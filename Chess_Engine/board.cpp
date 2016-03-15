@@ -18,18 +18,7 @@ std::list<Board> Board::get_child_boards() const
 				// if this piece is a king
 				if (board[rank][file].is_king())
 				{
-					// iterate over all adjacent squares
-					for (int rank_d = -1; rank_d <= 1; ++rank_d)
-					{
-						for (int file_d = -1; file_d <= 1; ++file_d)
-						{
-							// if the square is not occupied by a friendly piece
-							if (bounds_check(rank + rank_d, file + file_d) && !board[rank + rank_d][file + file_d].is_color(to_move))
-							{
-								child_boards.push_back(Board(board, rank, file, rank + rank_d, file + file_d));
-							}
-						}
-					}
+					find_king_moves(child_boards, rank, file);
 				}
 			} // end if piece can move
 		}
@@ -78,4 +67,20 @@ bool Board::is_valid_position() const
 	}
 
 	return true;
+}
+
+void Board::find_king_moves(std::list<Board> & child_boards, const int rank, const int file) const
+{
+	// iterate over all adjacent squares
+	for (int rank_d = -1; rank_d <= 1; ++rank_d)
+	{
+		for (int file_d = -1; file_d <= 1; ++file_d)
+		{
+			// if the square is not occupied by a friendly piece
+			if (bounds_check(rank + rank_d, file + file_d) && !board[rank + rank_d][file + file_d].is_color(to_move))
+			{
+				child_boards.push_back(Board(board, rank, file, rank + rank_d, file + file_d));
+			}
+		}
+	}
 }
