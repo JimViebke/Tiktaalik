@@ -24,18 +24,20 @@ private:
 
 public:
 	Board(const std::vector<std::vector<Piece>> & set_board) : board(set_board) {}
-	Board(const std::vector<std::vector<Piece>> & set_board, const int start_rank, const int start_file, const int end_rank, const int end_file)
+	Board(const Board & parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file)
 	{
 		// update position
-		board = set_board;
+		board = parent_board.get_board();
 
 		// update state
 		if (!piece_at(end_rank, end_file).is_empty()) fifty_move_rule = 0;
-		to_move = ((to_move == color::white) ? color::black : color::white);
+		to_move = ((parent_board.get_color_turn() == color::white) ? color::black : color::white);
 
 		// make the move
 		move_piece(start_rank, start_file, end_rank, end_file);
 	}
+
+	inline const color get_color_turn() const { return to_move; }
 
 	inline const Piece& piece_at(const Rank rank, const File file) const
 	{
