@@ -6,6 +6,7 @@ June 15 2014
 #include <iostream> // console input and output
 #include <string> // for strings
 #include <vector> // used to represent the board
+#include <map> // for node depth counting
 
 #include "board.h"
 
@@ -54,14 +55,20 @@ void menu()
 	} // end while
 }
 
-void print_board(const Board & board)
+inline void offset(const unsigned & offset)
 {
-	const std::vector<std::vector<Piece>> current_board = board.get_board();
+	for (unsigned i = 0; i < offset; ++i) { std::cout << ' '; }
+}
 
-	for (const std::vector<Piece> & row : current_board)
+void print_board(const Board & board, const unsigned & offset = 0)
+{
+	for (unsigned rank = 0; rank < 8; ++rank)
 	{
-		for (const Piece & piece : row)
+		::offset(offset * 9);
+		for (unsigned file = 0; file < 8; ++file)
 		{
+			const Piece & piece = board.piece_at(rank, file);
+
 			if (piece.is_empty()) std::cout << ".";
 			else if (piece.is_white())
 			{
@@ -76,29 +83,75 @@ void print_board(const Board & board)
 		}
 		std::cout << std::endl;
 	}
+
 	std::cout << std::endl;
 }
 
+class Node
+{
+private:
+	Board board;
+	unsigned my_ply_depth;
+	std::list<Node> child_nodes;
+
+	Node(const Board & set_board, unsigned set_my_ply_depth) :
+		board(set_board), my_ply_depth(set_my_ply_depth) {}
+
+public:
+	Node(const Board & set_board) :
+		board(set_board), my_ply_depth(0) {}
+
+	void generate_ply(const unsigned & depth)
+	{
+		// if we have not reached the ply depth
+		if (my_ply_depth < depth)
+		{
+			// generate child boards for this position
+			const std::list<Board> temp = board.get_child_boards();
+
+			// for each child board, add a node
+			for (const Board & board : temp)
+			{
+				child_nodes.push_back(Node(board, my_ply_depth + 1));
+
+				// make a recursive call to continue populating down the tree
+				child_nodes.back().generate_ply(depth);
+			}
+		}
+	}
+
+	void print_all() const
+	{
+		print_board(board, my_ply_depth);
+		std::cin.ignore();
+		for (const Node & node : child_nodes)
+			node.print_all();
+	}
+
+	void print_size() const
+	{
+		std::map<size_t, size_t> node_counter;
+		size(node_counter);
+
+		for (auto it = node_counter.begin(); it != node_counter.end(); ++it)
+			std::cout << "Number of child nodes from ply " << it->first << ": " << it->second << ".\n";
+	}
+
+private:
+	void size(std::map<size_t, size_t> & node_counter) const
+	{
+		node_counter[my_ply_depth] += child_nodes.size();
+		for (const Node & child : child_nodes)
+		{
+			child.size(node_counter);
+		}
+	}
+};
+
 int main()
 {
-	Board start_board(layouts::test_board);
+	Node parent(layouts::test_board);
 
-	std::list<Board> ply1 = start_board.get_child_boards();
-	std::list<Board> ply2;
-
-	for (auto it = ply1.begin(); it != ply1.end(); ++it)
-	{
-		std::list<Board> temp = it->get_child_boards();
-		ply2.splice(ply2.end(), temp);
-	}
-
-	for (int i = 0; i < 100; ++i) std::cout << std::endl;
-
-	for (const Board & board : ply2)
-	{
-		print_board(board);
-		std::cin.ignore();
-	}
-
-	std::cout << ply2.size() << std::endl;
+	parent.generate_ply(5);
+	parent.print_size();
 }
