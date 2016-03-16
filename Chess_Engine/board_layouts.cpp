@@ -9,15 +9,15 @@
 #define black_king Piece(color::black, piece::king)
 #define black_rook Piece(color::black, piece::rook)
 
-std::vector<std::vector<Piece>> layouts::test_board = {
-	{ empty, empty, empty, empty, black_king, empty, empty, empty },
-	{ empty, empty, empty, empty, empty, empty, empty, empty },
-	{ empty, empty, empty, empty, empty, empty, empty, empty },
-	{ empty, empty, empty, empty, empty, empty, empty, empty },
-	{ empty, empty, empty, empty, empty, empty, empty, empty },
-	{ empty, empty, empty, empty, empty, empty, empty, empty },
-	{ empty, empty, empty, empty, empty, empty, empty, empty },
-	{ empty, empty, empty, empty, white_king, empty, empty, empty },
+std::vector<Piece> layouts::test_board = {
+	 black_rook, empty, empty, empty, black_king, empty, empty, empty,
+	 empty, empty, empty, empty, empty, empty, empty, empty,
+	 empty, empty, empty, empty, empty, empty, empty, empty,
+	 empty, empty, empty, empty, empty, empty, empty, empty,
+	 empty, empty, empty, empty, empty, empty, empty, empty,
+	 empty, empty, empty, empty, empty, empty, empty, empty,
+	 empty, empty, empty, empty, empty, empty, empty, empty,
+	 white_rook, empty, empty, empty, white_king, empty, empty, empty
 };
 
 #undef empty

@@ -13,14 +13,14 @@ std::list<Board> Board::get_child_boards() const
 		for (int file = 0; file < 8; ++file)
 		{
 			// if this piece can move
-			if (board[rank][file].is_color(to_move))
+			if (piece_at(rank, file).is_color(to_move))
 			{
 				// if this piece is a king
-				if (board[rank][file].is_king())
+				if (piece_at(rank, file).is_king())
 				{
 					find_king_moves(child_boards, rank, file);
 				}
-				else if (board[rank][file].is_rook())
+				else if (piece_at(rank, file).is_rook())
 				{
 					find_rook_moves(child_boards, rank, file);
 				}
@@ -52,7 +52,7 @@ bool Board::is_valid_position() const
 		for (int file = 0; file < 8; ++file)
 		{
 			// if the piece is a king
-			if (board[rank][file].is_king())
+			if (piece_at(rank, file).is_king())
 			{
 				// iterate over all adjacent squares to check for a king
 				for (int rank_d = -1; rank_d <= 1; ++rank_d)
@@ -60,7 +60,7 @@ bool Board::is_valid_position() const
 					for (int file_d = -1; file_d <= 1; ++file_d)
 					{
 						if (rank_d == 0 && file_d == 0) continue; // don't examine the current square
-						if (bounds_check(rank + rank_d, file + file_d) && board[rank + rank_d][file + file_d].is_king())
+						if (bounds_check(rank + rank_d, file + file_d) && piece_at(rank + rank_d, file + file_d).is_king())
 						{
 							return false;
 						}
@@ -73,37 +73,37 @@ bool Board::is_valid_position() const
 				for (int other_rank = rank - 1; other_rank >= 0; --other_rank)
 				{
 					// if a square is found that is not empty
-					if (board[other_rank][file].is_occupied())
+					if (piece_at(other_rank, file).is_occupied())
 					{
 						// if the piece is a rook AND is hostile AND it is the hostile piece's turn, then the position is invalid
-						if (board[other_rank][file].is_rook() && board[other_rank][file].is_opposing_color(board[rank][file]) && board[other_rank][file].is_color(to_move)) return false;
+						if (piece_at(other_rank, file).is_rook() && piece_at(other_rank, file).is_opposing_color(piece_at(rank, file)) && piece_at(other_rank, file).is_color(to_move)) return false;
 						break; // a piece was found in this direction, stop checking in this direction
 					}
 				}
 				// rank ascending (documentation same as above)
 				for (int other_rank = rank + 1; other_rank < 8; ++other_rank)
 				{
-					if (board[other_rank][file].is_occupied())
+					if (piece_at(other_rank, file).is_occupied())
 					{
-						if (board[other_rank][file].is_rook() && board[other_rank][file].is_opposing_color(board[rank][file]) && board[other_rank][file].is_color(to_move)) return false;
+						if (piece_at(other_rank, file).is_rook() && piece_at(other_rank, file).is_opposing_color(piece_at(rank, file)) && piece_at(other_rank, file).is_color(to_move)) return false;
 						break;
 					}
 				}
 				// file descending (documentation same as above)
 				for (int other_file = file - 1; other_file >= 0; --other_file)
 				{
-					if (board[rank][other_file].is_occupied())
+					if (piece_at(rank, other_file).is_occupied())
 					{
-						if (board[rank][other_file].is_rook() && board[rank][other_file].is_opposing_color(board[rank][file]) && board[rank][other_file].is_color(to_move)) return false;
+						if (piece_at(rank, other_file).is_rook() && piece_at(rank, other_file).is_opposing_color(piece_at(rank, file)) && piece_at(rank, other_file).is_color(to_move)) return false;
 						break;
 					}
 				}
 				// file ascending (documentation same as above)
 				for (int other_file = file + 1; other_file < 8; ++other_file)
 				{
-					if (board[rank][other_file].is_occupied())
+					if (piece_at(rank, other_file).is_occupied())
 					{
-						if (board[rank][other_file].is_rook() && board[rank][other_file].is_opposing_color(board[rank][file]) && board[rank][other_file].is_color(to_move)) return false;
+						if (piece_at(rank, other_file).is_rook() && piece_at(rank, other_file).is_opposing_color(piece_at(rank, file)) && piece_at(rank, other_file).is_color(to_move)) return false;
 						break;
 					}
 				}
@@ -123,7 +123,7 @@ void Board::find_king_moves(std::list<Board> & child_boards, const int rank, con
 		for (int file_d = -1; file_d <= 1; ++file_d)
 		{
 			// if the square is not occupied by a friendly piece
-			if (bounds_check(rank + rank_d, file + file_d) && !board[rank + rank_d][file + file_d].is_color(to_move))
+			if (bounds_check(rank + rank_d, file + file_d) && !piece_at(rank + rank_d, file + file_d).is_color(to_move))
 			{
 				child_boards.push_back(Board(*this, rank, file, rank + rank_d, file + file_d));
 			}
@@ -137,13 +137,13 @@ void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, con
 	{
 		if (!bounds_check(end_rank, file)) break; // out of bounds; don't keep iterating in this direction
 
-		if (board[end_rank][file].is_empty()) // if the square is empty, the rook can move here
+		if (piece_at(end_rank, file).is_empty()) // if the square is empty, the rook can move here
 		{
 			child_boards.push_back(Board(*this, rank, file, end_rank, file));
 			continue; // keep searching in the current direction
 		}
 		// if the rook has encountered an enemy piece
-		else if (!board[end_rank][file].is_color(to_move))
+		else if (!piece_at(end_rank, file).is_color(to_move))
 		{
 			// the rook can capture...
 			child_boards.push_back(Board(*this, rank, file, end_rank, file));
@@ -157,12 +157,12 @@ void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, con
 	{
 		if (!bounds_check(end_rank, file)) break;
 
-		if (board[end_rank][file].is_empty())
+		if (piece_at(end_rank, file).is_empty())
 		{
 			child_boards.push_back(Board(*this, rank, file, end_rank, file));
 			continue;
 		}
-		else if (!board[end_rank][file].is_color(to_move))
+		else if (!piece_at(end_rank, file).is_color(to_move))
 		{
 			child_boards.push_back(Board(*this, rank, file, end_rank, file));
 			break;
@@ -175,12 +175,12 @@ void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, con
 	{
 		if (!bounds_check(rank, end_file)) break;
 
-		if (board[rank][end_file].is_empty())
+		if (piece_at(rank, end_file).is_empty())
 		{
 			child_boards.push_back(Board(*this, rank, file, rank, end_file));
 			continue;
 		}
-		else if (!board[rank][end_file].is_color(to_move))
+		else if (!piece_at(rank, end_file).is_color(to_move))
 		{
 			child_boards.push_back(Board(*this, rank, file, rank, end_file));
 			break;
@@ -193,12 +193,12 @@ void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, con
 	{
 		if (!bounds_check(rank, end_file)) break;
 
-		if (board[rank][end_file].is_empty())
+		if (piece_at(rank, end_file).is_empty())
 		{
 			child_boards.push_back(Board(*this, rank, file, rank, end_file));
 			continue;
 		}
-		else if (!board[rank][end_file].is_color(to_move))
+		else if (!piece_at(rank, end_file).is_color(to_move))
 		{
 			child_boards.push_back(Board(*this, rank, file, rank, end_file));
 			break;

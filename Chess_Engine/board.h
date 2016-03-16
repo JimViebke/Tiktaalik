@@ -12,7 +12,7 @@ private:
 	using File = int;
 
 	// position
-	std::vector<std::vector<Piece>> board;
+	std::vector<Piece> board;
 
 	// state
 	color to_move = color::white;
@@ -23,7 +23,7 @@ private:
 	bool black_can_castle_q_s = true;
 
 public:
-	Board(const std::vector<std::vector<Piece>> & set_board) : board(set_board) {}
+	Board(const std::vector<Piece> & set_board) : board(set_board) {}
 	Board(const Board & parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file)
 	{
 		// update position
@@ -41,11 +41,11 @@ public:
 
 	inline const Piece& piece_at(const Rank rank, const File file) const
 	{
-		return board[rank][file];
+		return board[rank*8 + file];
 	}
 	inline Piece& piece_at(const Rank rank, const File file)
 	{
-		return board[rank][file];
+		return board[rank * 8 + file];
 	}
 
 	inline void set_piece(const Rank rank, const File file, const Piece piece)
@@ -67,9 +67,9 @@ public:
 		int position_value = 0;
 
 		// evaluate material
-		for (auto row : board)
-			for (auto piece : row)
-				position_value += evaluate_piece(piece);
+		for (unsigned rank = 0; rank < 8; ++rank)
+			for (unsigned file = 0; file < 8; ++file)
+				position_value += evaluate_piece(piece_at(rank, file));
 
 		return position_value;
 	}
@@ -80,7 +80,7 @@ public:
 
 	bool is_valid_position() const;
 
-	std::vector<std::vector<Piece>> get_board() const { return board; }
+	std::vector<Piece> get_board() const { return board; }
 
 private:
 	template<typename T> inline bool bounds_check(const T rank_or_file) const { return rank_or_file < 8 && rank_or_file >= 0; }

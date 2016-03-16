@@ -6,7 +6,7 @@
 
 namespace layouts
 {
-	extern std::vector<std::vector<Piece>> test_board;
+	extern std::vector<Piece> test_board;
 
 	/* std::vector<std::vector<Piece>> default_board = {
 		{ Piece(black, rook), Piece(black, knight), Piece::black_bishop, Piece::black_queen, Piece::black_king, Piece::black_bishop, Piece::black_knight, Piece::black_rook },
