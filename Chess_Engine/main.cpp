@@ -66,10 +66,12 @@ void print_board(const Board & board)
 			else if (piece.is_white())
 			{
 				if (piece.is_king()) std::cout << "K";
+				if (piece.is_rook()) std::cout << "R";
 			}
 			else if (piece.is_black())
 			{
 				if (piece.is_king()) std::cout << "k";
+				if (piece.is_rook()) std::cout << "r";
 			}
 		}
 		std::cout << std::endl;
@@ -90,9 +92,12 @@ int main()
 		ply2.splice(ply2.end(), temp);
 	}
 
+	for (int i = 0; i < 100; ++i) std::cout << std::endl;
+
 	for (const Board & board : ply2)
 	{
 		print_board(board);
+		std::cin.ignore();
 	}
 
 	std::cout << ply2.size() << std::endl;

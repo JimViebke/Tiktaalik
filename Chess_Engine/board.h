@@ -111,4 +111,5 @@ private:
 	}
 
 	void find_king_moves(std::list<Board> & child_boards, const int rank, const int file) const;
+	void find_rook_moves(std::list<Board> & child_boards, const int rank, const int file) const;
 };

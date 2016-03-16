@@ -20,6 +20,10 @@ std::list<Board> Board::get_child_boards() const
 				{
 					find_king_moves(child_boards, rank, file);
 				}
+				else if (board[rank][file].is_rook())
+				{
+					find_rook_moves(child_boards, rank, file);
+				}
 			} // end if piece can move
 		}
 	}
@@ -82,5 +86,81 @@ void Board::find_king_moves(std::list<Board> & child_boards, const int rank, con
 				child_boards.push_back(Board(board, rank, file, rank + rank_d, file + file_d));
 			}
 		}
+	}
+}
+void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, const int file) const
+{
+	// rank descending
+	for (int end_rank = rank - 1; end_rank >= 0; --end_rank)
+	{
+		if (!bounds_check(end_rank, file)) break; // out of bounds; don't keep iterating in this direction
+
+		if (board[end_rank][file].is_empty()) // if the square is empty, the rook can move here
+		{
+			child_boards.push_back(Board(board, rank, file, end_rank, file));
+			continue; // keep searching in the current direction
+		}
+		// if the rook has encountered an enemy piece
+		else if (!board[end_rank][file].is_color(to_move))
+		{
+			// the rook can capture...
+			child_boards.push_back(Board(board, rank, file, end_rank, file));
+			break; // ...but the rook cannot keep moving
+		}
+		else break; // the rook cannot move into a friendly piece; stop searching this way
+	}
+
+	// rank ascending (documentation same as above)
+	for (int end_rank = rank + 1; end_rank < 8; ++end_rank)
+	{
+		if (!bounds_check(end_rank, file)) break;
+
+		if (board[end_rank][file].is_empty())
+		{
+			child_boards.push_back(Board(board, rank, file, end_rank, file));
+			continue;
+		}
+		else if (!board[end_rank][file].is_color(to_move))
+		{
+			child_boards.push_back(Board(board, rank, file, end_rank, file));
+			break;
+		}
+		else break;
+	}
+
+	// file descending (documentation same as above)
+	for (int end_file = file - 1; end_file >= 0; --end_file)
+	{
+		if (!bounds_check(rank, end_file)) break;
+
+		if (board[rank][end_file].is_empty())
+		{
+			child_boards.push_back(Board(board, rank, file, rank, end_file));
+			continue;
+		}
+		else if (!board[rank][end_file].is_color(to_move))
+		{
+			child_boards.push_back(Board(board, rank, file, rank, end_file));
+			break;
+		}
+		else break;
+	}
+
+	// file ascending (documentation same as above)
+	for (int end_file = file + 1; end_file < 8; ++end_file)
+	{
+		if (!bounds_check(rank, end_file)) break;
+
+		if (board[rank][end_file].is_empty())
+		{
+			child_boards.push_back(Board(board, rank, file, rank, end_file));
+			continue;
+		}
+		else if (!board[rank][end_file].is_color(to_move))
+		{
+			child_boards.push_back(Board(board, rank, file, rank, end_file));
+			break;
+		}
+		else break;
 	}
 }
