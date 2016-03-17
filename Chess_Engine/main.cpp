@@ -64,7 +64,9 @@ void print_board(const Board & board, const unsigned & offset = 0)
 {
 	for (unsigned rank = 0; rank < 8; ++rank)
 	{
-		::offset(offset * 9);
+		// add indent
+		for (unsigned i = 0; i < offset * 9; ++i) std::cout << ' ';
+
 		for (unsigned file = 0; file < 8; ++file)
 		{
 			const Piece & piece = board.piece_at(rank, file);
@@ -72,13 +74,15 @@ void print_board(const Board & board, const unsigned & offset = 0)
 			if (piece.is_empty()) std::cout << ".";
 			else if (piece.is_white())
 			{
-				if (piece.is_king()) std::cout << "K";
-				if (piece.is_rook()) std::cout << "R";
+				if (piece.is_bishop()) std::cout << "B";
+				else if (piece.is_rook()) std::cout << "R";
+				else if (piece.is_king()) std::cout << "K";
 			}
 			else if (piece.is_black())
 			{
-				if (piece.is_king()) std::cout << "k";
-				if (piece.is_rook()) std::cout << "r";
+				if (piece.is_bishop()) std::cout << "b";
+				else if (piece.is_rook()) std::cout << "r";
+				else if (piece.is_king()) std::cout << "k";
 			}
 		}
 		std::cout << std::endl;
