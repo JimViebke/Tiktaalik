@@ -162,10 +162,17 @@ public:
 
 	void print_all() const
 	{
-		print_board(board, my_ply_depth);
+		static std::list<Board> boards;
+		boards.push_back(board);
+
+		print_board(boards);
 		std::cin.ignore();
+
 		for (const Node & node : child_nodes)
+		{
 			node.print_all();
+		}
+		boards.pop_back();
 	}
 
 	void print_size() const
@@ -192,6 +199,7 @@ int main()
 {
 	Node parent(layouts::test_board);
 
-	parent.generate_ply(5);
+	parent.generate_ply(3);
 	parent.print_size();
+	parent.print_all();
 }
