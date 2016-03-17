@@ -87,7 +87,43 @@ void print_board(const Board & board, const unsigned & offset = 0)
 		}
 		std::cout << std::endl;
 	}
+	std::cout << std::endl;
+}
 
+void print_board(const std::list<Board> & boards)
+{
+	for (unsigned rank = 0; rank < 8; ++rank)
+	{
+		// render this rank for each board
+		for (std::list<Board>::const_iterator it = boards.cbegin(); it != boards.cend(); ++it)
+		{
+			for (unsigned file = 0; file < 8; ++file)
+			{
+				const Piece & piece = it->piece_at(rank, file);
+
+				if (piece.is_empty()) std::cout << ".";
+				else if (piece.is_white())
+				{
+					if (piece.is_bishop()) std::cout << "B";
+					else if (piece.is_rook()) std::cout << "R";
+					else if (piece.is_king()) std::cout << "K";
+				}
+				else if (piece.is_black())
+				{
+					if (piece.is_bishop()) std::cout << "b";
+					else if (piece.is_rook()) std::cout << "r";
+					else if (piece.is_king()) std::cout << "k";
+				}
+			}
+
+
+			// add indent if there is another board to print
+			if (it != --boards.cend())
+				for (unsigned i = 0; i < 5; ++i) std::cout << ' ';
+		}
+
+		std::cout << std::endl;
+	}
 	std::cout << std::endl;
 }
 
