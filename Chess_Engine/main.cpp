@@ -76,12 +76,14 @@ void print_board(const Board & board, const unsigned & offset = 0)
 			{
 				if (piece.is_bishop()) std::cout << "B";
 				else if (piece.is_rook()) std::cout << "R";
+				else if (piece.is_queen()) std::cout << "Q";
 				else if (piece.is_king()) std::cout << "K";
 			}
 			else if (piece.is_black())
 			{
 				if (piece.is_bishop()) std::cout << "b";
 				else if (piece.is_rook()) std::cout << "r";
+				else if (piece.is_queen()) std::cout << "q";
 				else if (piece.is_king()) std::cout << "k";
 			}
 		}
@@ -106,12 +108,14 @@ void print_board(const std::list<Board> & boards)
 				{
 					if (piece.is_bishop()) std::cout << "B";
 					else if (piece.is_rook()) std::cout << "R";
+					else if (piece.is_queen()) std::cout << "Q";
 					else if (piece.is_king()) std::cout << "K";
 				}
 				else if (piece.is_black())
 				{
 					if (piece.is_bishop()) std::cout << "b";
 					else if (piece.is_rook()) std::cout << "r";
+					else if (piece.is_queen()) std::cout << "q";
 					else if (piece.is_king()) std::cout << "k";
 				}
 			}
@@ -197,9 +201,9 @@ private:
 
 int main()
 {
-	Node parent(layouts::test_board);
+	Node parent_position(layouts::test_board);
 
-	parent.generate_ply(3);
-	parent.print_size();
-	parent.print_all();
+	parent_position.generate_ply(5);
+	parent_position.print_size();
+	parent_position.print_all();
 }
