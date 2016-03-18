@@ -23,6 +23,10 @@ std::list<Board> Board::get_child_boards() const
 				{
 					find_bishop_moves(child_boards, rank, file);
 				}
+				else if (piece_at(rank, file).is_knight())
+				{
+					find_knight_moves(child_boards, rank, file);
+				}
 				else if (piece_at(rank, file).is_queen())
 				{
 					find_queen_moves(child_boards, rank, file);
@@ -182,6 +186,16 @@ bool Board::is_valid_position() const
 						break;
 					}
 				}
+
+				// manually check eight locations for a knight
+				if (bounds_check(rank - 1, file - 2) && piece_at(rank - 1, file - 2).is_knight() && piece_at(rank - 1, file - 2).is_color(to_move)) return false;
+				if (bounds_check(rank - 1, file + 2) && piece_at(rank - 1, file + 2).is_knight() && piece_at(rank - 1, file + 2).is_color(to_move)) return false;
+				if (bounds_check(rank + 1, file - 2) && piece_at(rank + 1, file - 2).is_knight() && piece_at(rank + 1, file - 2).is_color(to_move)) return false;
+				if (bounds_check(rank + 1, file + 2) && piece_at(rank + 1, file + 2).is_knight() && piece_at(rank + 1, file + 2).is_color(to_move)) return false;
+				if (bounds_check(rank - 2, file - 1) && piece_at(rank - 2, file - 1).is_knight() && piece_at(rank - 2, file - 1).is_color(to_move)) return false;
+				if (bounds_check(rank - 2, file + 1) && piece_at(rank - 2, file + 1).is_knight() && piece_at(rank - 2, file + 1).is_color(to_move)) return false;
+				if (bounds_check(rank + 2, file - 1) && piece_at(rank + 2, file - 1).is_knight() && piece_at(rank + 2, file - 1).is_color(to_move)) return false;
+				if (bounds_check(rank + 2, file + 1) && piece_at(rank + 2, file + 1).is_knight() && piece_at(rank + 2, file + 1).is_color(to_move)) return false;
 
 			} // end if is king
 		}
@@ -347,6 +361,28 @@ void Board::find_bishop_moves(std::list<Board> & child_boards, const int rank, c
 		}
 		else break;
 	}
+}
+void Board::find_knight_moves(std::list<Board> & child_boards, const int rank, const int file) const
+{
+	if (bounds_check(rank - 1, file - 2) && !piece_at(rank - 1, file - 2).is_color(to_move))
+		child_boards.push_back(Board(board, rank, file, rank - 1, file - 2));
+	if (bounds_check(rank - 1, file + 2) && !piece_at(rank - 1, file + 2).is_color(to_move))
+		child_boards.push_back(Board(board, rank, file, rank - 1, file + 2));
+
+	if (bounds_check(rank + 1, file - 2) && !piece_at(rank + 1, file - 2).is_color(to_move))
+		child_boards.push_back(Board(board, rank, file, rank + 1, file - 2));
+	if (bounds_check(rank + 1, file + 2) && !piece_at(rank + 1, file + 2).is_color(to_move))
+		child_boards.push_back(Board(board, rank, file, rank + 1, file + 2));
+
+	if (bounds_check(rank - 2, file - 1) && !piece_at(rank - 2, file - 1).is_color(to_move))
+		child_boards.push_back(Board(board, rank, file, rank - 2, file - 1));
+	if (bounds_check(rank - 2, file + 1) && !piece_at(rank - 2, file + 1).is_color(to_move))
+		child_boards.push_back(Board(board, rank, file, rank - 2, file + 1));
+
+	if (bounds_check(rank + 2, file - 1) && !piece_at(rank + 2, file - 1).is_color(to_move))
+		child_boards.push_back(Board(board, rank, file, rank + 2, file - 1));
+	if (bounds_check(rank + 2, file + 1) && !piece_at(rank + 2, file + 1).is_color(to_move))
+		child_boards.push_back(Board(board, rank, file, rank + 2, file + 1));
 }
 void Board::find_queen_moves(std::list<Board> & child_boards, const int rank, const int file) const
 {

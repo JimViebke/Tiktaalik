@@ -114,6 +114,7 @@ private:
 
 	void find_rook_moves(std::list<Board> & child_boards, const int rank, const int file) const;
 	void find_bishop_moves(std::list<Board> & child_boards, const int rank, const int file) const;
+	void find_knight_moves(std::list<Board> & child_boards, const int rank, const int file) const;
 	void find_queen_moves(std::list<Board> & child_boards, const int rank, const int file) const;
 	void find_king_moves(std::list<Board> & child_boards, const int rank, const int file) const;
 };

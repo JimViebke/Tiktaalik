@@ -55,11 +55,6 @@ void menu()
 	} // end while
 }
 
-inline void offset(const unsigned & offset)
-{
-	for (unsigned i = 0; i < offset; ++i) { std::cout << ' '; }
-}
-
 void print_board(const Board & board, const unsigned & offset = 0)
 {
 	for (unsigned rank = 0; rank < 8; ++rank)
@@ -74,15 +69,17 @@ void print_board(const Board & board, const unsigned & offset = 0)
 			if (piece.is_empty()) std::cout << ".";
 			else if (piece.is_white())
 			{
-				if (piece.is_bishop()) std::cout << "B";
-				else if (piece.is_rook()) std::cout << "R";
+				if (piece.is_rook()) std::cout << "R";
+				else if (piece.is_bishop()) std::cout << "B";
+				else if (piece.is_knight()) std::cout << "N";
 				else if (piece.is_queen()) std::cout << "Q";
 				else if (piece.is_king()) std::cout << "K";
 			}
 			else if (piece.is_black())
 			{
-				if (piece.is_bishop()) std::cout << "b";
-				else if (piece.is_rook()) std::cout << "r";
+				if (piece.is_rook()) std::cout << "r";
+				else if (piece.is_bishop()) std::cout << "b";
+				else if (piece.is_knight()) std::cout << "n";
 				else if (piece.is_queen()) std::cout << "q";
 				else if (piece.is_king()) std::cout << "k";
 			}
@@ -106,20 +103,21 @@ void print_board(const std::list<Board> & boards)
 				if (piece.is_empty()) std::cout << ".";
 				else if (piece.is_white())
 				{
-					if (piece.is_bishop()) std::cout << "B";
-					else if (piece.is_rook()) std::cout << "R";
+					if (piece.is_rook()) std::cout << "R";
+					else if (piece.is_bishop()) std::cout << "B";
+					else if (piece.is_knight()) std::cout << "N";
 					else if (piece.is_queen()) std::cout << "Q";
 					else if (piece.is_king()) std::cout << "K";
 				}
 				else if (piece.is_black())
 				{
-					if (piece.is_bishop()) std::cout << "b";
-					else if (piece.is_rook()) std::cout << "r";
+					if (piece.is_rook()) std::cout << "r";
+					else if (piece.is_bishop()) std::cout << "b";
+					else if (piece.is_knight()) std::cout << "n";
 					else if (piece.is_queen()) std::cout << "q";
 					else if (piece.is_king()) std::cout << "k";
 				}
 			}
-
 
 			// add indent if there is another board to print
 			if (it != --boards.cend())
@@ -203,7 +201,7 @@ int main()
 {
 	Node parent_position(layouts::test_board);
 
-	parent_position.generate_ply(5);
+	parent_position.generate_ply(2);
 	parent_position.print_size();
 	parent_position.print_all();
 }
