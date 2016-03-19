@@ -18,14 +18,25 @@
 #define black_pawn Piece(color::black, piece::pawn)
 
 std::vector<Piece> layouts::test_board = {
-	 black_rook, empty, empty, empty, black_king, empty, empty, empty,
-	 empty, empty, empty, empty, empty, empty, empty, empty,
-	 empty, empty, empty, empty, empty, empty, empty, empty,
-	 empty, empty, empty, empty, empty, empty, empty, empty,
-	 empty, empty, empty, empty, empty, empty, empty, empty,
-	 empty, empty, empty, empty, empty, empty, empty, empty,
-	 empty, empty, empty, empty, empty, empty, empty, empty,
-	 white_rook, empty, empty, empty, white_king, empty, empty, empty
+	empty, empty, empty, empty, empty, empty, empty, empty,
+	white_pawn, empty, empty, empty, empty, empty, empty, empty,
+	empty, empty, empty, empty, empty, empty, empty, empty,
+	empty, empty, empty, empty, empty, empty, empty, empty,
+	empty, empty, empty, empty, empty, empty, empty, empty,
+	empty, empty, empty, empty, empty, empty, empty, empty,
+	empty, empty, empty, empty, empty, empty, empty, empty,
+	empty, empty, empty, empty, empty, black_knight, empty, white_king
+};
+
+std::vector<Piece> layouts::start_board = {
+	black_rook, black_knight, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook,
+	black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn,
+	empty, empty, empty, empty, empty, empty, empty, empty,
+	empty, empty, empty, empty, empty, empty, empty, empty,
+	empty, empty, empty, empty, empty, empty, empty, empty,
+	empty, empty, empty, empty, empty, empty, empty, empty,
+	white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn,
+	white_rook, white_knight, white_bishop, white_queen, white_king, white_bishop, white_knight, white_rook
 };
 
 #undef empty
