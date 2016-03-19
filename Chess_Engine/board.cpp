@@ -266,7 +266,7 @@ void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, con
 	// rank descending
 	for (int end_rank = rank - 1; end_rank >= 0; --end_rank)
 	{
-		if (!bounds_check(end_rank, file)) break; // out of bounds; don't keep iterating in this direction
+		if (!bounds_check(end_rank)) break; // out of bounds; don't keep iterating in this direction
 
 		if (piece_at(end_rank, file).is_empty()) // if the square is empty, the rook can move here
 		{
@@ -286,7 +286,7 @@ void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, con
 	// rank ascending (documentation same as above)
 	for (int end_rank = rank + 1; end_rank < 8; ++end_rank)
 	{
-		if (!bounds_check(end_rank, file)) break;
+		if (!bounds_check(end_rank)) break;
 
 		if (piece_at(end_rank, file).is_empty())
 		{
@@ -304,7 +304,7 @@ void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, con
 	// file descending (documentation same as above)
 	for (int end_file = file - 1; end_file >= 0; --end_file)
 	{
-		if (!bounds_check(rank, end_file)) break;
+		if (!bounds_check(end_file)) break;
 
 		if (piece_at(rank, end_file).is_empty())
 		{
@@ -322,7 +322,7 @@ void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, con
 	// file ascending (documentation same as above)
 	for (int end_file = file + 1; end_file < 8; ++end_file)
 	{
-		if (!bounds_check(rank, end_file)) break;
+		if (!bounds_check(end_file)) break;
 
 		if (piece_at(rank, end_file).is_empty())
 		{
