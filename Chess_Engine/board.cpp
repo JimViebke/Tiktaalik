@@ -201,6 +201,19 @@ bool Board::is_valid_position() const
 				if (bounds_check(rank + 2, file - 1) && piece_at(rank + 2, file - 1).is_knight() && piece_at(rank + 2, file - 1).is_color(to_move)) return false;
 				if (bounds_check(rank + 2, file + 1) && piece_at(rank + 2, file + 1).is_knight() && piece_at(rank + 2, file + 1).is_color(to_move)) return false;
 
+				// check if the white king is under attack by a black pawn ready to move
+				if (piece_at(rank, file).is_white() && to_move != color::white)
+				{
+					if ((bounds_check(rank - 1, file + 1) && piece_at(rank - 1, file + 1).is(color::black, piece::pawn)) ||
+						(bounds_check(rank - 1, file - 1) && piece_at(rank - 1, file - 1).is(color::black, piece::pawn))) return false;
+				}
+				// check if the black king is under attack by a white pawn ready to move
+				else if (piece_at(rank, file).is_black() && to_move != color::black)
+				{
+					if ((bounds_check(rank + 1, file + 1) && piece_at(rank + 1, file + 1).is(color::white, piece::pawn)) ||
+						(bounds_check(rank + 1, file - 1) && piece_at(rank + 1, file - 1).is(color::white, piece::pawn))) return false;
+				}
+
 			} // end if is king
 		}
 	}
@@ -247,7 +260,6 @@ void Board::find_pawn_moves(std::list<Board> & child_boards, const int rank, con
 				child_boards.push_back(Board(*this, rank, file, rank + 1, file - 1));
 		}
 	}
-
 }
 void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, const int file) const
 {

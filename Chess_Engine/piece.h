@@ -53,4 +53,5 @@ public:
 
 	// check entire thing
 	inline bool is(Piece compare_piece) const { return _color == compare_piece._color && _piece == compare_piece._piece; }
+	inline bool is(const color check_color, const piece check_piece) const { return _piece == check_piece && _color == check_color; }
 };
