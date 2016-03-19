@@ -15,7 +15,11 @@ std::list<Board> Board::get_child_boards() const
 			// if this piece can move
 			if (piece_at(rank, file).is_color(to_move))
 			{
-				if (piece_at(rank, file).is_rook())
+				if (piece_at(rank, file).is_pawn())
+				{
+					find_pawn_moves(child_boards, rank, file);
+				}
+				else if (piece_at(rank, file).is_rook())
 				{
 					find_rook_moves(child_boards, rank, file);
 				}
@@ -206,6 +210,45 @@ bool Board::is_valid_position() const
 
 // these are in the same order that they are called in the generation function, which acts in order of probable piece frequency
 
+
+void Board::find_pawn_moves(std::list<Board> & child_boards, const int rank, const int file) const
+{
+	if (piece_at(rank, file).is_white())
+	{
+		if (bounds_check(rank - 1)) // only validate moving forwards once
+		{
+			// check for moving forward one square
+			if (piece_at(rank - 1, file).is_empty())
+				child_boards.push_back(Board(*this, rank, file, rank - 1, file));
+			// check for moving forward two squares
+			if (rank == 6 && piece_at(5, file).is_empty() && piece_at(4, file).is_empty())
+				child_boards.push_back(Board(*this, rank, file, 4, file));
+			// check for captures
+			if (bounds_check(file + 1) && piece_at(rank - 1, file + 1).is_black())
+				child_boards.push_back(Board(*this, rank, file, rank - 1, file + 1));
+			if (bounds_check(file - 1) && piece_at(rank - 1, file - 1).is_black())
+				child_boards.push_back(Board(*this, rank, file, rank - 1, file - 1));
+		}
+	}
+	else if (piece_at(rank, file).is_black())
+	{
+		if (bounds_check(rank + 1)) // only validate moving forwards once
+		{
+			// check for moving forward one square
+			if (piece_at(rank + 1, file).is_empty())
+				child_boards.push_back(Board(*this, rank, file, rank + 1, file));
+			// check for moving forward two squares
+			if (rank == 1 && piece_at(2, file).is_empty() && piece_at(3, file).is_empty())
+				child_boards.push_back(Board(*this, rank, file, 3, file));
+			// check for captures
+			if (bounds_check(file + 1) && piece_at(rank + 1, file + 1).is_white())
+				child_boards.push_back(Board(*this, rank, file, rank + 1, file + 1));
+			if (bounds_check(file - 1) && piece_at(rank + 1, file - 1).is_white())
+				child_boards.push_back(Board(*this, rank, file, rank + 1, file - 1));
+		}
+	}
+
+}
 void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, const int file) const
 {
 	// rank descending

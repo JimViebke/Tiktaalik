@@ -112,6 +112,7 @@ private:
 		return 0; // should never happen
 	}
 
+	void find_pawn_moves(std::list<Board> & child_boards, const int rank, const int file) const;
 	void find_rook_moves(std::list<Board> & child_boards, const int rank, const int file) const;
 	void find_bishop_moves(std::list<Board> & child_boards, const int rank, const int file) const;
 	void find_knight_moves(std::list<Board> & child_boards, const int rank, const int file) const;

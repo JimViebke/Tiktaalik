@@ -103,7 +103,8 @@ void print_board(const std::list<Board> & boards)
 				if (piece.is_empty()) std::cout << ".";
 				else if (piece.is_white())
 				{
-					if (piece.is_rook()) std::cout << "R";
+					if (piece.is_pawn()) std::cout << "P";
+					else if (piece.is_rook()) std::cout << "R";
 					else if (piece.is_bishop()) std::cout << "B";
 					else if (piece.is_knight()) std::cout << "N";
 					else if (piece.is_queen()) std::cout << "Q";
@@ -111,7 +112,8 @@ void print_board(const std::list<Board> & boards)
 				}
 				else if (piece.is_black())
 				{
-					if (piece.is_rook()) std::cout << "r";
+					if (piece.is_pawn()) std::cout << "p";
+					else if (piece.is_rook()) std::cout << "r";
 					else if (piece.is_bishop()) std::cout << "b";
 					else if (piece.is_knight()) std::cout << "n";
 					else if (piece.is_queen()) std::cout << "q";
