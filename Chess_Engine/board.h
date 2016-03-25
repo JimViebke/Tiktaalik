@@ -15,7 +15,7 @@ private:
 	std::vector<Piece> board;
 
 	// state
-	color to_move = color::white;
+	color color_to_move = color::white;
 	int fifty_move_rule = 0;
 	bool white_can_castle_k_s = true;
 	bool white_can_castle_q_s = true;
@@ -31,17 +31,18 @@ public:
 
 		// update state
 		if (!piece_at(end_rank, end_file).is_empty()) fifty_move_rule = 0;
-		to_move = ((parent_board.get_color_turn() == color::white) ? color::black : color::white);
+		color_to_move = ((parent_board.get_color_to_move() == color::white) ? color::black : color::white);
 
 		// make the move
 		move_piece(start_rank, start_file, end_rank, end_file);
 	}
 
-	inline const color get_color_turn() const { return to_move; }
+	inline const color get_color_to_move() const { return color_to_move; }
+	inline void set_color_to_move(const color set_color_to_move) { color_to_move = set_color_to_move; }
 
 	inline const Piece& piece_at(const Rank rank, const File file) const
 	{
-		return board[rank*8 + file];
+		return board[rank * 8 + file];
 	}
 	inline Piece& piece_at(const Rank rank, const File file)
 	{
@@ -76,15 +77,16 @@ public:
 
 	std::list<Board> get_child_boards() const;
 
-	static void remove_invalid_boards(std::list<Board> & boards);
-
-	bool is_valid_position() const;
 
 	std::vector<Piece> get_board() const { return board; }
 
 private:
 	template<typename T> inline bool bounds_check(const T rank_or_file) const { return rank_or_file < 8 && rank_or_file >= 0; }
 	template<typename T> inline bool bounds_check(const T rank, const T file) const { return bounds_check(rank) && bounds_check(file); }
+
+	bool is_valid_position() const;
+
+	static void remove_invalid_boards(std::list<Board> & boards);
 
 	int evaluate_piece(const Piece & piece) const
 	{
