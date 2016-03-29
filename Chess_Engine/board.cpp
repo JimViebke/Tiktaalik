@@ -2,7 +2,84 @@
 /* Jim Viebke
 Mar 14 2016 */
 
+#include <iostream>
+
 #include "board.h"
+
+void Board::print_board(const Board & board, const unsigned & offset = 0)
+{
+	for (unsigned rank = 0; rank < 8; ++rank)
+	{
+		// add indent
+		for (unsigned i = 0; i < offset * 9; ++i) std::cout << ' ';
+
+		for (unsigned file = 0; file < 8; ++file)
+		{
+			const Piece & piece = board.piece_at(rank, file);
+
+			if (piece.is_empty()) std::cout << ".";
+			else if (piece.is_white())
+			{
+				if (piece.is_rook()) std::cout << "R";
+				else if (piece.is_bishop()) std::cout << "B";
+				else if (piece.is_knight()) std::cout << "N";
+				else if (piece.is_queen()) std::cout << "Q";
+				else if (piece.is_king()) std::cout << "K";
+			}
+			else if (piece.is_black())
+			{
+				if (piece.is_rook()) std::cout << "r";
+				else if (piece.is_bishop()) std::cout << "b";
+				else if (piece.is_knight()) std::cout << "n";
+				else if (piece.is_queen()) std::cout << "q";
+				else if (piece.is_king()) std::cout << "k";
+			}
+		}
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
+}
+void Board::print_board(const std::list<Board> & boards)
+{
+	for (unsigned rank = 0; rank < 8; ++rank)
+	{
+		// render this rank for each board
+		for (std::list<Board>::const_iterator it = boards.cbegin(); it != boards.cend(); ++it)
+		{
+			for (unsigned file = 0; file < 8; ++file)
+			{
+				const Piece & piece = it->piece_at(rank, file);
+
+				if (piece.is_empty()) std::cout << ".";
+				else if (piece.is_white())
+				{
+					if (piece.is_pawn()) std::cout << "P";
+					else if (piece.is_rook()) std::cout << "R";
+					else if (piece.is_bishop()) std::cout << "B";
+					else if (piece.is_knight()) std::cout << "N";
+					else if (piece.is_queen()) std::cout << "Q";
+					else if (piece.is_king()) std::cout << "K";
+				}
+				else if (piece.is_black())
+				{
+					if (piece.is_pawn()) std::cout << "p";
+					else if (piece.is_rook()) std::cout << "r";
+					else if (piece.is_bishop()) std::cout << "b";
+					else if (piece.is_knight()) std::cout << "n";
+					else if (piece.is_queen()) std::cout << "q";
+					else if (piece.is_king()) std::cout << "k";
+				}
+			}
+
+			// add indent if there is another board to print
+			if (it != --boards.cend())
+				for (unsigned i = 0; i < 5; ++i) std::cout << ' ';
+		}
+
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
+}
 
 std::list<Board> Board::get_child_boards() const
 {
@@ -90,6 +167,14 @@ void Board::find_pawn_moves(std::list<Board> & child_boards, const int rank, con
 				child_boards.push_back(Board(*this, rank, file, rank - 1, file + 1));
 			if (bounds_check(file - 1) && piece_at(rank - 1, file - 1).is_black())
 				child_boards.push_back(Board(*this, rank, file, rank - 1, file - 1));
+			// check for en passant
+			if (rank == 3)
+			{
+				if (en_passant_flag == file - 1 && bounds_check(file - 1) && piece_at(rank, file - 1).is_pawn())
+					child_boards.push_back(Board(*this, rank, file, rank - 1, file - 1));
+				else if (en_passant_flag == file + 1 && bounds_check(file + 1) && piece_at(rank, file + 1).is_pawn())
+					child_boards.push_back(Board(*this, rank, file, rank - 1, file + 1));
+			}
 		}
 	}
 	else if (piece_at(rank, file).is_black())
@@ -475,3 +560,4 @@ bool Board::is_king_in_check(const Piece king, const Rank rank, const File file)
 
 	return false;
 }
+

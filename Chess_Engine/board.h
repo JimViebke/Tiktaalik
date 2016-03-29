@@ -39,6 +39,9 @@ public:
 		move_piece(start_rank, start_file, end_rank, end_file);
 	}
 
+	static void print_board(const Board & board, const unsigned & offset = 0);
+	static void print_board(const std::list<Board> & boards);
+
 	inline const color get_color_to_move() const { return color_to_move; }
 	inline void set_color_to_move(const color set_color_to_move) { color_to_move = set_color_to_move; }
 

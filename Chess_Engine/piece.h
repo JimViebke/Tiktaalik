@@ -27,8 +27,8 @@ private:
 	piece _piece;
 
 public:
-	Piece() : _color(color::none), _piece(piece::empty) {}
-	Piece(color color, piece piece) : _color(color), _piece(piece) {}
+	inline Piece() : _color(color::none), _piece(piece::empty) {}
+	inline Piece(color color, piece piece) : _color(color), _piece(piece) {}
 	
 	// check empty
 	inline bool is_empty() const { return _piece == piece::empty; }
