@@ -361,24 +361,24 @@ void Board::find_bishop_moves(std::list<Board> & child_boards, const int rank, c
 }
 void Board::find_knight_moves(std::list<Board> & child_boards, const int rank, const int file) const
 {
-	if (bounds_check(rank - 2, file + 1) && piece_at(rank - 2, file + 1).is_opposing_color(color_to_move))
+	if (bounds_check(rank - 2, file + 1) && !piece_at(rank - 2, file + 1).is_color(color_to_move))
 		child_boards.emplace_back(*this, rank, file, rank - 2, file + 1);
-	if (bounds_check(rank - 1, file + 2) && piece_at(rank - 1, file + 2).is_opposing_color(color_to_move))
+	if (bounds_check(rank - 1, file + 2) && !piece_at(rank - 1, file + 2).is_color(color_to_move))
 		child_boards.emplace_back(*this, rank, file, rank - 1, file + 2);
 
-	if (bounds_check(rank + 1, file + 2) && piece_at(rank + 1, file + 2).is_opposing_color(color_to_move))
+	if (bounds_check(rank + 1, file + 2) && !piece_at(rank + 1, file + 2).is_color(color_to_move))
 		child_boards.emplace_back(*this, rank, file, rank + 1, file + 2);
-	if (bounds_check(rank + 2, file + 1) && piece_at(rank + 2, file + 1).is_opposing_color(color_to_move))
+	if (bounds_check(rank + 2, file + 1) && !piece_at(rank + 2, file + 1).is_color(color_to_move))
 		child_boards.emplace_back(*this, rank, file, rank + 2, file + 1);
 
-	if (bounds_check(rank + 2, file - 1) && piece_at(rank + 2, file - 1).is_opposing_color(color_to_move))
+	if (bounds_check(rank + 2, file - 1) && !piece_at(rank + 2, file - 1).is_color(color_to_move))
 		child_boards.emplace_back(*this, rank, file, rank + 2, file - 1);
-	if (bounds_check(rank + 1, file - 2) && piece_at(rank + 1, file - 2).is_opposing_color(color_to_move))
+	if (bounds_check(rank + 1, file - 2) && !piece_at(rank + 1, file - 2).is_color(color_to_move))
 		child_boards.emplace_back(*this, rank, file, rank + 1, file - 2);
 
-	if (bounds_check(rank - 1, file - 2) && piece_at(rank - 1, file - 2).is_opposing_color(color_to_move))
+	if (bounds_check(rank - 1, file - 2) && !piece_at(rank - 1, file - 2).is_color(color_to_move))
 		child_boards.emplace_back(*this, rank, file, rank - 1, file - 2);
-	if (bounds_check(rank - 2, file - 1) && piece_at(rank - 2, file - 1).is_opposing_color(color_to_move))
+	if (bounds_check(rank - 2, file - 1) && !piece_at(rank - 2, file - 1).is_color(color_to_move))
 		child_boards.emplace_back(*this, rank, file, rank - 2, file - 1);
 }
 void Board::find_queen_moves(std::list<Board> & child_boards, const int rank, const int file) const
@@ -395,7 +395,7 @@ void Board::find_king_moves(std::list<Board> & child_boards, const int rank, con
 		for (int file_d = -1; file_d <= 1; ++file_d)
 		{
 			// if the square is not occupied by a friendly piece
-			if (bounds_check(rank + rank_d, file + file_d) && piece_at(rank + rank_d, file + file_d).is_opposing_color(color_to_move))
+			if (bounds_check(rank + rank_d, file + file_d) && !piece_at(rank + rank_d, file + file_d).is_color(color_to_move))
 			{
 				child_boards.emplace_back(*this, rank, file, rank + rank_d, file + file_d);
 			}
@@ -556,16 +556,15 @@ bool Board::is_king_in_check(const Piece king, const Rank rank, const File file)
 	// check if the white king is under attack by a black pawn
 	if (king.is_white())
 	{
-		if ((bounds_check(rank - 1, file + 1) && piece_at(rank - 1, file + 1).is(color::black, piece::pawn)) ||
-			(bounds_check(rank - 1, file - 1) && piece_at(rank - 1, file - 1).is(color::black, piece::pawn))) return true;
+		if ((bounds_check(rank - 1, file + 1) && piece_at(rank - 1, file + 1).is(black_pawn)) ||
+			(bounds_check(rank - 1, file - 1) && piece_at(rank - 1, file - 1).is(black_pawn))) return true;
 	}
 	// check if the black king is under attack by a white pawn
 	else if (king.is_black())
 	{
-		if ((bounds_check(rank + 1, file + 1) && piece_at(rank + 1, file + 1).is(color::white, piece::pawn)) ||
-			(bounds_check(rank + 1, file - 1) && piece_at(rank + 1, file - 1).is(color::white, piece::pawn))) return true;
+		if ((bounds_check(rank + 1, file + 1) && piece_at(rank + 1, file + 1).is(white_pawn)) ||
+			(bounds_check(rank + 1, file - 1) && piece_at(rank + 1, file - 1).is(white_pawn))) return true;
 	}
 
 	return false;
 }
-

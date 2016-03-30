@@ -74,7 +74,7 @@ public:
 	}
 	inline void remove_piece(const Rank rank, const File file)
 	{
-		set_piece(rank, file, Piece(color::none, piece::empty));
+		set_piece(rank, file, Piece(empty));
 	}
 	inline void move_piece(const Rank start_rank, const File start_file, const Rank end_rank, const File end_file)
 	{
