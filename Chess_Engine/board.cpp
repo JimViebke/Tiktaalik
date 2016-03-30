@@ -6,7 +6,7 @@ Mar 14 2016 */
 
 #include "board.h"
 
-void Board::print_board(const Board & board, const unsigned & offset = 0)
+void Board::print_board(const Board & board, const unsigned & offset)
 {
 	for (unsigned rank = 0; rank < 8; ++rank)
 	{
@@ -192,6 +192,14 @@ void Board::find_pawn_moves(std::list<Board> & child_boards, const int rank, con
 				child_boards.push_back(Board(*this, rank, file, rank + 1, file + 1));
 			if (bounds_check(file - 1) && piece_at(rank + 1, file - 1).is_white())
 				child_boards.push_back(Board(*this, rank, file, rank + 1, file - 1));
+			// check for en passant
+			if (rank == 4)
+			{
+				if (en_passant_flag == file - 1 && bounds_check(file - 1) && piece_at(rank, file - 1).is_pawn())
+					child_boards.push_back(Board(*this, rank, file, rank + 1, file - 1));
+				else if (en_passant_flag == file + 1 && bounds_check(file + 1) && piece_at(rank, file + 1).is_pawn())
+					child_boards.push_back(Board(*this, rank, file, rank + 1, file + 1));
+			}
 		}
 	}
 }

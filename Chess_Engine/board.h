@@ -17,7 +17,7 @@ private:
 	// state
 	color color_to_move = color::white;
 	int fifty_move_rule = 0;
-	// int last_moved_pawn 
+	File en_passant_flag = -1;
 	bool white_can_castle_k_s = true;
 	bool white_can_castle_q_s = true;
 	bool black_can_castle_k_s = true;
@@ -34,6 +34,20 @@ public:
 		if (piece_at(end_rank, end_file).is_empty()) ++fifty_move_rule; else fifty_move_rule = 0;
 		// switch color to move		
 		color_to_move = other_color(parent_board.get_color_to_move());
+
+		// if the moving piece is a pawn that is moving two spaces
+		en_passant_flag = (parent_board.piece_at(start_rank, start_file).is_pawn() && abs(start_rank - end_rank) == 2)
+			? start_file : -1;
+
+		if (piece_at(start_rank, start_file).is_pawn() &&
+			abs(start_rank - end_rank) == 1 && start_file != end_file &&
+			piece_at(end_rank, end_file).is_empty())
+		{
+			fifty_move_rule = 0;
+
+			// the captured pawn will always be on the same rank that the pawn started, and at the same file that the pawn ended
+			remove_piece(start_rank, end_file);
+		}
 
 		// make the move
 		move_piece(start_rank, start_file, end_rank, end_file);
@@ -81,7 +95,7 @@ public:
 	}
 
 	std::list<Board> get_child_boards() const;
-	
+
 	std::vector<Piece> get_board() const { return board; }
 
 private:
