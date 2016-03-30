@@ -2,23 +2,26 @@
 
 #include "constants.h"
 
-enum class color : char {
-	none,
+namespace
+{
+	enum class color : char {
+		none,
 
-	white,
-	black,
-};
+		white,
+		black,
+	};
 
-enum class piece : char {
-	empty,
+	enum class piece : char {
+		empty,
 
-	pawn,
-	knight,
-	bishop,
-	rook,
-	queen,
-	king
-};
+		pawn,
+		knight,
+		bishop,
+		rook,
+		queen,
+		king
+	};
+}
 
 class Piece
 {
@@ -29,7 +32,7 @@ private:
 public:
 	inline Piece() : _color(color::none), _piece(piece::empty) {}
 	inline Piece(color color, piece piece) : _color(color), _piece(piece) {}
-	
+
 	// check empty
 	inline bool is_empty() const { return _piece == piece::empty; }
 	inline bool is_occupied() const { return _piece != piece::empty; }

@@ -11,7 +11,6 @@ private:
 	Board board;
 	unsigned my_ply_depth;
 	std::list<Node> child_nodes;
-
 	Node(const Board & set_board, unsigned set_my_ply_depth);
 
 public:
