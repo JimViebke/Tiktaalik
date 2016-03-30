@@ -7,6 +7,9 @@ Mar 28 2016 */
 Node::Node(const Board & set_board, unsigned set_my_ply_depth) :
 	board(set_board), my_ply_depth(set_my_ply_depth) {}
 
+
+Node::Node(const std::vector<Piece> & set_board) : board(Board(set_board)) {}
+
 Node::Node(const Board & set_board) :
 	board(set_board), my_ply_depth(0) {}
 

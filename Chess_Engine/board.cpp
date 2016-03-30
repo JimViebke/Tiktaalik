@@ -158,22 +158,22 @@ void Board::find_pawn_moves(std::list<Board> & child_boards, const int rank, con
 		{
 			// check for moving forward one square
 			if (piece_at(rank - 1, file).is_empty())
-				child_boards.push_back(Board(*this, rank, file, rank - 1, file));
+				child_boards.emplace_back(*this, rank, file, rank - 1, file);
 			// check for moving forward two squares
 			if (rank == 6 && piece_at(5, file).is_empty() && piece_at(4, file).is_empty())
-				child_boards.push_back(Board(*this, rank, file, 4, file));
+				child_boards.emplace_back(*this, rank, file, 4, file);
 			// check for captures
 			if (bounds_check(file + 1) && piece_at(rank - 1, file + 1).is_black())
-				child_boards.push_back(Board(*this, rank, file, rank - 1, file + 1));
+				child_boards.emplace_back(*this, rank, file, rank - 1, file + 1);
 			if (bounds_check(file - 1) && piece_at(rank - 1, file - 1).is_black())
-				child_boards.push_back(Board(*this, rank, file, rank - 1, file - 1));
+				child_boards.emplace_back(*this, rank, file, rank - 1, file - 1);
 			// check for en passant
 			if (rank == 3)
 			{
 				if (en_passant_flag == file - 1 && bounds_check(file - 1) && piece_at(rank, file - 1).is_pawn())
-					child_boards.push_back(Board(*this, rank, file, rank - 1, file - 1));
+					child_boards.emplace_back(*this, rank, file, rank - 1, file - 1);
 				else if (en_passant_flag == file + 1 && bounds_check(file + 1) && piece_at(rank, file + 1).is_pawn())
-					child_boards.push_back(Board(*this, rank, file, rank - 1, file + 1));
+					child_boards.emplace_back(*this, rank, file, rank - 1, file + 1);
 			}
 		}
 	}
@@ -183,22 +183,22 @@ void Board::find_pawn_moves(std::list<Board> & child_boards, const int rank, con
 		{
 			// check for moving forward one square
 			if (piece_at(rank + 1, file).is_empty())
-				child_boards.push_back(Board(*this, rank, file, rank + 1, file));
+				child_boards.emplace_back(*this, rank, file, rank + 1, file);
 			// check for moving forward two squares
 			if (rank == 1 && piece_at(2, file).is_empty() && piece_at(3, file).is_empty())
-				child_boards.push_back(Board(*this, rank, file, 3, file));
+				child_boards.emplace_back(*this, rank, file, 3, file);
 			// check for captures
 			if (bounds_check(file + 1) && piece_at(rank + 1, file + 1).is_white())
-				child_boards.push_back(Board(*this, rank, file, rank + 1, file + 1));
+				child_boards.emplace_back(*this, rank, file, rank + 1, file + 1);
 			if (bounds_check(file - 1) && piece_at(rank + 1, file - 1).is_white())
-				child_boards.push_back(Board(*this, rank, file, rank + 1, file - 1));
+				child_boards.emplace_back(*this, rank, file, rank + 1, file - 1);
 			// check for en passant
 			if (rank == 4)
 			{
 				if (en_passant_flag == file - 1 && bounds_check(file - 1) && piece_at(rank, file - 1).is_pawn())
-					child_boards.push_back(Board(*this, rank, file, rank + 1, file - 1));
+					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1);
 				else if (en_passant_flag == file + 1 && bounds_check(file + 1) && piece_at(rank, file + 1).is_pawn())
-					child_boards.push_back(Board(*this, rank, file, rank + 1, file + 1));
+					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1);
 			}
 		}
 	}
@@ -212,14 +212,14 @@ void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, con
 
 		if (piece_at(end_rank, file).is_empty()) // if the square is empty, the rook can move here
 		{
-			child_boards.push_back(Board(*this, rank, file, end_rank, file));
+			child_boards.emplace_back(*this, rank, file, end_rank, file);
 			continue; // keep searching in the current direction
 		}
 		// if the rook has encountered an enemy piece
 		else if (piece_at(end_rank, file).is_opposing_color(color_to_move))
 		{
 			// the rook can capture...
-			child_boards.push_back(Board(*this, rank, file, end_rank, file));
+			child_boards.emplace_back(*this, rank, file, end_rank, file);
 			break; // ...but the rook cannot keep moving
 		}
 		else break; // the rook cannot move into a friendly piece; stop searching this way
@@ -232,12 +232,12 @@ void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, con
 
 		if (piece_at(end_rank, file).is_empty())
 		{
-			child_boards.push_back(Board(*this, rank, file, end_rank, file));
+			child_boards.emplace_back(*this, rank, file, end_rank, file);
 			continue;
 		}
 		else if (piece_at(end_rank, file).is_opposing_color(color_to_move))
 		{
-			child_boards.push_back(Board(*this, rank, file, end_rank, file));
+			child_boards.emplace_back(*this, rank, file, end_rank, file);
 			break;
 		}
 		else break;
@@ -250,12 +250,12 @@ void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, con
 
 		if (piece_at(rank, end_file).is_empty())
 		{
-			child_boards.push_back(Board(*this, rank, file, rank, end_file));
+			child_boards.emplace_back(*this, rank, file, rank, end_file);
 			continue;
 		}
 		else if (piece_at(rank, end_file).is_opposing_color(color_to_move))
 		{
-			child_boards.push_back(Board(*this, rank, file, rank, end_file));
+			child_boards.emplace_back(*this, rank, file, rank, end_file);
 			break;
 		}
 		else break;
@@ -268,12 +268,12 @@ void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, con
 
 		if (piece_at(rank, end_file).is_empty())
 		{
-			child_boards.push_back(Board(*this, rank, file, rank, end_file));
+			child_boards.emplace_back(*this, rank, file, rank, end_file);
 			continue;
 		}
 		else if (piece_at(rank, end_file).is_opposing_color(color_to_move))
 		{
-			child_boards.push_back(Board(*this, rank, file, rank, end_file));
+			child_boards.emplace_back(*this, rank, file, rank, end_file);
 			break;
 		}
 		else break;
@@ -291,13 +291,13 @@ void Board::find_bishop_moves(std::list<Board> & child_boards, const int rank, c
 		if (piece_at(rank - offset, file - offset).is_empty())
 		{
 			// the bishop can move here
-			child_boards.push_back(Board(*this, rank, file, rank - offset, file - offset));
+			child_boards.emplace_back(*this, rank, file, rank - offset, file - offset);
 			continue; // keep searching in this direction
 		}
 		// if the square is occupied by an enemy piece, the bishop can capture it
 		else if (piece_at(rank - offset, file - offset).is_opposing_color(color_to_move))
 		{
-			child_boards.push_back(Board(*this, rank, file, rank - offset, file - offset));
+			child_boards.emplace_back(*this, rank, file, rank - offset, file - offset);
 			// the bishop made a capture, stop searching in this direction
 			break;
 		}
@@ -312,12 +312,12 @@ void Board::find_bishop_moves(std::list<Board> & child_boards, const int rank, c
 
 		if (piece_at(rank - offset, file + offset).is_empty())
 		{
-			child_boards.push_back(Board(*this, rank, file, rank - offset, file + offset));
+			child_boards.emplace_back(*this, rank, file, rank - offset, file + offset);
 			continue;
 		}
 		else if (piece_at(rank - offset, file + offset).is_opposing_color(color_to_move))
 		{
-			child_boards.push_back(Board(*this, rank, file, rank - offset, file + offset));
+			child_boards.emplace_back(*this, rank, file, rank - offset, file + offset);
 			break;
 		}
 		else break;
@@ -330,12 +330,12 @@ void Board::find_bishop_moves(std::list<Board> & child_boards, const int rank, c
 
 		if (piece_at(rank + offset, file - offset).is_empty())
 		{
-			child_boards.push_back(Board(*this, rank, file, rank + offset, file - offset));
+			child_boards.emplace_back(*this, rank, file, rank + offset, file - offset);
 			continue;
 		}
 		else if (piece_at(rank + offset, file - offset).is_opposing_color(color_to_move))
 		{
-			child_boards.push_back(Board(*this, rank, file, rank + offset, file - offset));
+			child_boards.emplace_back(*this, rank, file, rank + offset, file - offset);
 			break;
 		}
 		else break;
@@ -348,12 +348,12 @@ void Board::find_bishop_moves(std::list<Board> & child_boards, const int rank, c
 
 		if (piece_at(rank + offset, file + offset).is_empty())
 		{
-			child_boards.push_back(Board(*this, rank, file, rank + offset, file + offset));
+			child_boards.emplace_back(*this, rank, file, rank + offset, file + offset);
 			continue;
 		}
 		else if (piece_at(rank + offset, file + offset).is_opposing_color(color_to_move))
 		{
-			child_boards.push_back(Board(*this, rank, file, rank + offset, file + offset));
+			child_boards.emplace_back(*this, rank, file, rank + offset, file + offset);
 			break;
 		}
 		else break;
@@ -362,24 +362,24 @@ void Board::find_bishop_moves(std::list<Board> & child_boards, const int rank, c
 void Board::find_knight_moves(std::list<Board> & child_boards, const int rank, const int file) const
 {
 	if (bounds_check(rank - 2, file + 1) && piece_at(rank - 2, file + 1).is_opposing_color(color_to_move))
-		child_boards.push_back(Board(board, rank, file, rank - 2, file + 1));
+		child_boards.emplace_back(*this, rank, file, rank - 2, file + 1);
 	if (bounds_check(rank - 1, file + 2) && piece_at(rank - 1, file + 2).is_opposing_color(color_to_move))
-		child_boards.push_back(Board(board, rank, file, rank - 1, file + 2));
+		child_boards.emplace_back(*this, rank, file, rank - 1, file + 2);
 
 	if (bounds_check(rank + 1, file + 2) && piece_at(rank + 1, file + 2).is_opposing_color(color_to_move))
-		child_boards.push_back(Board(board, rank, file, rank + 1, file + 2));
+		child_boards.emplace_back(*this, rank, file, rank + 1, file + 2);
 	if (bounds_check(rank + 2, file + 1) && piece_at(rank + 2, file + 1).is_opposing_color(color_to_move))
-		child_boards.push_back(Board(board, rank, file, rank + 2, file + 1));
+		child_boards.emplace_back(*this, rank, file, rank + 2, file + 1);
 
 	if (bounds_check(rank + 2, file - 1) && piece_at(rank + 2, file - 1).is_opposing_color(color_to_move))
-		child_boards.push_back(Board(board, rank, file, rank + 2, file - 1));
+		child_boards.emplace_back(*this, rank, file, rank + 2, file - 1);
 	if (bounds_check(rank + 1, file - 2) && piece_at(rank + 1, file - 2).is_opposing_color(color_to_move))
-		child_boards.push_back(Board(board, rank, file, rank + 1, file - 2));
+		child_boards.emplace_back(*this, rank, file, rank + 1, file - 2);
 
 	if (bounds_check(rank - 1, file - 2) && piece_at(rank - 1, file - 2).is_opposing_color(color_to_move))
-		child_boards.push_back(Board(board, rank, file, rank - 1, file - 2));
+		child_boards.emplace_back(*this, rank, file, rank - 1, file - 2);
 	if (bounds_check(rank - 2, file - 1) && piece_at(rank - 2, file - 1).is_opposing_color(color_to_move))
-		child_boards.push_back(Board(board, rank, file, rank - 2, file - 1));
+		child_boards.emplace_back(*this, rank, file, rank - 2, file - 1);
 }
 void Board::find_queen_moves(std::list<Board> & child_boards, const int rank, const int file) const
 {
@@ -397,7 +397,7 @@ void Board::find_king_moves(std::list<Board> & child_boards, const int rank, con
 			// if the square is not occupied by a friendly piece
 			if (bounds_check(rank + rank_d, file + file_d) && piece_at(rank + rank_d, file + file_d).is_opposing_color(color_to_move))
 			{
-				child_boards.push_back(Board(*this, rank, file, rank + rank_d, file + file_d));
+				child_boards.emplace_back(*this, rank, file, rank + rank_d, file + file_d);
 			}
 		}
 	}

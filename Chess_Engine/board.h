@@ -3,7 +3,6 @@
 #include <list>
 
 #include "board_layouts.h"
-#include "constants.h"
 
 class Board
 {
@@ -24,8 +23,9 @@ private:
 	bool black_can_castle_q_s = true;
 
 public:
-	Board(const std::vector<Piece> & set_board) : board(set_board) {}
-	Board(const Board & parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file)
+	// explicit Board(const Board& b);
+	explicit Board(const std::vector<Piece> & set_board) : board(set_board) {}
+	explicit Board(const Board & parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file)
 	{
 		// copy the position
 		board = parent_board.get_board();

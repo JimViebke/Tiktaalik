@@ -15,6 +15,7 @@ private:
 	Node(const Board & set_board, unsigned set_my_ply_depth);
 
 public:
+	Node(const std::vector<Piece> & set_board);
 	Node(const Board & set_board);
 
 	void generate_ply(const unsigned & depth);

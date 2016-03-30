@@ -8,7 +8,6 @@ June 15 2014
 #include <vector> // used to represent the board
 #include <map> // for node depth counting
 
-#include "board.h"
 #include "node.h"
 
 void print_commands()
