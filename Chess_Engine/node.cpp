@@ -7,15 +7,15 @@ Mar 28 2016 */
 Node::Node(const Board & set_board, unsigned set_my_ply_depth) :
 	board(set_board), my_ply_depth(set_my_ply_depth) {}
 
-Node::Node(const std::vector<Piece> & set_board) : board(Board(set_board)) {}
+Node::Node(const std::vector<Piece> & set_board) : board(Board(set_board)), my_ply_depth(1) {}
 
 Node::Node(const Board & set_board) :
-	board(set_board), my_ply_depth(0) {}
+	board(set_board), my_ply_depth(1) {}
 
 void Node::generate_ply(const unsigned & depth)
 {
 	// if we have not reached the ply depth
-	if (my_ply_depth < depth)
+	if (my_ply_depth <= depth)
 	{
 		// generate child boards for this position
 		const std::list<Board> temp = board.get_child_boards();
@@ -49,6 +49,9 @@ void Node::print_all() const
 void Node::print_size() const
 {
 	std::map<size_t, size_t> node_counter;
+	// hardcode start position
+	node_counter[0] = 1;
+
 	size(node_counter);
 
 	for (auto it = node_counter.begin(); it != node_counter.end(); ++it)
