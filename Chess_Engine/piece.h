@@ -31,7 +31,6 @@ enum piece : char {
 class Piece
 {
 private:
-	// color _color;
 	piece _piece;
 
 public:

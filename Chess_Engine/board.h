@@ -39,6 +39,8 @@ public:
 		en_passant_flag = (parent_board.piece_at(start_rank, start_file).is_pawn() && abs(start_rank - end_rank) == 2)
 			? start_file : -1;
 
+		// normally we can detect captures based on the presence of a piece at the destination coordinates,
+		// but en passant requires a special check
 		if (piece_at(start_rank, start_file).is_pawn() &&
 			abs(start_rank - end_rank) == 1 && start_file != end_file &&
 			piece_at(end_rank, end_file).is_empty())
