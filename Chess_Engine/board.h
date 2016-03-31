@@ -23,35 +23,83 @@ private:
 	bool black_can_castle_q_s = true;
 
 public:
-	// explicit Board(const Board& b);
 	explicit Board(const std::vector<Piece> & set_board) : board(set_board) {}
 	explicit Board(const Board & parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file)
 	{
 		// copy the position
-		board = parent_board.get_board();
-
+		board = parent_board.board;
+		// copy castle flags
+		white_can_castle_k_s = parent_board.white_can_castle_k_s;
+		white_can_castle_q_s = parent_board.white_can_castle_q_s;
+		black_can_castle_k_s = parent_board.black_can_castle_k_s;
+		black_can_castle_q_s = parent_board.black_can_castle_q_s;
 		// update 50 move rule
 		if (piece_at(end_rank, end_file).is_empty()) ++fifty_move_rule; else fifty_move_rule = 0;
-		// switch color to move		
+		// toggle color to move		
 		color_to_move = other_color(parent_board.get_color_to_move());
-
-		// if the moving piece is a pawn that is moving two spaces
+		// check if the en passant indicator needs to be set
 		en_passant_flag = (parent_board.piece_at(start_rank, start_file).is_pawn() && abs(start_rank - end_rank) == 2)
 			? start_file : -1;
 
-		// normally we can detect captures based on the presence of a piece at the destination coordinates,
-		// but en passant requires a special check
+		// check for en passant captures
 		if (piece_at(start_rank, start_file).is_pawn() &&
 			abs(start_rank - end_rank) == 1 && start_file != end_file &&
 			piece_at(end_rank, end_file).is_empty())
 		{
 			fifty_move_rule = 0;
-
-			// the captured pawn will always be on the same rank that the pawn started, and at the same file that the pawn ended
-			remove_piece(start_rank, end_file);
+			remove_piece(start_rank, end_file); // the captured pawn will always be on the same rank that the pawn started, and at the same file that the pawn ended
 		}
 
-		// make the move
+		// if a king moves, it can no longer castle either way
+		if (parent_board.piece_at(start_file, start_file).is_king())
+		{
+			if (parent_board.piece_at(start_file, start_file).is_white())
+				white_can_castle_k_s = white_can_castle_q_s = false;
+			else // the moving king is black
+				black_can_castle_k_s = black_can_castle_q_s = false;
+		}
+
+		// if a rook moves out of its starting corner, it cannot be used to castle
+		if (start_rank == 0)
+		{
+			if (start_file == 0 && piece_at(start_rank, start_file).is_rook())
+				black_can_castle_q_s = false;
+			else if (start_file == 7 && piece_at(start_rank, start_file).is_rook())
+				black_can_castle_k_s = false;
+		}
+		else if (start_rank == 7)
+		{
+			if (start_file == 0 && piece_at(start_rank, start_file).is_rook())
+				white_can_castle_q_s = false;
+			else if (start_file == 7 && piece_at(start_rank, start_file).is_rook())
+				white_can_castle_k_s = false;
+		}
+
+		if (end_rank == 0) // detect captures of black's rooks
+		{
+			if (end_file == 0) // queen's rook
+				black_can_castle_q_s = false;
+			else if (end_rank == 7) // king's rook
+				black_can_castle_k_s = false;
+		}
+		else if (end_rank == 7) // detect captures of white's rooks
+		{
+			if (end_file == 0) // queen's rook
+				black_can_castle_q_s = false;
+			else if (end_rank == 7) // king's rook
+				white_can_castle_k_s = false;
+		}
+
+		// also move the rook in the event of a castle (this was already validated in the move generator)
+		if (piece_at(start_rank, start_file).is_king() && abs(start_file - end_file) > 1)
+		{
+			if (start_file < end_file) // kingside castle
+				move_piece(start_rank, 7, start_rank, 5); // move the rook
+			else if (start_file > end_file) // queenside castle
+				move_piece(start_rank, 0, start_rank, 3); // move the rook
+		}
+
+		// move the piece
 		move_piece(start_rank, start_file, end_rank, end_file);
 	}
 

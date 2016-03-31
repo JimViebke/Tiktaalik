@@ -401,6 +401,37 @@ void Board::find_king_moves(std::list<Board> & child_boards, const int rank, con
 			}
 		}
 	}
+
+	const Piece & king = piece_at(rank, file);
+
+	if ((king.is_white() && white_can_castle_k_s) ||
+		(king.is_black() && black_can_castle_k_s))
+	{
+		if (// If white can castle to kingside, then we already know the king and rook are in place.
+			// Check if the squares in between are empty. 
+			piece_at(rank, file + 1).is_empty() && // Check if the squares in between are empty.
+			piece_at(rank, file + 2).is_empty() &&
+			!is_king_in_check(king, rank, file) && // check if the king is in check now...			
+			!Board(*this, rank, file, rank, file + 1).is_king_in_check(king, rank, file + 1) && // ...on his way...
+			!Board(*this, rank, file, rank, file + 2).is_king_in_check(king, rank, file + 2)) // ...or at his destination.
+		{
+			child_boards.emplace_back(*this, rank, file, rank, file + 2); // the board constructor will detect a castle and move the rook as well
+		}
+	}
+
+	if ((king.is_white() && white_can_castle_q_s) || // documentation same as above
+		(king.is_black() && black_can_castle_q_s))
+	{
+		if (piece_at(rank, file - 1).is_empty() &&
+			piece_at(rank, file - 2).is_empty() &&
+			piece_at(rank, file - 3).is_empty() && // we need to check that this square is empty for the rook to move through, but no check test is needed
+			!is_king_in_check(king, rank, file) &&
+			!Board(*this, rank, file, rank, file - 1).is_king_in_check(king, rank, file - 1) &&
+			!Board(*this, rank, file, rank, file - 2).is_king_in_check(king, rank, file - 2))
+		{
+			child_boards.emplace_back(*this, rank, file, rank, file - 2);
+		}
+	}
 }
 
 bool Board::is_king_in_check(const color check_color) const
