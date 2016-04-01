@@ -34,8 +34,8 @@ private:
 	piece _piece;
 
 public:
-	inline Piece() : _piece(piece::empty) {}
-	inline Piece(piece piece) : _piece(piece) {}
+	explicit inline Piece() : _piece(piece::empty) {}
+	explicit inline Piece(piece piece) : _piece(piece) {}
 
 	// check empty
 	inline bool is_empty() const { return _piece == piece::empty; }

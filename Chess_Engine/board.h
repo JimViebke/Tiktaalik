@@ -47,16 +47,24 @@ public:
 			piece_at(end_rank, end_file).is_empty())
 		{
 			fifty_move_rule = 0;
-			remove_piece(start_rank, end_file); // the captured pawn will always be on the same rank that the pawn started, and at the same file that the pawn ended
+			piece_at(start_rank, end_file) = Piece(empty); // the captured pawn will always be on the same rank that the pawn started, and at the same file that the pawn ended
 		}
-
-		// if a king moves, it can no longer castle either way
-		if (parent_board.piece_at(start_file, start_file).is_king())
+		// if a king is moving  moves, 
+		else if (parent_board.piece_at(start_file, start_file).is_king())
 		{
+			// it can no longer castle either way
 			if (parent_board.piece_at(start_file, start_file).is_white())
 				white_can_castle_k_s = white_can_castle_q_s = false;
 			else // the moving king is black
 				black_can_castle_k_s = black_can_castle_q_s = false;
+
+			if (abs(start_file - end_file) > 1) // if the king is castling, move the rook
+			{
+				if (start_file < end_file) // kingside castle
+					move_piece(start_rank, 7, start_rank, 5); // move the rook
+				else if (start_file > end_file) // queenside castle
+					move_piece(start_rank, 0, start_rank, 3); // move the rook
+			}
 		}
 
 		// if a rook moves out of its starting corner, it cannot be used to castle
@@ -90,15 +98,6 @@ public:
 				white_can_castle_k_s = false;
 		}
 
-		// also move the rook in the event of a castle (this was already validated in the move generator)
-		if (piece_at(start_rank, start_file).is_king() && abs(start_file - end_file) > 1)
-		{
-			if (start_file < end_file) // kingside castle
-				move_piece(start_rank, 7, start_rank, 5); // move the rook
-			else if (start_file > end_file) // queenside castle
-				move_piece(start_rank, 0, start_rank, 3); // move the rook
-		}
-
 		// move the piece
 		move_piece(start_rank, start_file, end_rank, end_file);
 	}
@@ -118,18 +117,10 @@ public:
 		return board[rank * 8 + file];
 	}
 
-	inline void set_piece(const Rank rank, const File file, const Piece piece)
-	{
-		piece_at(rank, file) = piece;
-	}
-	inline void remove_piece(const Rank rank, const File file)
-	{
-		set_piece(rank, file, Piece(empty));
-	}
 	inline void move_piece(const Rank start_rank, const File start_file, const Rank end_rank, const File end_file)
 	{
-		set_piece(end_rank, end_file, piece_at(start_rank, start_file));
-		remove_piece(start_rank, start_file);
+		piece_at(end_rank, end_file) = piece_at(start_rank, start_file);
+		piece_at(start_rank, start_file) = Piece(empty);
 	}
 
 	int evaluate_position() const
