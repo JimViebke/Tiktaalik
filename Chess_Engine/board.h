@@ -49,11 +49,11 @@ public:
 			fifty_move_rule = 0;
 			piece_at(start_rank, end_file) = Piece(empty); // the captured pawn will always be on the same rank that the pawn started, and at the same file that the pawn ended
 		}
-		// if a king is moving  moves, 
-		else if (parent_board.piece_at(start_file, start_file).is_king())
+		// if a king is moving 
+		else if (piece_at(start_rank, start_file).is_king())
 		{
 			// it can no longer castle either way
-			if (parent_board.piece_at(start_file, start_file).is_white())
+			if (parent_board.piece_at(start_rank, start_file).is_white())
 				white_can_castle_k_s = white_can_castle_q_s = false;
 			else // the moving king is black
 				black_can_castle_k_s = black_can_castle_q_s = false;
