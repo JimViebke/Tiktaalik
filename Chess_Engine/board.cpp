@@ -172,9 +172,29 @@ void Board::find_pawn_moves(std::list<Board> & child_boards, const int rank, con
 				child_boards.emplace_back(*this, rank, file, 4, file);
 			// check for captures
 			if (bounds_check(file + 1) && piece_at(rank - 1, file + 1).is_black())
-				child_boards.emplace_back(*this, rank, file, rank - 1, file + 1);
+			{
+				if (rank == 1) // if the pawn is on the second last rank
+				{
+					child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, white_queen);
+					child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, white_rook);
+					child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, white_bishop);
+					child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, white_knight);
+				}
+				else // the pawn is capturing without promotion
+					child_boards.emplace_back(*this, rank, file, rank - 1, file + 1);
+			}
 			if (bounds_check(file - 1) && piece_at(rank - 1, file - 1).is_black())
-				child_boards.emplace_back(*this, rank, file, rank - 1, file - 1);
+			{
+				if (rank == 1) // if the pawn is on the second last rank
+				{
+					child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, white_queen);
+					child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, white_rook);
+					child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, white_bishop);
+					child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, white_knight);
+				}
+				else // the pawn is capturing without promotion
+					child_boards.emplace_back(*this, rank, file, rank - 1, file - 1);
+			}
 			// check for en passant
 			if (rank == 3)
 			{
@@ -205,9 +225,29 @@ void Board::find_pawn_moves(std::list<Board> & child_boards, const int rank, con
 				child_boards.emplace_back(*this, rank, file, 3, file);
 			// check for captures
 			if (bounds_check(file + 1) && piece_at(rank + 1, file + 1).is_white())
-				child_boards.emplace_back(*this, rank, file, rank + 1, file + 1);
+			{
+				if (rank == 6) // if the pawn is on the second last rank
+				{
+					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, white_queen);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, white_rook);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, white_bishop);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, white_knight);
+				}
+				else // the pawn is capturing without promotion
+					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1);
+			}
 			if (bounds_check(file - 1) && piece_at(rank + 1, file - 1).is_white())
-				child_boards.emplace_back(*this, rank, file, rank + 1, file - 1);
+			{
+				if (rank == 6) // if the pawn is on the second last rank
+				{
+					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, white_queen);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, white_rook);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, white_bishop);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, white_knight);
+				}
+				else // the pawn is capturing without promotion
+					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1);
+			}
 			// check for en passant
 			if (rank == 4)
 			{
