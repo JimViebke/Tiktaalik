@@ -158,7 +158,15 @@ void Board::find_pawn_moves(std::list<Board> & child_boards, const int rank, con
 		{
 			// check for moving forward one square
 			if (piece_at(rank - 1, file).is_empty())
-				child_boards.emplace_back(*this, rank, file, rank - 1, file);
+				if (rank == 1) // if the pawn is on the second last rank
+				{
+					child_boards.emplace_back(*this, rank, file, rank - 1, file, white_queen);
+					child_boards.emplace_back(*this, rank, file, rank - 1, file, white_rook);
+					child_boards.emplace_back(*this, rank, file, rank - 1, file, white_bishop);
+					child_boards.emplace_back(*this, rank, file, rank - 1, file, white_knight);
+				}
+				else // the pawn is moving without promotion
+					child_boards.emplace_back(*this, rank, file, rank - 1, file);
 			// check for moving forward two squares
 			if (rank == 6 && piece_at(5, file).is_empty() && piece_at(4, file).is_empty())
 				child_boards.emplace_back(*this, rank, file, 4, file);
@@ -183,7 +191,15 @@ void Board::find_pawn_moves(std::list<Board> & child_boards, const int rank, con
 		{
 			// check for moving forward one square
 			if (piece_at(rank + 1, file).is_empty())
-				child_boards.emplace_back(*this, rank, file, rank + 1, file);
+				if (rank == 6) // if the pawn is on the second last rank
+				{
+					child_boards.emplace_back(*this, rank, file, rank + 1, file, white_queen);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file, white_rook);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file, white_bishop);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file, white_knight);
+				}
+				else // the pawn is moving without promotion
+					child_boards.emplace_back(*this, rank, file, rank + 1, file);
 			// check for moving forward two squares
 			if (rank == 1 && piece_at(2, file).is_empty() && piece_at(3, file).is_empty())
 				child_boards.emplace_back(*this, rank, file, 3, file);

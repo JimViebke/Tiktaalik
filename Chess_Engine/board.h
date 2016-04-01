@@ -101,6 +101,12 @@ public:
 		// move the piece
 		move_piece(start_rank, start_file, end_rank, end_file);
 	}
+	explicit Board(const Board & parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file, const piece & promote_to)
+		: Board(parent_board, start_rank, start_file, end_rank, end_file)
+	{
+		// call this constructor (four times) for pawn promotion
+		piece_at(end_rank, end_file) = Piece(promote_to);
+	}
 
 	static void print_board(const Board & board, const unsigned & offset = 0);
 	static void print_board(const std::list<Board> & boards);
