@@ -59,6 +59,25 @@ void Node::print_size() const
 		std::cout << "Number of child nodes from ply " << it->first << ": " << it->second << ".\n";
 }
 
+void Node::divide() const
+{
+	std::map<std::string, size_t> move_divide;
+
+	for (const Node & node : child_nodes)
+	{
+		// count this node's total number of children
+		std::map<size_t, size_t> node_counter;
+		node.size(node_counter);
+
+		// the last entry will always be 0, so select the size two levels above .end()
+		if (node_counter.size() > 1)
+			move_divide[node.board.get_move()] = (----node_counter.end())->second;
+	}
+
+	for (auto it = move_divide.begin(); it != move_divide.end(); ++it)
+		std::cout << it->first << ": " << it->second << std::endl;
+}
+
 void Node::size(std::map<size_t, size_t> & node_counter) const
 {
 	node_counter[my_ply_depth] += child_nodes.size();

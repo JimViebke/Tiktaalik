@@ -56,5 +56,8 @@ int main()
 
 	parent_position.generate_ply(2);
 	parent_position.print_size();
+
+	parent_position.divide();
+
 	parent_position.print_all();
 }

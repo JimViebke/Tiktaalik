@@ -22,6 +22,8 @@ public:
 
 	void print_size() const;
 
+	void divide() const;
+
 private:
 	void size(std::map<size_t, size_t> & node_counter) const;
 };
