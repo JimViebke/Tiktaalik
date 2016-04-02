@@ -3,11 +3,6 @@ Jim Viebke
 June 15 2014
 */
 
-#include <iostream> // console input and output
-#include <string> // for strings
-#include <vector> // used to represent the board
-#include <map> // for node depth counting
-
 #include "node.h"
 
 void print_commands()
