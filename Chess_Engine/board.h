@@ -24,6 +24,7 @@ private:
 	bool white_can_castle_q_s = true;
 	bool black_can_castle_k_s = true;
 	bool black_can_castle_q_s = true;
+	char move[4];
 
 public:
 	explicit Board(const std::vector<Piece> & set_board) : board(set_board) {}
@@ -103,6 +104,9 @@ public:
 
 		// move the piece
 		move_piece(start_rank, start_file, end_rank, end_file);
+
+		// record the move
+		save_move(start_rank, start_file, end_rank, end_file);
 	}
 	explicit Board(const Board & parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file, const piece & promote_to)
 		: Board(parent_board, start_rank, start_file, end_rank, end_file)
@@ -178,6 +182,22 @@ public:
 
 	static void print_board(const Board & board, const unsigned & offset = 0);
 	static void print_board(const std::list<Board> & boards);
+	inline void save_move(const Rank start_rank, const File start_file, const Rank end_rank, const File end_file)
+	{
+		move[0] = (start_file + 'a');
+		move[1] = ((start_rank * -1) + 8 + '0');
+		move[2] = (end_file + 'a');
+		move[3] = ((end_rank * -1) + 8 + '0');
+	}
+	const std::string get_move() const
+	{
+		std::string result = "";
+		result += move[0];
+		result += move[1];
+		result += move[2];
+		result += move[3];
+		return result;
+	}
 
 	inline const color get_color_to_move() const { return color_to_move; }
 	inline void set_color_to_move(const color set_color_to_move) { color_to_move = set_color_to_move; }
