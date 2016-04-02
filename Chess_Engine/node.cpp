@@ -18,12 +18,13 @@ void Node::generate_ply(const unsigned & depth)
 	if (my_ply_depth <= depth)
 	{
 		// generate child boards for this position
-		const std::list<Board> temp = board.get_child_boards();
+		const std::list<Board> child_boards = board.get_child_boards();
 
-		// for each child board, add a node
-		for (const Board & board : temp)
+		// for each child board
+		for (const Board & child_board : child_boards)
 		{
-			child_nodes.push_back(Node(board, my_ply_depth + 1));
+			// save the child board to its own node
+			child_nodes.push_back(Node(child_board, my_ply_depth + 1));
 
 			// make a recursive call to continue populating down the tree
 			child_nodes.back().generate_ply(depth);
