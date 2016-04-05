@@ -8,9 +8,7 @@ class Node
 {
 private:
 	Board board;
-	unsigned my_ply_depth;
 	std::list<Node> child_nodes;
-	Node(const Board & set_board, unsigned set_my_ply_depth);
 
 public:
 	Node(const std::vector<Piece> & set_board);
@@ -25,5 +23,5 @@ public:
 	void divide() const;
 
 private:
-	void size(std::map<size_t, size_t> & node_counter) const;
+	void size(std::map<size_t, size_t> & node_counter, const unsigned & depth = 1) const;
 };

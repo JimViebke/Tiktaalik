@@ -4,18 +4,15 @@ Mar 28 2016 */
 
 #include "node.h"
 
-Node::Node(const Board & set_board, unsigned set_my_ply_depth) :
-	board(set_board), my_ply_depth(set_my_ply_depth) {}
 
-Node::Node(const std::vector<Piece> & set_board) : board(Board(set_board)), my_ply_depth(1) {}
+Node::Node(const std::vector<Piece> & set_board) : board(Board(set_board)) {}
 
-Node::Node(const Board & set_board) :
-	board(set_board), my_ply_depth(1) {}
+Node::Node(const Board & set_board) : board(set_board) {}
 
 void Node::generate_ply(const unsigned & depth)
 {
-	// if we have not reached the ply depth
-	if (my_ply_depth <= depth)
+	// if we have not reached the desired ply depth
+	if (depth > 0)
 	{
 		// generate child boards for this position
 		const std::list<Board> child_boards = board.get_child_boards();
@@ -24,10 +21,10 @@ void Node::generate_ply(const unsigned & depth)
 		for (const Board & child_board : child_boards)
 		{
 			// save the child board to its own node
-			child_nodes.push_back(Node(child_board, my_ply_depth + 1));
+			child_nodes.emplace_back(child_board);
 
 			// make a recursive call to continue populating down the tree
-			child_nodes.back().generate_ply(depth);
+			child_nodes.back().generate_ply(depth - 1);
 		}
 	}
 }
@@ -78,11 +75,11 @@ void Node::divide() const
 		std::cout << it->first << ": " << it->second << std::endl;
 }
 
-void Node::size(std::map<size_t, size_t> & node_counter) const
+void Node::size(std::map<size_t, size_t> & node_counter, const unsigned & depth) const
 {
-	node_counter[my_ply_depth] += child_nodes.size();
+	node_counter[depth] += child_nodes.size();
 	for (const Node & child : child_nodes)
 	{
-		child.size(node_counter);
+		child.size(node_counter, depth + 1);
 	}
 }
