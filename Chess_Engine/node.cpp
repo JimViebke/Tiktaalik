@@ -15,7 +15,7 @@ void Node::generate_ply(const unsigned & depth)
 	if (depth > 0)
 	{
 		// generate child boards for this position
-		const std::list<Board> child_boards = board.get_child_boards();
+		const Board::board_list child_boards = board.get_child_boards();
 
 		// for each child board
 		for (const Board & child_board : child_boards)
@@ -31,7 +31,7 @@ void Node::generate_ply(const unsigned & depth)
 
 void Node::print_all() const
 {
-	static std::list<Board> boards;
+	static Board::board_list boards;
 	boards.push_back(board);
 
 	Board::print_board(boards);

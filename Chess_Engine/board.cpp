@@ -39,12 +39,12 @@ void Board::print_board(const Board & board, const unsigned & offset)
 	}
 	std::cout << std::endl;
 }
-void Board::print_board(const std::list<Board> & boards)
+void Board::print_board(const board_list & boards)
 {
 	for (unsigned rank = 0; rank < 8; ++rank)
 	{
 		// render this rank for each board
-		for (std::list<Board>::const_iterator it = boards.cbegin(); it != boards.cend(); ++it)
+		for (board_list::const_iterator it = boards.cbegin(); it != boards.cend(); ++it)
 		{
 			for (unsigned file = 0; file < 8; ++file)
 			{
@@ -81,9 +81,9 @@ void Board::print_board(const std::list<Board> & boards)
 	std::cout << std::endl;
 }
 
-std::list<Board> Board::get_child_boards() const
+Board::board_list Board::get_child_boards() const
 {
-	std::list<Board> child_boards;
+	board_list child_boards;
 
 	for (int rank = 0; rank < 8; ++rank)
 	{
@@ -125,7 +125,7 @@ std::list<Board> Board::get_child_boards() const
 	return child_boards;
 }
 
-void Board::remove_invalid_boards(std::list<Board> & boards)
+void Board::remove_invalid_boards(board_list & boards)
 {
 	for (auto it = boards.begin(); it != boards.end(); )
 	{
@@ -140,17 +140,12 @@ bool Board::is_valid_position() const
 {
 	// It is fine if the moving player was placed into check.
 	// The color that just moved may not be in check.
-	if (is_king_in_check(other_color(color_to_move)))
-	{
-		return false;
-	}
-
-	return true;
+	return !is_king_in_check(other_color(color_to_move));
 }
 
 // these are in the same order that they are called in the generation function, which acts in order of probable piece frequency
 
-void Board::find_pawn_moves(std::list<Board> & child_boards, const int rank, const int file) const
+void Board::find_pawn_moves(board_list & child_boards, const int rank, const int file) const
 {
 	if (piece_at(rank, file).is_white())
 	{
@@ -259,7 +254,7 @@ void Board::find_pawn_moves(std::list<Board> & child_boards, const int rank, con
 		}
 	}
 }
-void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, const int file) const
+void Board::find_rook_moves(board_list & child_boards, const int rank, const int file) const
 {
 	// rank descending
 	for (int end_rank = rank - 1; end_rank >= 0; --end_rank)
@@ -335,7 +330,7 @@ void Board::find_rook_moves(std::list<Board> & child_boards, const int rank, con
 		else break;
 	}
 }
-void Board::find_bishop_moves(std::list<Board> & child_boards, const int rank, const int file) const
+void Board::find_bishop_moves(board_list & child_boards, const int rank, const int file) const
 {
 	// working diagonally (rank and file descending)
 	for (int offset = 1; offset < 8; ++offset)
@@ -415,7 +410,7 @@ void Board::find_bishop_moves(std::list<Board> & child_boards, const int rank, c
 		else break;
 	}
 }
-void Board::find_knight_moves(std::list<Board> & child_boards, const int rank, const int file) const
+void Board::find_knight_moves(board_list & child_boards, const int rank, const int file) const
 {
 	if (bounds_check(rank - 2, file + 1) && !piece_at(rank - 2, file + 1).is_color(color_to_move))
 		child_boards.emplace_back(*this, rank, file, rank - 2, file + 1);
@@ -437,13 +432,13 @@ void Board::find_knight_moves(std::list<Board> & child_boards, const int rank, c
 	if (bounds_check(rank - 2, file - 1) && !piece_at(rank - 2, file - 1).is_color(color_to_move))
 		child_boards.emplace_back(*this, rank, file, rank - 2, file - 1);
 }
-void Board::find_queen_moves(std::list<Board> & child_boards, const int rank, const int file) const
+void Board::find_queen_moves(board_list & child_boards, const int rank, const int file) const
 {
 	// the function calls themselves are piece-agnostic, so there's no reason this shouldn't work
 	find_rook_moves(child_boards, rank, file);
 	find_bishop_moves(child_boards, rank, file);
 }
-void Board::find_king_moves(std::list<Board> & child_boards, const int rank, const int file) const
+void Board::find_king_moves(board_list & child_boards, const int rank, const int file) const
 {
 	// iterate over all adjacent squares
 	for (int rank_d = -1; rank_d <= 1; ++rank_d)

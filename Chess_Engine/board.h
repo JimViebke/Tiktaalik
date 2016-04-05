@@ -27,6 +27,8 @@ private:
 	char move[4];
 
 public:
+	using board_list = std::list<Board>;
+
 	explicit Board(const std::vector<Piece> & set_board) : board(set_board) {}
 	explicit Board(const Board & parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file)
 	{
@@ -181,7 +183,8 @@ public:
 	}
 
 	static void print_board(const Board & board, const unsigned & offset = 0);
-	static void print_board(const std::list<Board> & boards);
+	static void print_board(const board_list & boards);
+
 	inline void save_move(const Rank start_rank, const File start_file, const Rank end_rank, const File end_file)
 	{
 		move[0] = (start_file + 'a');
@@ -219,17 +222,16 @@ public:
 
 	int evaluate_position() const
 	{
-		int position_value = 0;
+		int material_value = 0;
 
 		// evaluate material
-		for (unsigned rank = 0; rank < 8; ++rank)
-			for (unsigned file = 0; file < 8; ++file)
-				position_value += evaluate_piece(piece_at(rank, file));
+		for (unsigned i = 0; i < 64; ++i)
+			material_value += evaluate_piece(board[i]);
 
-		return position_value;
+		return material_value;
 	}
 
-	std::list<Board> get_child_boards() const;
+	board_list get_child_boards() const;
 
 	std::vector<Piece> get_board() const { return board; }
 
@@ -237,9 +239,9 @@ private:
 	template<typename T> inline bool bounds_check(const T rank_or_file) const { return rank_or_file < 8 && rank_or_file >= 0; }
 	template<typename T> inline bool bounds_check(const T rank, const T file) const { return bounds_check(rank) && bounds_check(file); }
 
-	bool is_valid_position() const;
+	inline bool is_valid_position() const;
 
-	static void remove_invalid_boards(std::list<Board> & boards);
+	static inline void remove_invalid_boards(board_list & boards);
 
 	int evaluate_piece(const Piece & piece) const
 	{
@@ -267,15 +269,15 @@ private:
 		return 0; // should never happen
 	}
 
-	void find_pawn_moves(std::list<Board> & child_boards, const int rank, const int file) const;
-	void find_rook_moves(std::list<Board> & child_boards, const int rank, const int file) const;
-	void find_bishop_moves(std::list<Board> & child_boards, const int rank, const int file) const;
-	void find_knight_moves(std::list<Board> & child_boards, const int rank, const int file) const;
-	void find_queen_moves(std::list<Board> & child_boards, const int rank, const int file) const;
-	void find_king_moves(std::list<Board> & child_boards, const int rank, const int file) const;
+	inline void find_pawn_moves(board_list & child_boards, const int rank, const int file) const;
+	inline void find_rook_moves(board_list & child_boards, const int rank, const int file) const;
+	inline void find_bishop_moves(board_list & child_boards, const int rank, const int file) const;
+	inline void find_knight_moves(board_list & child_boards, const int rank, const int file) const;
+	inline void find_queen_moves(board_list & child_boards, const int rank, const int file) const;
+	inline void find_king_moves(board_list & child_boards, const int rank, const int file) const;
 
-	bool is_king_in_check(const color check_color) const;
-	bool is_king_in_check(const Piece piece, const Rank rank, const File file) const;
+	inline bool is_king_in_check(const color check_color) const;
+	inline bool is_king_in_check(const Piece piece, const Rank rank, const File file) const;
 
-	static color other_color(const color other_color) { return (other_color == color::white) ? color::black : color::white; }
+	static inline color other_color(const color other_color) { return (other_color == color::white) ? color::black : color::white; }
 };
