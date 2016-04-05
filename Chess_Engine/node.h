@@ -8,7 +8,7 @@ class Node
 {
 private:
 	Board board;
-	std::list<Node> child_nodes;
+	std::vector<Node> child_nodes;
 
 public:
 	Node(const std::vector<Piece> & set_board);
