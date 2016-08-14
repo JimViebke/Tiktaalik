@@ -2,8 +2,9 @@
 /* Jim Viebke
 Mar 28 2016 */
 
-#include "node.h"
+#include <algorithm>
 
+#include "node.h"
 
 Node::Node(const std::vector<Piece> & set_board) : board(Board(set_board)) {}
 
@@ -56,23 +57,27 @@ void Node::print_size() const
 		std::cout << "Number of child nodes from ply " << it->first << ": " << it->second << ".\n";
 }
 
-void Node::divide() const
-{
-	std::map<std::string, size_t> move_divide;
+void Node::divide(const unsigned & depth)
+{	
+	// generate child boards for this position
+	const Board::board_list child_boards = board.get_child_boards();
 
-	for (const Node & node : child_nodes)
+	// save the child boards to the node
+	for (const Board & child_board : child_boards)
+		child_nodes.emplace_back(child_board);
+
+	for (Node & node : child_nodes)
 	{
-		// count this node's total number of children
-		std::map<size_t, size_t> node_counter;
-		node.size(node_counter);
+		std::map<size_t, size_t> node_counter; // <depth, child count>
+		node.divide(node_counter, depth);
 
-		// the last entry will always be 0, so select the size two levels above .end()
-		if (node_counter.size() > 1)
-			move_divide[node.board.get_move()] = (----node_counter.end())->second;
+		// print the move
+		std::cout << node.board.get_move() << " ";
+		if (node_counter.size() > 0)
+			std::cout << (----node_counter.end())->second << "\n";
+		else
+			std::cout << 0 << "\n";
 	}
-
-	for (auto it = move_divide.begin(); it != move_divide.end(); ++it)
-		std::cout << it->first << ": " << it->second << std::endl;
 }
 
 void Node::size(std::map<size_t, size_t> & node_counter, const unsigned & depth) const
@@ -82,4 +87,12 @@ void Node::size(std::map<size_t, size_t> & node_counter, const unsigned & depth)
 	{
 		child.size(node_counter, depth + 1);
 	}
+}
+
+// sort positions by rank instead of file (the default sort)
+bool Node::rank_sort(const std::pair<std::string, size_t> & left, const std::pair<std::string, size_t> & right)
+{
+	if (left.first[1] == right.first[1] && left.first[3] < right.first[3]) return true;
+
+	return (left.first[1] < right.first[1]);
 }
