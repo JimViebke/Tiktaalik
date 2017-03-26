@@ -59,8 +59,8 @@ public:
 	inline bool is_piece(piece compare_piece) const { return _piece == compare_piece; }
 
 	// check entire piece
-	inline bool is(Piece compare_piece) const { return compare_piece._piece == _piece; }
-	inline bool is(piece compare_piece) const { return compare_piece == _piece; }
+	inline bool is(const Piece compare_piece) const { return compare_piece._piece == _piece; }
+	inline bool is(const piece compare_piece) const { return compare_piece == _piece; }
 
 	static inline char my_abs(char x)
 	{
