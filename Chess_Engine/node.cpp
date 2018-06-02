@@ -66,6 +66,8 @@ void Node::divide(const unsigned & depth)
 	for (const Board & child_board : child_boards)
 		child_nodes.emplace_back(child_board);
 
+	size_t total_nodes = 0;
+
 	for (Node & node : child_nodes)
 	{
 		std::map<size_t, size_t> node_counter; // <depth, child count>
@@ -74,10 +76,16 @@ void Node::divide(const unsigned & depth)
 		// print the move
 		std::cout << node.board.get_move() << " ";
 		if (node_counter.size() > 0)
-			std::cout << (----node_counter.end())->second << "\n";
+		{
+			const size_t moves = (----node_counter.end())->second;
+			total_nodes += moves;
+			std::cout << moves << "\n";
+		}
 		else
 			std::cout << 0 << "\n";
 	}
+
+	std::cout << "Total nodes: " << total_nodes << std::endl;
 }
 
 void Node::size(std::map<size_t, size_t> & node_counter, const unsigned & depth) const

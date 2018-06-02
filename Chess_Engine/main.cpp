@@ -52,12 +52,12 @@ void menu()
 
 int main()
 {
-	Node parent_position(layouts::test_board);
+	Node parent_position(layouts::start_board);
 
-	parent_position.generate_ply(2);
-	parent_position.print_size();
+	// parent_position.generate_ply(3);
+	// parent_position.print_size();
 
-	parent_position.divide(5);
+	parent_position.divide(6);
 
-	parent_position.print_all();
+	// parent_position.print_all();
 }
