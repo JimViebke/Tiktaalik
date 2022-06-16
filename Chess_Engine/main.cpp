@@ -3,6 +3,7 @@ Jim Viebke
 June 15 2014
 */
 
+#include "game.hpp"
 #include "node.h"
 
 void print_commands()
@@ -52,12 +53,6 @@ void menu()
 
 int main()
 {
-	Node parent_position(layouts::start_board);
-
-	// parent_position.generate_ply(3);
-	// parent_position.print_size();
-
-	parent_position.divide(6);
-
-	// parent_position.print_all();
+	Game game;
+	game.run();
 }

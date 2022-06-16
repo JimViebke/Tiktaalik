@@ -2,13 +2,10 @@
 
 #include "constants.h"
 
-namespace
-{
-	enum color : char {
-		black = -1,
-		white = 1,
-	};
-}
+enum color : char {
+	black = -1,
+	white = 1,
+};
 
 enum piece : char {
 	black_king = -6,

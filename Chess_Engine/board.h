@@ -4,6 +4,7 @@
 #include <iterator> // for parsing FENs
 #include <sstream> // for parsing FENs
 #include <map>
+#include <cassert>
 
 #include "board_layouts.h"
 
@@ -14,7 +15,9 @@ private:
 	using File = int;
 
 	// position
-	std::vector<Piece> board;
+public:
+	std::vector<Piece> position;
+private:
 
 	// state
 	color color_to_move = color::white;
@@ -27,20 +30,21 @@ private:
 	char move[4];
 
 public:
-	using board_list = std::list<Board>;
+	using board_list = std::vector<Board>;
 
-	explicit Board(const std::vector<Piece> & set_board) : board(set_board) {}
+	explicit Board(const std::vector<Piece> & set_board) : position(set_board) { assert(position.size() == 64); }
 	explicit Board(const Board & parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file)
 	{
 		// copy the position
-		board = parent_board.board;
+		position = parent_board.position;
+		assert(position.size() == 64);
 		// copy castle flags
 		white_can_castle_k_s = parent_board.white_can_castle_k_s;
 		white_can_castle_q_s = parent_board.white_can_castle_q_s;
 		black_can_castle_k_s = parent_board.black_can_castle_k_s;
 		black_can_castle_q_s = parent_board.black_can_castle_q_s;
-		// update 50 move rule
-		if (piece_at(end_rank, end_file).is_empty()) ++fifty_move_rule; else fifty_move_rule = 0;
+		// update 50 move rule - increment for a non-pawn-move or non-capture move
+		if (!piece_at(end_rank, end_file).is_pawn() || piece_at(end_rank, end_file).is_empty()) ++fifty_move_rule; else fifty_move_rule = 0;
 		// toggle color to move		
 		color_to_move = other_color(parent_board.get_color_to_move());
 		// check if the en passant indicator needs to be set
@@ -109,13 +113,20 @@ public:
 
 		// record the move
 		save_move(start_rank, start_file, end_rank, end_file);
+
+		assert(position.size() == 64);
 	}
 	explicit Board(const Board & parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file, const piece & promote_to)
 		: Board(parent_board, start_rank, start_file, end_rank, end_file)
 	{
+		assert(position.size() == 64);
+
 		// call this constructor (four times) for pawn promotion
 		piece_at(end_rank, end_file) = Piece(promote_to);
+
+		assert(position.size() == 64);
 	}
+	/*
 	explicit Board(const std::string & FEN)
 	{
 		std::stringstream ss(FEN);
@@ -137,7 +148,7 @@ public:
 			{ 'Q', white_queen },
 			{ 'K', white_king } };
 
-		board.reserve(64);
+		position.reserve(64);
 
 		// Edited from Wikipedia:
 
@@ -155,10 +166,10 @@ public:
 			// find the piece
 			const auto piece_type = pieces.find(*it);
 			if (piece_type != pieces.cend())
-				board.push_back(Piece(piece_type->second));
+				position.push_back(Piece(piece_type->second));
 			else if (*it >= '0' && *it <= '9')
 				for (int empty = 0; empty < (*it) - '0'; ++empty)
-					board.emplace_back(Piece(piece::empty));
+					position.emplace_back(Piece(piece::empty));
 		}
 
 		// 2. Active color. "w" means White moves next, "b" means Black.
@@ -180,18 +191,11 @@ public:
 		// fifty - move rule.
 
 		// 6. Fullmove number. The number of the full move. It starts at 1, and is incremented after Black's move.
-	}
+	}*/
 
 	static void print_board(const Board & board, const unsigned & offset = 0);
 	static void print_board(const board_list & boards);
 
-	inline void save_move(const Rank start_rank, const File start_file, const Rank end_rank, const File end_file)
-	{
-		move[0] = (start_file + 'a');
-		move[1] = ((start_rank * -1) + 8 + '0');
-		move[2] = (end_file + 'a');
-		move[3] = ((end_rank * -1) + 8 + '0');
-	}
 	const std::string get_move() const
 	{
 		std::string result = "";
@@ -202,22 +206,27 @@ public:
 		return result;
 	}
 
-	inline const color get_color_to_move() const { return color_to_move; }
-	inline void set_color_to_move(const color set_color_to_move) { color_to_move = set_color_to_move; }
+	const color get_color_to_move() const { return color_to_move; }
 
-	inline const Piece& piece_at(const Rank rank, const File file) const
+	bool white_to_move() const { return color_to_move == color::white; }
+	bool black_to_move() const { return color_to_move == color::black; }
+
+	const Piece& piece_at(const Rank rank, const File file) const
 	{
-		return board[rank * 8 + file];
+		return position[rank * 8 + file];
 	}
-	inline Piece& piece_at(const Rank rank, const File file)
+	Piece& piece_at(const Rank rank, const File file)
 	{
-		return board[rank * 8 + file];
+		return position[rank * 8 + file];
 	}
 
-	inline void move_piece(const Rank start_rank, const File start_file, const Rank end_rank, const File end_file)
+	bool is_empty(const Rank rank, const File file) const
 	{
-		piece_at(end_rank, end_file) = piece_at(start_rank, start_file);
-		piece_at(start_rank, start_file) = Piece(empty);
+		return piece_at(rank, file).is_empty();
+	}
+	bool is_occupied(const Rank rank, const File file) const
+	{
+		return !is_empty(rank, file);
 	}
 
 	int evaluate_position() const
@@ -226,22 +235,42 @@ public:
 
 		// evaluate material
 		for (unsigned i = 0; i < 64; ++i)
-			material_value += evaluate_piece(board[i]);
+			material_value += evaluate_piece(position[i]);
 
 		return material_value;
 	}
 
-	board_list get_child_boards() const;
+	std::vector<Piece> get_board() const { return position; }
 
-	std::vector<Piece> get_board() const { return board; }
+	bool is_king_in_check(const color check_color) const;
+
+	board_list generate_child_boards() const;
 
 private:
-	template<typename T> inline bool bounds_check(const T rank_or_file) const { return rank_or_file < 8 && rank_or_file >= 0; }
-	template<typename T> inline bool bounds_check(const T rank, const T file) const { return bounds_check(rank) && bounds_check(file); }
+	// Make this private at least for now.
+	// External users should be using the constructor, not modifying an existing board.
+	void move_piece(const Rank start_rank, const File start_file, const Rank end_rank, const File end_file)
+	{
+		piece_at(end_rank, end_file) = piece_at(start_rank, start_file);
+		piece_at(start_rank, start_file) = Piece(empty);
+	}
 
-	inline bool is_valid_position() const;
+	void save_move(const Rank start_rank, const File start_file, const Rank end_rank, const File end_file)
+	{
+		move[0] = (start_file + 'a');
+		move[1] = ((start_rank * -1) + 8 + '0');
+		move[2] = (end_file + 'a');
+		move[3] = ((end_rank * -1) + 8 + '0');
+	}
 
-	static inline void remove_invalid_boards(board_list & boards);
+	void set_color_to_move(const color set_color_to_move) { color_to_move = set_color_to_move; }
+
+	template<typename T> bool bounds_check(const T rank_or_file) const { return rank_or_file < 8 && rank_or_file >= 0; }
+	template<typename T> bool bounds_check(const T rank, const T file) const { return bounds_check(rank) && bounds_check(file); }
+
+	bool is_valid_position() const;
+
+	static void remove_invalid_boards(board_list & boards);
 
 	int evaluate_piece(const Piece & piece) const
 	{
@@ -269,15 +298,14 @@ private:
 		return 0; // should never happen
 	}
 
-	inline void find_pawn_moves(board_list & child_boards, const int rank, const int file) const;
-	inline void find_rook_moves(board_list & child_boards, const int rank, const int file) const;
-	inline void find_bishop_moves(board_list & child_boards, const int rank, const int file) const;
-	inline void find_knight_moves(board_list & child_boards, const int rank, const int file) const;
-	inline void find_queen_moves(board_list & child_boards, const int rank, const int file) const;
-	inline void find_king_moves(board_list & child_boards, const int rank, const int file) const;
+	void find_pawn_moves(board_list & child_boards, const int rank, const int file) const;
+	void find_rook_moves(board_list & child_boards, const int rank, const int file) const;
+	void find_bishop_moves(board_list & child_boards, const int rank, const int file) const;
+	void find_knight_moves(board_list & child_boards, const int rank, const int file) const;
+	void find_queen_moves(board_list & child_boards, const int rank, const int file) const;
+	void find_king_moves(board_list & child_boards, const int rank, const int file) const;
 
-	inline bool is_king_in_check(const color check_color) const;
-	inline bool is_king_in_check(const Piece piece, const Rank rank, const File file) const;
+	bool is_king_in_check(const Piece piece, const Rank rank, const File file) const;
 
-	static inline color other_color(const color other_color) { return (other_color == color::white) ? color::black : color::white; }
+	static color other_color(const color other_color) { return (other_color == color::white) ? color::black : color::white; }
 };

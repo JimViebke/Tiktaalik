@@ -18,14 +18,14 @@
 #define black_pawn Piece(black_pawn)
 
 std::vector<Piece> layouts::test_board = {
-	black_rook, black_knight, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook,
-	black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn,
-	empty, empty, empty, empty, empty, empty, empty, empty,
-	empty, empty, empty, empty, empty, empty, empty, empty,
-	empty, empty, empty, empty, empty, empty, empty, empty,
-	empty, empty, empty, empty, empty, empty, empty, empty,
-	white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn,
-	white_rook, white_knight, white_bishop, white_queen, white_king, white_bishop, white_knight, white_rook
+	black_rook, empty, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook,
+	black_pawn, black_pawn, black_pawn, black_pawn, empty, black_pawn, black_pawn, black_pawn,
+	empty, empty, black_knight, empty, empty, empty, empty, empty,
+	empty, empty, empty, empty, black_pawn, empty, empty, empty,
+	empty, empty, empty, empty, white_pawn, empty, empty, empty,
+	empty, empty, empty, empty, empty, white_knight, empty, empty,
+	white_pawn, white_pawn, white_pawn, white_pawn, empty, white_pawn, white_pawn, white_pawn,
+	white_rook, white_knight, white_bishop, white_queen, white_king, white_bishop, empty, white_rook
 };
 
 std::vector<Piece> layouts::start_board = {

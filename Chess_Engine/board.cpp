@@ -81,7 +81,7 @@ void Board::print_board(const board_list & boards)
 	std::cout << std::endl;
 }
 
-Board::board_list Board::get_child_boards() const
+Board::board_list Board::generate_child_boards() const
 {
 	board_list child_boards;
 
@@ -120,7 +120,15 @@ Board::board_list Board::get_child_boards() const
 		}
 	}
 
+	for (auto& child_board : child_boards)
+		if (child_board.position.size() != 64)
+			std::cout << "Move generation created a board without a position.";
+
 	Board::remove_invalid_boards(child_boards);
+
+	for (auto& child_board : child_boards)
+		if (child_board.position.size() != 64)
+			std::cout << "Removing illegal boards during move generation left a board without a position.";
 
 	return child_boards;
 }
@@ -139,7 +147,7 @@ void Board::remove_invalid_boards(board_list & boards)
 bool Board::is_valid_position() const
 {
 	// It is fine if the moving player was placed into check.
-	// The color that just moved may not be in check.
+	// The color that just moved must not be in check.
 	return !is_king_in_check(other_color(color_to_move));
 }
 
@@ -219,10 +227,10 @@ void Board::find_pawn_moves(board_list & child_boards, const int rank, const int
 			{
 				if (rank == 6) // if the pawn is on the second last rank
 				{
-					child_boards.emplace_back(*this, rank, file, rank + 1, file, white_queen);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file, white_rook);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file, white_bishop);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file, white_knight);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file, black_queen);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file, black_rook);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file, black_bishop);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file, black_knight);
 				}
 				else // the pawn is moving without promotion
 				{
@@ -239,10 +247,10 @@ void Board::find_pawn_moves(board_list & child_boards, const int rank, const int
 			{
 				if (rank == 6) // if the pawn is on the second last rank
 				{
-					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, white_queen);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, white_rook);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, white_bishop);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, white_knight);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, black_queen);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, black_rook);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, black_bishop);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, black_knight);
 				}
 				else // the pawn is capturing without promotion
 				{
@@ -253,10 +261,10 @@ void Board::find_pawn_moves(board_list & child_boards, const int rank, const int
 			{
 				if (rank == 6) // if the pawn is on the second last rank
 				{
-					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, white_queen);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, white_rook);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, white_bishop);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, white_knight);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, black_queen);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, black_rook);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, black_bishop);
+					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, black_knight);
 				}
 				else // the pawn is capturing without promotion
 				{
