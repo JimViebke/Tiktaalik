@@ -1,10 +1,9 @@
 #pragma once
 
-#include <list>
+#include <array>
 #include <iterator> // for parsing FENs
 #include <sstream> // for parsing FENs
-#include <map>
-#include <cassert>
+#include <vector>
 
 #include "board_layouts.h"
 
@@ -13,10 +12,11 @@ class Board
 private:
 	using Rank = int;
 	using File = int;
+	using Position = std::array<Piece, 64>;
 
 	// position
 public:
-	std::vector<Piece> position;
+	Position position;
 private:
 
 	// state
@@ -27,17 +27,16 @@ private:
 	bool white_can_castle_q_s = true;
 	bool black_can_castle_k_s = true;
 	bool black_can_castle_q_s = true;
-	char move[4];
+	char move[4] = "   ";
 
 public:
 	using board_list = std::vector<Board>;
 
-	explicit Board(const std::vector<Piece> & set_board) : position(set_board) { assert(position.size() == 64); }
-	explicit Board(const Board & parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file)
+	explicit Board(const Position& set_position) : position(set_position) {}
+	explicit Board(const Board& parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file)
 	{
 		// copy the position
 		position = parent_board.position;
-		assert(position.size() == 64);
 		// copy castle flags
 		white_can_castle_k_s = parent_board.white_can_castle_k_s;
 		white_can_castle_q_s = parent_board.white_can_castle_q_s;
@@ -45,7 +44,7 @@ public:
 		black_can_castle_q_s = parent_board.black_can_castle_q_s;
 		// update 50 move rule - increment for a non-pawn-move or non-capture move
 		if (!piece_at(end_rank, end_file).is_pawn() || piece_at(end_rank, end_file).is_empty()) ++fifty_move_rule; else fifty_move_rule = 0;
-		// toggle color to move		
+		// toggle color to move
 		color_to_move = other_color(parent_board.get_color_to_move());
 		// check if the en passant indicator needs to be set
 		en_passant_flag = (parent_board.piece_at(start_rank, start_file).is_pawn() && abs(start_rank - end_rank) == 2)
@@ -59,7 +58,7 @@ public:
 			fifty_move_rule = 0;
 			piece_at(start_rank, end_file) = Piece(empty); // the captured pawn will always be on the same rank that the pawn started, and at the same file that the pawn ended
 		}
-		// if a king is moving 
+		// if a king is moving
 		else if (piece_at(start_rank, start_file).is_king())
 		{
 			// it can no longer castle either way
@@ -113,18 +112,12 @@ public:
 
 		// record the move
 		save_move(start_rank, start_file, end_rank, end_file);
-
-		assert(position.size() == 64);
 	}
-	explicit Board(const Board & parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file, const piece & promote_to)
+	explicit Board(const Board& parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file, const piece& promote_to)
 		: Board(parent_board, start_rank, start_file, end_rank, end_file)
 	{
-		assert(position.size() == 64);
-
 		// call this constructor (four times) for pawn promotion
 		piece_at(end_rank, end_file) = Piece(promote_to);
-
-		assert(position.size() == 64);
 	}
 	/*
 	explicit Board(const std::string & FEN)
@@ -193,8 +186,8 @@ public:
 		// 6. Fullmove number. The number of the full move. It starts at 1, and is incremented after Black's move.
 	}*/
 
-	static void print_board(const Board & board, const unsigned & offset = 0);
-	static void print_board(const board_list & boards);
+	static void print_board(const Board& board, const unsigned& offset = 0);
+	static void print_board(const board_list& boards);
 
 	const std::string get_move() const
 	{
@@ -240,7 +233,7 @@ public:
 		return material_value;
 	}
 
-	std::vector<Piece> get_board() const { return position; }
+	Position get_position() const { return position; }
 
 	bool is_king_in_check(const color check_color) const;
 
@@ -270,9 +263,9 @@ private:
 
 	bool is_valid_position() const;
 
-	static void remove_invalid_boards(board_list & boards);
+	static void remove_invalid_boards(board_list& boards);
 
-	int evaluate_piece(const Piece & piece) const
+	int evaluate_piece(const Piece& piece) const
 	{
 		if (piece.is_empty()) return 0;
 
@@ -298,12 +291,12 @@ private:
 		return 0; // should never happen
 	}
 
-	void find_pawn_moves(board_list & child_boards, const int rank, const int file) const;
-	void find_rook_moves(board_list & child_boards, const int rank, const int file) const;
-	void find_bishop_moves(board_list & child_boards, const int rank, const int file) const;
-	void find_knight_moves(board_list & child_boards, const int rank, const int file) const;
-	void find_queen_moves(board_list & child_boards, const int rank, const int file) const;
-	void find_king_moves(board_list & child_boards, const int rank, const int file) const;
+	void find_pawn_moves(board_list& child_boards, const int rank, const int file) const;
+	void find_rook_moves(board_list& child_boards, const int rank, const int file) const;
+	void find_bishop_moves(board_list& child_boards, const int rank, const int file) const;
+	void find_knight_moves(board_list& child_boards, const int rank, const int file) const;
+	void find_queen_moves(board_list& child_boards, const int rank, const int file) const;
+	void find_king_moves(board_list& child_boards, const int rank, const int file) const;
 
 	bool is_king_in_check(const Piece piece, const Rank rank, const File file) const;
 

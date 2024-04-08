@@ -120,15 +120,7 @@ Board::board_list Board::generate_child_boards() const
 		}
 	}
 
-	for (auto& child_board : child_boards)
-		if (child_board.position.size() != 64)
-			std::cout << "Move generation created a board without a position.";
-
 	Board::remove_invalid_boards(child_boards);
-
-	for (auto& child_board : child_boards)
-		if (child_board.position.size() != 64)
-			std::cout << "Removing illegal boards during move generation left a board without a position.";
 
 	return child_boards;
 }

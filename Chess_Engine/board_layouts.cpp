@@ -17,7 +17,7 @@
 #define black_knight Piece(black_knight)
 #define black_pawn Piece(black_pawn)
 
-std::vector<Piece> layouts::test_board = {
+std::array<Piece, 64> layouts::test_board = {
 	black_rook, empty, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook,
 	black_pawn, black_pawn, black_pawn, black_pawn, empty, black_pawn, black_pawn, black_pawn,
 	empty, empty, black_knight, empty, empty, empty, empty, empty,
@@ -28,7 +28,7 @@ std::vector<Piece> layouts::test_board = {
 	white_rook, white_knight, white_bishop, white_queen, white_king, white_bishop, empty, white_rook
 };
 
-std::vector<Piece> layouts::start_board = {
+std::array<Piece, 64> layouts::start_board = {
 	black_rook, black_knight, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook,
 	black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn,
 	empty, empty, empty, empty, empty, empty, empty, empty,

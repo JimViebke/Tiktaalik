@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vector>
+#include <array>
 
 #include "piece.h"
 
 namespace layouts
 {
-	extern std::vector<Piece> test_board;
-	extern std::vector<Piece> start_board;
+	extern std::array<Piece, 64> test_board;
+	extern std::array<Piece, 64> start_board;
 }

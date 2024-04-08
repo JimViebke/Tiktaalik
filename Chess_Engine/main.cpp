@@ -40,8 +40,7 @@ void menu()
 		{
 			std::cout << std::endl;
 
-			std::cout << "Board value is [evaluation], where 1 point = 1 centipawn.\n";
-			std::cout << "A positive value is in white's favor, a negative is black's.\n";
+			std::cout << "Board value is [evaluation], where 1 point = 1 pawn.\n";
 		}
 		else if (user_input == "quit")
 		{

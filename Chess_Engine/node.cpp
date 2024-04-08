@@ -30,21 +30,6 @@ Node::Node(const Board & set_board) : board(set_board) {}
 	}
 }*/
 
-//void Node::print_all() const
-//{
-//	static Board::board_list boards;
-//	boards.push_back(board);
-//
-//	Board::print_board(boards);
-//	std::cin.ignore();
-//
-//	for (const Node & node : child_nodes)
-//	{
-//		node.print_all();
-//	}
-//	boards.pop_back();
-//}
-
 void Node::print_size() const
 {
 	std::map<size_t, size_t> node_counter;

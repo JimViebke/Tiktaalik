@@ -34,12 +34,13 @@ namespace detail
 class Game
 {
 public:
-	Game() : node{ Board { layouts::start_board} } {
+	Game() : node{ Board{ layouts::start_board } }
+	{
 		sf::ContextSettings settings;
 		settings.antialiasingLevel = 8;
 
 		const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
-		std::thread([this] { bot_thread(); }).detach();
+		std::thread([this] { worker_thread(); }).detach();
 
 		window = std::make_unique<sf::RenderWindow>(
 			sf::VideoMode((uint32_t)detail::window_width, (uint32_t)detail::window_height),
@@ -230,17 +231,10 @@ private:
 				const Node temp = child_node;
 				node = temp;
 
-				if (node.board.position.size() != 64)
-				{
-					std::cout << "Somehow, child node became root note without a valid position.";
-				}
-
-				// node.audit_boards();
-
 				// Make sure all ply-1 child nodes have been generated.
+				// A worker thread will almost certainly have generated these by now, but do this anyway
+				// for the sake of correctness.
 				node.generate_child_boards();
-
-				// node.audit_boards();
 
 				// We made a move (and modified the structure we're iterating over), bail
 				return;
@@ -259,45 +253,45 @@ private:
 		{
 			switch (event.type)
 			{
-			case sf::Event::MouseMoved:
-				mouse_x = event.mouseMove.x;
-				mouse_y = event.mouseMove.y;
-				break;
+				case sf::Event::MouseMoved:
+					mouse_x = event.mouseMove.x;
+					mouse_y = event.mouseMove.y;
+					break;
 
-			case sf::Event::MouseButtonPressed:
-				if (event.mouseButton.button == sf::Mouse::Button::Left)
-					on_click();
-				break;
+				case sf::Event::MouseButtonPressed:
+					if (event.mouseButton.button == sf::Mouse::Button::Left)
+						on_click();
+					break;
 
-			case sf::Event::MouseButtonReleased:
-				if (event.mouseButton.button == sf::Mouse::Button::Left)
-					on_release();
-				break;
+				case sf::Event::MouseButtonReleased:
+					if (event.mouseButton.button == sf::Mouse::Button::Left)
+						on_release();
+					break;
 
-			case sf::Event::KeyPressed:
-				if (event.key.code == sf::Keyboard::Key::X)
-				{
-					//
-				}
-				else if (event.key.code == sf::Keyboard::Key::Y)
-				{
-					//
-				}
-				else if (event.key.code == sf::Keyboard::Key::Z)
-				{
-					//
-				}
-				break;
+				case sf::Event::KeyPressed:
+					if (event.key.code == sf::Keyboard::Key::X)
+					{
+						//
+					}
+					else if (event.key.code == sf::Keyboard::Key::Y)
+					{
+						//
+					}
+					else if (event.key.code == sf::Keyboard::Key::Z)
+					{
+						//
+					}
+					break;
 
-			case sf::Event::Closed:
-				window->close();
-				break;
+				case sf::Event::Closed:
+					window->close();
+					break;
 			}
 		}
 	}
 
 	void draw_box(const size_t x, const size_t y, const size_t width, const size_t height, const sf::Color color,
-		bool outline = false, const sf::Color outline_color = sf::Color::Black, const float outline_thickness = -2.f)
+				  bool outline = false, const sf::Color outline_color = sf::Color::Black, const float outline_thickness = -2.f)
 	{
 		sf::RectangleShape box{ { (float)width, (float)height } };
 		box.setPosition({ (float)x, (float)y });
@@ -319,7 +313,7 @@ private:
 		event handling or rendering.
 		*/
 
-		++frame_counter;
+		++tick_counter;
 
 		if (mouse_on_board())
 		{
@@ -467,14 +461,10 @@ private:
 			// add the destination coordinates
 			move_list << legal_move[2] << legal_move[3];
 
-			if (child_node.board.position.size() != 64)
-			{
-				std::cout << "Render function found a child node's board with no position.\n";
-			}
-
-			// careful - gotta use the child board here, not the current board
+			// careful - use the child board here, not the current board
 			if (child_node.board.is_king_in_check(
-				child_node.board.get_color_to_move())) {
+				child_node.board.get_color_to_move()))
+			{
 				move_list << '+';
 			}
 
@@ -503,7 +493,7 @@ private:
 		render_move_list();
 	}
 
-	void bot_thread();
+	void worker_thread();
 
 public:
 	void run()
@@ -525,10 +515,10 @@ public:
 	}
 
 private:
-	// Used to regulate reading and modification of the game state between the GUI and bot threads.
+	// Used to regulate reading and modification of the game state between the GUI and worker threads.
 	std::mutex game_mutex;
 
-	size_t frame_counter = 0;
+	size_t tick_counter = 0;
 
 	int32_t mouse_x = 0, mouse_y = 0;
 	size_t mouse_square_x = 0, mouse_square_y = 0;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <map>
 
 #include "board.h"
 
@@ -15,54 +16,25 @@ public:
 
 	void generate_child_boards()
 	{
-		// Generating all immediate child nodes is an atomic operation.
-		// If any child nodes exist, all exist.
+		// Generate all immediate child nodes with boards.
+		// If any child node exists, all exist.
 		if (children.size() != 0)
 		{
-			std::cout << "(skipped generating child boards of new position)\n";
+			std::cout << "(skipping generating child boards for move " << board.get_move() << " with " << children.size() << " children)\n";
 			return;
 		}
 
-		// all feels kinda ugly
 		Board::board_list child_boards = board.generate_child_boards();
-
-		for (const auto& child_board : child_boards)
-			if (child_board.position.size() != 64)
-				std::cout << "Move generation returned a board without a position.";
 
 		children.reserve(child_boards.size());
 		for (const Board& child_board : child_boards)
 			children.emplace_back(child_board);
-
-		for (const auto& child_node : children)
-			if (child_node.board.position.size() != 64)
-				std::cout << "Created a node with a board, without a valid position.";
-	}
-
-	void audit_boards() const
-	{
-		if (board.position.size() != 64)
-		{
-			std::cout << "Node has invalid board!\n";
-		}
-
-		for (const auto& child : children)
-		{
-			if (child.board.position.size() != 64)
-			{
-				std::cout << "Child node has invalid board!";
-			}
-		}
 	}
 
 private:
-	// stashing this as private until I figure out if I need its
 	// void generate_ply(const unsigned & depth);
-	// stashing this as private until I figure out if I need it
 	void print_size() const;
-	// stashing this as private until I figure out if I need it
 	// void divide(const unsigned & depth);
-	// stashing this as private until I figure out if I need it
 	// static bool Node::rank_sort(const std::pair<std::string, size_t> & left, const std::pair<std::string, size_t> & right);
 
 	void divide(std::map<size_t, size_t> & node_counter, const size_t & max_depth, const size_t & current_depth = 0)
