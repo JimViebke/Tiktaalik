@@ -227,7 +227,8 @@ private:
 			{
 				// Move a ply-1 child node to become the root node
 				// This preserves the relevant subset of the move graph.
-				node = child_node;
+				const Node temp = child_node;
+				node = temp;
 
 				if (node.board.position.size() != 64)
 				{
