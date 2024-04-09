@@ -22,11 +22,13 @@ namespace detail
 	constexpr size_t board_y = 100;
 
 	const sf::Color background = { 70, 70, 70 };
-	const sf::Color brown = { 153, 76, 0 }; // brown (ripped from ye internet)
-	const sf::Color cream = { 248, 194, 150 }; // cream (ripped from ye internet)
+	const sf::Color brown = { 153, 76, 0 }; // brown
+	const sf::Color cream = { 248, 194, 150 }; // cream
 
 	constexpr size_t tile_size_px = 90;
 	constexpr size_t board_size_px = tile_size_px * 8;
+
+	constexpr size_t legal_marker_radius_px = tile_size_px / 5;
 
 	constexpr size_t piece_resolution_px = 150; // use 150x150, the native piece resolution
 }
@@ -44,7 +46,7 @@ public:
 
 		window = std::make_unique<sf::RenderWindow>(
 			sf::VideoMode((uint32_t)detail::window_width, (uint32_t)detail::window_height),
-			"Matrix chess engine",
+			"Chess engine",
 			sf::Style::Titlebar,
 			settings);
 
@@ -59,7 +61,7 @@ public:
 
 		node.generate_child_boards();
 
-		legal_marker.setRadius(detail::tile_size_px / 5);
+		legal_marker.setRadius(detail::legal_marker_radius_px);
 		legal_marker.setPointCount(15);
 		legal_marker.setFillColor({ 50, 50, 50, 255 / 2 });
 
@@ -113,7 +115,7 @@ public:
 		bp.setTexture(bp_texture);
 
 		// scale
-		const float scaling = 1.f / 150.f * (float)detail::tile_size_px;
+		constexpr float scaling = (float)detail::tile_size_px / (float)detail::piece_resolution_px;
 
 		wk.setScale(scaling, scaling);
 		wq.setScale(scaling, scaling);
@@ -141,9 +143,11 @@ private:
 	void on_click()
 	{
 		if (!mouse_on_board()) return;
-
-		// Again, awkward flipping of x/y axis vs rank/file.
-		// Normalize all of this so the top right corner of the board is 0,0.
+		
+		/*
+		Typically, x increases to the right, and y increases downward.
+		In chess, rank increases upward, and file increases to the right.
+		This requires some translation. */
 		if (node.board.is_empty((int)mouse_square_y, (int)mouse_square_x))
 		{
 			std::cout << "No piece to drag\n";
@@ -156,7 +160,7 @@ private:
 			return;
 		}
 
-		// only allow dragging if we can find a legal move starting from the clicked square
+		// Only allow dragging if we can find a legal move starting from the clicked square
 		for (const Node& child_node : node.children)
 		{
 			const std::string legal_move = child_node.board.get_move();
@@ -170,9 +174,11 @@ private:
 				dragging_from_x = mouse_square_x;
 				dragging_from_y = mouse_square_y;
 				std::cout << "drag...\n";
-				break;
+				return;
 			}
 		}
+
+		std::cout << "This piece can't move\n";
 	}
 
 	void on_release()
@@ -189,15 +195,6 @@ private:
 
 		std::cout << "...and drop\n";
 
-		/*
-		In software, we start with x moving right, then y moving down.
-		In chess, we start with "rank" moving up, then "file" moving right.
-
-		This requires some awkward translations.
-
-		I would like to normalize all of this to behave like typical X and Y and only ever
-		translate out to rank/file as absolutely required for user presentation and move recording. */
-
 		// Check that the x or y has changed, otherwise this was a non-move
 		if (dragging_from_x == mouse_square_x &&
 			dragging_from_y == mouse_square_y)
@@ -212,7 +209,7 @@ private:
 				<< mouse_square_x << ',' << mouse_square_y << '\n';
 		}
 
-		// Check that our [from_x, from_y, to_x, to_y] exists as one entry in the legal moves list
+		// Check that [from_x, from_y, to_x, to_y] is a legal move
 		for (const Node& child_node : node.children)
 		{
 			const std::string legal_move = child_node.board.get_move();
@@ -235,8 +232,6 @@ private:
 				// A worker thread will almost certainly have generated these by now, but do this anyway
 				// for the sake of correctness.
 				node.generate_child_boards();
-
-				// We made a move (and modified the structure we're iterating over), bail
 				return;
 			}
 		}
@@ -269,18 +264,9 @@ private:
 					break;
 
 				case sf::Event::KeyPressed:
-					if (event.key.code == sf::Keyboard::Key::X)
-					{
-						//
-					}
-					else if (event.key.code == sf::Keyboard::Key::Y)
-					{
-						//
-					}
-					else if (event.key.code == sf::Keyboard::Key::Z)
-					{
-						//
-					}
+					if (event.key.code == sf::Keyboard::Key::X) {}
+					else if (event.key.code == sf::Keyboard::Key::Y) {}
+					else if (event.key.code == sf::Keyboard::Key::Z) {}
 					break;
 
 				case sf::Event::Closed:
@@ -327,20 +313,20 @@ private:
 		if (piece.is_white())
 		{
 			if (piece.is_rook()) { wr.setPosition({ x_pos, y_pos }); window->draw(wr); }
-			if (piece.is_knight()) { wn.setPosition({ x_pos, y_pos }); window->draw(wn); }
-			if (piece.is_bishop()) { wb.setPosition({ x_pos, y_pos }); window->draw(wb); }
-			if (piece.is_queen()) { wq.setPosition({ x_pos, y_pos }); window->draw(wq); }
-			if (piece.is_king()) { wk.setPosition({ x_pos, y_pos }); window->draw(wk); }
-			if (piece.is_pawn()) { wp.setPosition({ x_pos, y_pos }); window->draw(wp); }
+			else if (piece.is_knight()) { wn.setPosition({ x_pos, y_pos }); window->draw(wn); }
+			else if (piece.is_bishop()) { wb.setPosition({ x_pos, y_pos }); window->draw(wb); }
+			else if (piece.is_queen()) { wq.setPosition({ x_pos, y_pos }); window->draw(wq); }
+			else if (piece.is_king()) { wk.setPosition({ x_pos, y_pos }); window->draw(wk); }
+			else if (piece.is_pawn()) { wp.setPosition({ x_pos, y_pos }); window->draw(wp); }
 		}
 		else
 		{
 			if (piece.is_rook()) { br.setPosition({ x_pos, y_pos }); window->draw(br); }
-			if (piece.is_knight()) { bn.setPosition({ x_pos, y_pos }); window->draw(bn); }
-			if (piece.is_bishop()) { bb.setPosition({ x_pos, y_pos }); window->draw(bb); }
-			if (piece.is_queen()) { bq.setPosition({ x_pos, y_pos }); window->draw(bq); }
-			if (piece.is_king()) { bk.setPosition({ x_pos, y_pos }); window->draw(bk); }
-			if (piece.is_pawn()) { bp.setPosition({ x_pos, y_pos }); window->draw(bp); }
+			else if (piece.is_knight()) { bn.setPosition({ x_pos, y_pos }); window->draw(bn); }
+			else if (piece.is_bishop()) { bb.setPosition({ x_pos, y_pos }); window->draw(bb); }
+			else if (piece.is_queen()) { bq.setPosition({ x_pos, y_pos }); window->draw(bq); }
+			else if (piece.is_king()) { bk.setPosition({ x_pos, y_pos }); window->draw(bk); }
+			else if (piece.is_pawn()) { bp.setPosition({ x_pos, y_pos }); window->draw(bp); }
 		}
 	}
 
@@ -392,22 +378,22 @@ private:
 		{
 			for (const Node& child_node : node.children)
 			{
-				const std::string legal_move = child_node.board.get_move();
-				const size_t legal_move_x = file_to_x(legal_move[0]);
-				const size_t legal_move_y = rank_to_y(legal_move[1]);
+				const std::string move = child_node.board.get_move();
+				const size_t move_x = file_to_x(move[0]);
+				const size_t move_y = rank_to_y(move[1]);
 
-				if (dragging_from_x == legal_move_x &&
-					dragging_from_y == legal_move_y)
+				if (dragging_from_x == move_x &&
+					dragging_from_y == move_y)
 				{
-					const size_t legal_move_to_x = file_to_x(legal_move[2]);
-					const size_t legal_move_to_y = rank_to_y(legal_move[3]);
+					const size_t move_to_x = file_to_x(move[2]);
+					const size_t move_to_y = rank_to_y(move[3]);
 
-					// add half a tile's size, then remove the marker's radius
-					const float adjust = float(detail::tile_size_px / 2 - legal_marker.getRadius());
+					// Add half of a tile's size, then remove the marker's radius
+					constexpr float adjust = (detail::tile_size_px / 2) - legal_marker_radius_px;
 
 					legal_marker.setPosition(
-						float(board_x + detail::tile_size_px * legal_move_to_x + adjust),
-						float(board_y + detail::tile_size_px * legal_move_to_y + adjust));
+						float(board_x + detail::tile_size_px * move_to_x + adjust),
+						float(board_y + detail::tile_size_px * move_to_y + adjust));
 
 					window->draw(legal_marker);
 				}
@@ -430,22 +416,21 @@ private:
 			const int x = (int)file_to_x(legal_move[0]);
 			const int y = (int)rank_to_y(legal_move[1]);
 
-			// help; flipping x,y coordinates to y,x is icky
+			// todo: find a cleaner way to handle x,y coordinate flipping?
 			if (node.board.piece_at(y, x).is_queen()) { move_list << 'Q'; }
 			else if (node.board.piece_at(y, x).is_rook()) { move_list << 'R'; }
 			else if (node.board.piece_at(y, x).is_bishop()) { move_list << 'B'; }
 			else if (node.board.piece_at(y, x).is_knight()) { move_list << 'N'; }
 			else if (node.board.piece_at(y, x).is_king())
 			{
-				// Special logic for castling
+				// Add logic for castling
 				move_list << 'K';
 			}
 			else if (node.board.piece_at(y, x).is_pawn())
 			{
-				// Special logic for en-passant captures
+				// Add logic for en passant captures
 			}
 
-			// help; more icky flipping x,y coordinates to y,x
 			const int target_x = (int)file_to_x(legal_move[2]);
 			const int target_y = (int)rank_to_y(legal_move[3]);
 			if (node.board.is_occupied(target_y, target_x))
@@ -461,7 +446,7 @@ private:
 			// add the destination coordinates
 			move_list << legal_move[2] << legal_move[3];
 
-			// careful - use the child board here, not the current board
+			// use the child board here, not the current board
 			if (child_node.board.is_king_in_check(
 				child_node.board.get_color_to_move()))
 			{
