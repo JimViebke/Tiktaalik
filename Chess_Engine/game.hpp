@@ -36,7 +36,7 @@ namespace detail
 class Game
 {
 public:
-	Game() : node{ Board{ layouts::start_board } }
+	Game() : root{ Board{ layouts::start_board } }
 	{
 		sf::ContextSettings settings;
 		settings.antialiasingLevel = 8;
@@ -59,7 +59,7 @@ public:
 			abort();
 		}
 
-		node.generate_child_boards();
+		root.generate_child_boards();
 
 		legal_marker.setRadius(detail::legal_marker_radius_px);
 		legal_marker.setPointCount(15);
@@ -148,20 +148,20 @@ private:
 		Typically, x increases to the right, and y increases downward.
 		In chess, rank increases upward, and file increases to the right.
 		This requires some translation. */
-		if (node.board.is_empty((int)mouse_square_y, (int)mouse_square_x))
+		if (root.board.is_empty((int)mouse_square_y, (int)mouse_square_x))
 		{
 			std::cout << "No piece to drag\n";
 			return;
 		}
 
-		if (!node.board.piece_at((int)mouse_square_y, (int)mouse_square_x).is_color(node.board.get_color_to_move()))
+		if (!root.board.piece_at((int)mouse_square_y, (int)mouse_square_x).is_color(root.board.get_color_to_move()))
 		{
 			std::cout << "Not this color's turn\n";
 			return;
 		}
 
 		// Only allow dragging if we can find a legal move starting from the clicked square
-		for (const Node& child_node : node.children)
+		for (const Node& child_node : root.children)
 		{
 			const std::string legal_move = child_node.board.get_move();
 			const size_t legal_move_x = file_to_x(legal_move[0]);
@@ -170,7 +170,7 @@ private:
 			if (legal_move_x == mouse_square_x && legal_move_y == mouse_square_y)
 			{
 				dragging = true;
-				dragging_piece = node.board.piece_at((int)mouse_square_y, (int)mouse_square_x);
+				dragging_piece = root.board.piece_at((int)mouse_square_y, (int)mouse_square_x);
 				dragging_from_x = mouse_square_x;
 				dragging_from_y = mouse_square_y;
 				std::cout << "drag...\n";
@@ -210,7 +210,7 @@ private:
 		}
 
 		// Check that [from_x, from_y, to_x, to_y] is a legal move
-		for (const Node& child_node : node.children)
+		for (const Node& child_node : root.children)
 		{
 			const std::string legal_move = child_node.board.get_move();
 			const size_t legal_start_x = file_to_x(legal_move[0]);
@@ -226,12 +226,12 @@ private:
 				// Move a ply-1 child node to become the root node
 				// This preserves the relevant subset of the move graph.
 				const Node temp = child_node;
-				node = temp;
+				root = temp;
 
 				// Make sure all ply-1 child nodes have been generated.
 				// A worker thread will almost certainly have generated these by now, but do this anyway
 				// for the sake of correctness.
-				node.generate_child_boards();
+				root.generate_child_boards();
 				return;
 			}
 		}
@@ -360,7 +360,7 @@ private:
 		{
 			for (int file = 0; file < 8; ++file)
 			{
-				const Piece piece = node.board.piece_at(rank, file);
+				const Piece piece = root.board.piece_at(rank, file);
 				if (piece.is_empty()) continue;
 
 				// If the current piece is being dragged, don't draw it in the original position
@@ -376,7 +376,7 @@ private:
 
 		if (dragging)
 		{
-			for (const Node& child_node : node.children)
+			for (const Node& child_node : root.children)
 			{
 				const std::string move = child_node.board.get_move();
 				const size_t move_x = file_to_x(move[0]);
@@ -407,35 +407,36 @@ private:
 	{
 		std::stringstream move_list;
 
-		move_list << (node.board.white_to_move() ? "White to move\n\n" : "Black to move\n\n");
+		move_list << (root.board.white_to_move() ? "White to move\n\n" : "Black to move\n\n");
 
-		move_list << node.children.size() << " moves:\n";
-		for (const Node& child_node : node.children)
+		move_list << root.children.size() << " moves:\n";
+		for (const Node& child_node : root.children)
 		{
 			const std::string legal_move = child_node.board.get_move();
 			const int x = (int)file_to_x(legal_move[0]);
 			const int y = (int)rank_to_y(legal_move[1]);
 
 			// todo: find a cleaner way to handle x,y coordinate flipping?
-			if (node.board.piece_at(y, x).is_queen()) { move_list << 'Q'; }
-			else if (node.board.piece_at(y, x).is_rook()) { move_list << 'R'; }
-			else if (node.board.piece_at(y, x).is_bishop()) { move_list << 'B'; }
-			else if (node.board.piece_at(y, x).is_knight()) { move_list << 'N'; }
-			else if (node.board.piece_at(y, x).is_king())
+			const Piece piece = root.board.piece_at(y, x);
+			if (piece.is_queen()) { move_list << 'Q'; }
+			else if (piece.is_rook()) { move_list << 'R'; }
+			else if (piece.is_bishop()) { move_list << 'B'; }
+			else if (piece.is_knight()) { move_list << 'N'; }
+			else if (piece.is_king())
 			{
 				// Add logic for castling
 				move_list << 'K';
 			}
-			else if (node.board.piece_at(y, x).is_pawn())
+			else if (piece.is_pawn())
 			{
 				// Add logic for en passant captures
 			}
 
 			const int target_x = (int)file_to_x(legal_move[2]);
 			const int target_y = (int)rank_to_y(legal_move[3]);
-			if (node.board.is_occupied(target_y, target_x))
+			if (root.board.is_occupied(target_y, target_x))
 			{
-				if (node.board.piece_at(y, x).is_pawn())
+				if (root.board.piece_at(y, x).is_pawn())
 				{
 					move_list << legal_move[0];
 				}
@@ -517,7 +518,7 @@ private:
 	sf::Text overlay; // easy way to add text on the screen
 	sf::Text overlay_right; // the move list
 
-	Node node; // move graph, rooted on the current position
+	Node root; // move graph, rooted on the current position
 
 	const color human_color = color::white;
 
