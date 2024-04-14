@@ -4,7 +4,7 @@ June 15 2014
 */
 
 #include "game.hpp"
-#include "node.h"
+#include "node.hpp"
 
 void print_commands()
 {
@@ -52,6 +52,6 @@ void menu()
 
 int main()
 {
-	Game game;
+	chess::Game game;
 	game.run();
 }

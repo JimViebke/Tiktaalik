@@ -4,57 +4,25 @@ Mar 14 2016 */
 
 #include <iostream>
 
-#include "board.h"
+#include "board.hpp"
 
-void Board::print_board(const Board & board, const unsigned & offset)
+namespace chess
 {
-	for (unsigned rank = 0; rank < 8; ++rank)
+	void Board::print_board(const Board& board, const unsigned& offset)
 	{
-		// add indent
-		for (unsigned i = 0; i < offset * 9; ++i) std::cout << ' ';
-
-		for (unsigned file = 0; file < 8; ++file)
+		for (unsigned rank = 0; rank < 8; ++rank)
 		{
-			const Piece & piece = board.piece_at(rank, file);
+			// add indent
+			for (unsigned i = 0; i < offset * 9; ++i) std::cout << ' ';
 
-			if (piece.is_empty()) std::cout << ".";
-			else if (piece.is_white())
-			{
-				if (piece.is_rook()) std::cout << "R";
-				else if (piece.is_bishop()) std::cout << "B";
-				else if (piece.is_knight()) std::cout << "N";
-				else if (piece.is_queen()) std::cout << "Q";
-				else if (piece.is_king()) std::cout << "K";
-			}
-			else if (piece.is_black())
-			{
-				if (piece.is_rook()) std::cout << "r";
-				else if (piece.is_bishop()) std::cout << "b";
-				else if (piece.is_knight()) std::cout << "n";
-				else if (piece.is_queen()) std::cout << "q";
-				else if (piece.is_king()) std::cout << "k";
-			}
-		}
-		std::cout << std::endl;
-	}
-	std::cout << std::endl;
-}
-void Board::print_board(const board_list & boards)
-{
-	for (unsigned rank = 0; rank < 8; ++rank)
-	{
-		// render this rank for each board
-		for (board_list::const_iterator it = boards.cbegin(); it != boards.cend(); ++it)
-		{
 			for (unsigned file = 0; file < 8; ++file)
 			{
-				const Piece & piece = it->piece_at(rank, file);
+				const piece& piece = board.piece_at(rank, file);
 
 				if (piece.is_empty()) std::cout << ".";
 				else if (piece.is_white())
 				{
-					if (piece.is_pawn()) std::cout << "P";
-					else if (piece.is_rook()) std::cout << "R";
+					if (piece.is_rook()) std::cout << "R";
 					else if (piece.is_bishop()) std::cout << "B";
 					else if (piece.is_knight()) std::cout << "N";
 					else if (piece.is_queen()) std::cout << "Q";
@@ -62,611 +30,658 @@ void Board::print_board(const board_list & boards)
 				}
 				else if (piece.is_black())
 				{
-					if (piece.is_pawn()) std::cout << "p";
-					else if (piece.is_rook()) std::cout << "r";
+					if (piece.is_rook()) std::cout << "r";
 					else if (piece.is_bishop()) std::cout << "b";
 					else if (piece.is_knight()) std::cout << "n";
 					else if (piece.is_queen()) std::cout << "q";
 					else if (piece.is_king()) std::cout << "k";
 				}
 			}
-
-			// add indent if there is another board to print
-			if (it != --boards.cend())
-				for (unsigned i = 0; i < 5; ++i) std::cout << ' ';
+			std::cout << std::endl;
 		}
-
 		std::cout << std::endl;
 	}
-	std::cout << std::endl;
-}
-
-Board::board_list Board::generate_child_boards() const
-{
-	board_list child_boards;
-
-	for (int rank = 0; rank < 8; ++rank)
+	void Board::print_board(const board_list& boards)
 	{
-		for (int file = 0; file < 8; ++file)
+		for (unsigned rank = 0; rank < 8; ++rank)
 		{
-			// if this piece can move
-			if (piece_at(rank, file).is_color(color_to_move))
+			// render this rank for each board
+			for (board_list::const_iterator it = boards.cbegin(); it != boards.cend(); ++it)
 			{
-				if (piece_at(rank, file).is_pawn())
+				for (unsigned file = 0; file < 8; ++file)
 				{
-					find_pawn_moves(child_boards, rank, file);
+					const piece& piece = it->piece_at(rank, file);
+
+					if (piece.is_empty()) std::cout << ".";
+					else if (piece.is_white())
+					{
+						if (piece.is_pawn()) std::cout << "P";
+						else if (piece.is_rook()) std::cout << "R";
+						else if (piece.is_bishop()) std::cout << "B";
+						else if (piece.is_knight()) std::cout << "N";
+						else if (piece.is_queen()) std::cout << "Q";
+						else if (piece.is_king()) std::cout << "K";
+					}
+					else if (piece.is_black())
+					{
+						if (piece.is_pawn()) std::cout << "p";
+						else if (piece.is_rook()) std::cout << "r";
+						else if (piece.is_bishop()) std::cout << "b";
+						else if (piece.is_knight()) std::cout << "n";
+						else if (piece.is_queen()) std::cout << "q";
+						else if (piece.is_king()) std::cout << "k";
+					}
 				}
-				else if (piece_at(rank, file).is_rook())
-				{
-					find_rook_moves(child_boards, rank, file);
-				}
-				else if (piece_at(rank, file).is_bishop())
-				{
-					find_bishop_moves(child_boards, rank, file);
-				}
-				else if (piece_at(rank, file).is_knight())
-				{
-					find_knight_moves(child_boards, rank, file);
-				}
-				else if (piece_at(rank, file).is_queen())
-				{
-					find_queen_moves(child_boards, rank, file);
-				}
-				else if (piece_at(rank, file).is_king())
-				{
-					find_king_moves(child_boards, rank, file);
-				}
-			} // end if piece can move
+
+				// add indent if there is another board to print
+				if (it != --boards.cend())
+					for (unsigned i = 0; i < 5; ++i) std::cout << ' ';
+			}
+
+			std::cout << std::endl;
 		}
+		std::cout << std::endl;
 	}
 
-	Board::remove_invalid_boards(child_boards);
-
-	return child_boards;
-}
-
-void Board::remove_invalid_boards(board_list & boards)
-{
-	for (auto it = boards.begin(); it != boards.end(); )
+	Board::board_list Board::generate_child_boards()
 	{
-		if (!it->is_valid_position())
-			it = boards.erase(it);
-		else
-			++it;
-	}
-}
+		board_list child_boards;
 
-bool Board::is_valid_position() const
-{
-	// It is fine if the moving player was placed into check.
-	// The color that just moved must not be in check.
-	return !is_king_in_check(other_color(color_to_move));
-}
-
-// these are in the same order that they are called in the generation function, which acts in order of probable piece frequency
-
-void Board::find_pawn_moves(board_list & child_boards, const int rank, const int file) const
-{
-	if (piece_at(rank, file).is_white())
-	{
-		if (bounds_check(rank - 1)) // only validate moving forwards once
+		for (int rank = 0; rank < 8; ++rank)
 		{
-			// check for moving forward one square
-			if (piece_at(rank - 1, file).is_empty())
+			for (int file = 0; file < 8; ++file)
 			{
-				if (rank == 1) // if the pawn is on the second last rank
+				// if this piece can move
+				if (piece_at(rank, file).is_color(color_to_move))
 				{
-					child_boards.emplace_back(*this, rank, file, rank - 1, file, white_queen);
-					child_boards.emplace_back(*this, rank, file, rank - 1, file, white_rook);
-					child_boards.emplace_back(*this, rank, file, rank - 1, file, white_bishop);
-					child_boards.emplace_back(*this, rank, file, rank - 1, file, white_knight);
-				}
-				else // the pawn is moving without promotion
-				{
-					child_boards.emplace_back(*this, rank, file, rank - 1, file);
-				}
-			}
-			// check for moving forward two squares
-			if (rank == 6 && piece_at(5, file).is_empty() && piece_at(4, file).is_empty())
-			{
-				child_boards.emplace_back(*this, rank, file, 4, file);
-			}
-			// check for captures
-			if (bounds_check(file + 1) && piece_at(rank - 1, file + 1).is_black())
-			{
-				if (rank == 1) // if the pawn is on the second last rank
-				{
-					child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, white_queen);
-					child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, white_rook);
-					child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, white_bishop);
-					child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, white_knight);
-				}
-				else // the pawn is capturing without promotion
-				{
-					child_boards.emplace_back(*this, rank, file, rank - 1, file + 1);
-				}
-			}
-			if (bounds_check(file - 1) && piece_at(rank - 1, file - 1).is_black())
-			{
-				if (rank == 1) // if the pawn is on the second last rank
-				{
-					child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, white_queen);
-					child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, white_rook);
-					child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, white_bishop);
-					child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, white_knight);
-				}
-				else // the pawn is capturing without promotion
-				{
-					child_boards.emplace_back(*this, rank, file, rank - 1, file - 1);
-				}
-			}
-			// check for en passant
-			if (rank == 3)
-			{
-				if (en_passant_flag == file - 1 && bounds_check(file - 1) && piece_at(rank, file - 1).is_pawn())
-					child_boards.emplace_back(*this, rank, file, rank - 1, file - 1);
-				else if (en_passant_flag == file + 1 && bounds_check(file + 1) && piece_at(rank, file + 1).is_pawn())
-					child_boards.emplace_back(*this, rank, file, rank - 1, file + 1);
+					if (piece_at(rank, file).is_pawn())
+					{
+						find_pawn_moves(child_boards, rank, file);
+					}
+					else if (piece_at(rank, file).is_rook())
+					{
+						find_rook_moves(child_boards, rank, file);
+					}
+					else if (piece_at(rank, file).is_bishop())
+					{
+						find_bishop_moves(child_boards, rank, file);
+					}
+					else if (piece_at(rank, file).is_knight())
+					{
+						find_knight_moves(child_boards, rank, file);
+					}
+					else if (piece_at(rank, file).is_queen())
+					{
+						find_queen_moves(child_boards, rank, file);
+					}
+					else if (piece_at(rank, file).is_king())
+					{
+						find_king_moves(child_boards, rank, file);
+					}
+				} // end if piece can move
 			}
 		}
-	}
-	else if (piece_at(rank, file).is_black())
-	{
-		if (bounds_check(rank + 1)) // only validate moving forwards once
+
+		Board::remove_invalid_boards(child_boards);
+
+		if (child_boards.size() == 0)
 		{
-			// check for moving forward one square
-			if (piece_at(rank + 1, file).is_empty())
+			if (white_to_move() && is_king_in_check(color::white))
 			{
-				if (rank == 6) // if the pawn is on the second last rank
-				{
-					child_boards.emplace_back(*this, rank, file, rank + 1, file, black_queen);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file, black_rook);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file, black_bishop);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file, black_knight);
-				}
-				else // the pawn is moving without promotion
-				{
-					child_boards.emplace_back(*this, rank, file, rank + 1, file);
-				}
+				_result = result::black_wins_by_checkmate;
 			}
-			// check for moving forward two squares
-			if (rank == 1 && piece_at(2, file).is_empty() && piece_at(3, file).is_empty())
+			else if (black_to_move() && is_king_in_check(color::black))
 			{
-				child_boards.emplace_back(*this, rank, file, 3, file);
+				_result = result::white_wins_by_checkmate;
 			}
-			// check for captures
-			if (bounds_check(file + 1) && piece_at(rank + 1, file + 1).is_white())
+			else
 			{
-				if (rank == 6) // if the pawn is on the second last rank
-				{
-					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, black_queen);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, black_rook);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, black_bishop);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, black_knight);
-				}
-				else // the pawn is capturing without promotion
-				{
-					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1);
-				}
-			}
-			if (bounds_check(file - 1) && piece_at(rank + 1, file - 1).is_white())
-			{
-				if (rank == 6) // if the pawn is on the second last rank
-				{
-					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, black_queen);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, black_rook);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, black_bishop);
-					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, black_knight);
-				}
-				else // the pawn is capturing without promotion
-				{
-					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1);
-				}
-			}
-			// check for en passant
-			if (rank == 4)
-			{
-				if (en_passant_flag == file - 1 && bounds_check(file - 1) && piece_at(rank, file - 1).is_pawn())
-					child_boards.emplace_back(*this, rank, file, rank + 1, file - 1);
-				else if (en_passant_flag == file + 1 && bounds_check(file + 1) && piece_at(rank, file + 1).is_pawn())
-					child_boards.emplace_back(*this, rank, file, rank + 1, file + 1);
+				_result = result::draw_by_stalemate;
 			}
 		}
-	}
-}
-void Board::find_rook_moves(board_list & child_boards, const int rank, const int file) const
-{
-	// rank descending
-	for (int end_rank = rank - 1; end_rank >= 0; --end_rank)
-	{
-		if (!bounds_check(end_rank)) break; // out of bounds; don't keep iterating in this direction
 
-		if (piece_at(end_rank, file).is_empty()) // if the square is empty, the rook can move here
-		{
-			child_boards.emplace_back(*this, rank, file, end_rank, file);
-			continue; // keep searching in the current direction
-		}
-		// if the rook has encountered an enemy piece
-		else if (piece_at(end_rank, file).is_opposing_color(color_to_move))
-		{
-			// the rook can capture...
-			child_boards.emplace_back(*this, rank, file, end_rank, file);
-			break; // ...but the rook cannot keep moving
-		}
-		else break; // the rook cannot move into a friendly piece; stop searching this way
+		return child_boards;
 	}
 
-	// rank ascending (documentation same as above)
-	for (int end_rank = rank + 1; end_rank < 8; ++end_rank)
+	void Board::remove_invalid_boards(board_list& boards)
 	{
-		if (!bounds_check(end_rank)) break;
-
-		if (piece_at(end_rank, file).is_empty())
+		for (auto it = boards.begin(); it != boards.end(); )
 		{
-			child_boards.emplace_back(*this, rank, file, end_rank, file);
-			continue;
+			if (!it->is_valid_position())
+				it = boards.erase(it);
+			else
+				++it;
 		}
-		else if (piece_at(end_rank, file).is_opposing_color(color_to_move))
-		{
-			child_boards.emplace_back(*this, rank, file, end_rank, file);
-			break;
-		}
-		else break;
 	}
 
-	// file descending (documentation same as above)
-	for (int end_file = file - 1; end_file >= 0; --end_file)
+	bool Board::is_valid_position() const
 	{
-		if (!bounds_check(end_file)) break;
-
-		if (piece_at(rank, end_file).is_empty())
-		{
-			child_boards.emplace_back(*this, rank, file, rank, end_file);
-			continue;
-		}
-		else if (piece_at(rank, end_file).is_opposing_color(color_to_move))
-		{
-			child_boards.emplace_back(*this, rank, file, rank, end_file);
-			break;
-		}
-		else break;
+		// It is fine if the moving player was placed into check.
+		// The color that just moved must not be in check.
+		return !is_king_in_check(other_color(color_to_move));
 	}
 
-	// file ascending (documentation same as above)
-	for (int end_file = file + 1; end_file < 8; ++end_file)
+	// these are in the same order that they are called in the generation function, which acts in order of probable piece frequency
+
+	void Board::find_pawn_moves(board_list& child_boards, const int rank, const int file) const
 	{
-		if (!bounds_check(end_file)) break;
-
-		if (piece_at(rank, end_file).is_empty())
+		if (piece_at(rank, file).is_white())
 		{
-			child_boards.emplace_back(*this, rank, file, rank, end_file);
-			continue;
-		}
-		else if (piece_at(rank, end_file).is_opposing_color(color_to_move))
-		{
-			child_boards.emplace_back(*this, rank, file, rank, end_file);
-			break;
-		}
-		else break;
-	}
-}
-void Board::find_bishop_moves(board_list & child_boards, const int rank, const int file) const
-{
-	// working diagonally (rank and file descending)
-	for (int offset = 1; offset < 8; ++offset)
-	{
-		// if the location is off of the board, stop searching in this direction
-		if (!bounds_check(rank - offset, file - offset)) break;
-
-		// if the square is empty
-		if (piece_at(rank - offset, file - offset).is_empty())
-		{
-			// the bishop can move here
-			child_boards.emplace_back(*this, rank, file, rank - offset, file - offset);
-			continue; // keep searching in this direction
-		}
-		// if the square is occupied by an enemy piece, the bishop can capture it
-		else if (piece_at(rank - offset, file - offset).is_opposing_color(color_to_move))
-		{
-			child_boards.emplace_back(*this, rank, file, rank - offset, file - offset);
-			// the bishop made a capture, stop searching in this direction
-			break;
-		}
-		// else, the square is occupied by a friendly piece, stop searching in this direction
-		else break;
-	}
-
-	// working diagonally (rank descending and file ascending) (documentation same as above)
-	for (int offset = 1; offset < 8; ++offset)
-	{
-		if (!bounds_check(rank - offset, file + offset)) break;
-
-		if (piece_at(rank - offset, file + offset).is_empty())
-		{
-			child_boards.emplace_back(*this, rank, file, rank - offset, file + offset);
-			continue;
-		}
-		else if (piece_at(rank - offset, file + offset).is_opposing_color(color_to_move))
-		{
-			child_boards.emplace_back(*this, rank, file, rank - offset, file + offset);
-			break;
-		}
-		else break;
-	}
-
-	// working diagonally (rank ascending and file descending) (documentation same as above)
-	for (int offset = 1; offset < 8; ++offset)
-	{
-		if (!bounds_check(rank + offset, file - offset)) break;
-
-		if (piece_at(rank + offset, file - offset).is_empty())
-		{
-			child_boards.emplace_back(*this, rank, file, rank + offset, file - offset);
-			continue;
-		}
-		else if (piece_at(rank + offset, file - offset).is_opposing_color(color_to_move))
-		{
-			child_boards.emplace_back(*this, rank, file, rank + offset, file - offset);
-			break;
-		}
-		else break;
-	}
-
-	// working diagonally (rank and file ascending) (documentation same as above)
-	for (int offset = 1; offset < 8; ++offset)
-	{
-		if (!bounds_check(rank + offset, file + offset)) break;
-
-		if (piece_at(rank + offset, file + offset).is_empty())
-		{
-			child_boards.emplace_back(*this, rank, file, rank + offset, file + offset);
-			continue;
-		}
-		else if (piece_at(rank + offset, file + offset).is_opposing_color(color_to_move))
-		{
-			child_boards.emplace_back(*this, rank, file, rank + offset, file + offset);
-			break;
-		}
-		else break;
-	}
-}
-void Board::find_knight_moves(board_list & child_boards, const int rank, const int file) const
-{
-	if (bounds_check(rank - 2, file + 1) && !piece_at(rank - 2, file + 1).is_color(color_to_move))
-		child_boards.emplace_back(*this, rank, file, rank - 2, file + 1);
-	if (bounds_check(rank - 1, file + 2) && !piece_at(rank - 1, file + 2).is_color(color_to_move))
-		child_boards.emplace_back(*this, rank, file, rank - 1, file + 2);
-
-	if (bounds_check(rank + 1, file + 2) && !piece_at(rank + 1, file + 2).is_color(color_to_move))
-		child_boards.emplace_back(*this, rank, file, rank + 1, file + 2);
-	if (bounds_check(rank + 2, file + 1) && !piece_at(rank + 2, file + 1).is_color(color_to_move))
-		child_boards.emplace_back(*this, rank, file, rank + 2, file + 1);
-
-	if (bounds_check(rank + 2, file - 1) && !piece_at(rank + 2, file - 1).is_color(color_to_move))
-		child_boards.emplace_back(*this, rank, file, rank + 2, file - 1);
-	if (bounds_check(rank + 1, file - 2) && !piece_at(rank + 1, file - 2).is_color(color_to_move))
-		child_boards.emplace_back(*this, rank, file, rank + 1, file - 2);
-
-	if (bounds_check(rank - 1, file - 2) && !piece_at(rank - 1, file - 2).is_color(color_to_move))
-		child_boards.emplace_back(*this, rank, file, rank - 1, file - 2);
-	if (bounds_check(rank - 2, file - 1) && !piece_at(rank - 2, file - 1).is_color(color_to_move))
-		child_boards.emplace_back(*this, rank, file, rank - 2, file - 1);
-}
-void Board::find_queen_moves(board_list & child_boards, const int rank, const int file) const
-{
-	// the function calls themselves are piece-agnostic, so there's no reason this shouldn't work
-	find_rook_moves(child_boards, rank, file);
-	find_bishop_moves(child_boards, rank, file);
-}
-void Board::find_king_moves(board_list & child_boards, const int rank, const int file) const
-{
-	// iterate over all adjacent squares
-	for (int rank_d = -1; rank_d <= 1; ++rank_d)
-	{
-		for (int file_d = -1; file_d <= 1; ++file_d)
-		{
-			// if the square is not occupied by a friendly piece
-			if (bounds_check(rank + rank_d, file + file_d) && !piece_at(rank + rank_d, file + file_d).is_color(color_to_move))
+			if (bounds_check(rank - 1)) // only validate moving forwards once
 			{
-				child_boards.emplace_back(*this, rank, file, rank + rank_d, file + file_d);
+				// check for moving forward one square
+				if (piece_at(rank - 1, file).is_empty())
+				{
+					if (rank == 1) // if the pawn is on the second last rank
+					{
+						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white_queen));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white_rook));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white_bishop));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white_knight));
+					}
+					else // the pawn is moving without promotion
+					{
+						child_boards.emplace_back(*this, rank, file, rank - 1, file);
+					}
+				}
+				// check for moving forward two squares
+				if (rank == 6 && piece_at(5, file).is_empty() && piece_at(4, file).is_empty())
+				{
+					child_boards.emplace_back(*this, rank, file, 4, file);
+				}
+				// check for captures
+				if (bounds_check(file + 1) && piece_at(rank - 1, file + 1).is_black())
+				{
+					if (rank == 1) // if the pawn is on the second last rank
+					{
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white_queen));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white_rook));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white_bishop));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white_knight));
+					}
+					else // the pawn is capturing without promotion
+					{
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1);
+					}
+				}
+				if (bounds_check(file - 1) && piece_at(rank - 1, file - 1).is_black())
+				{
+					if (rank == 1) // if the pawn is on the second last rank
+					{
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white_queen));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white_rook));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white_bishop));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white_knight));
+					}
+					else // the pawn is capturing without promotion
+					{
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1);
+					}
+				}
+				// check for en passant
+				if (rank == 3)
+				{
+					if (en_passant_flag == file - 1 && bounds_check(file - 1) && piece_at(rank, file - 1).is_pawn())
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1);
+					else if (en_passant_flag == file + 1 && bounds_check(file + 1) && piece_at(rank, file + 1).is_pawn())
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1);
+				}
 			}
 		}
-	}
-
-	const Piece & king = piece_at(rank, file);
-
-	if ((king.is_white() && white_can_castle_k_s) ||
-		(king.is_black() && black_can_castle_k_s))
-	{
-		if (// If white can castle to kingside, then we already know the king and rook are in place.
-			// Check if the squares in between are empty. 
-			piece_at(rank, file + 1).is_empty() && // Check if the squares in between are empty.
-			piece_at(rank, file + 2).is_empty() &&
-			!is_king_in_check(king, rank, file) && // check if the king is in check now...			
-			!Board(*this, rank, file, rank, file + 1).is_king_in_check(king, rank, file + 1) && // ...on his way...
-			!Board(*this, rank, file, rank, file + 2).is_king_in_check(king, rank, file + 2)) // ...or at his destination.
+		else if (piece_at(rank, file).is_black())
 		{
-			child_boards.emplace_back(*this, rank, file, rank, file + 2); // the board constructor will detect a castle and move the rook as well
-		}
-	}
-
-	if ((king.is_white() && white_can_castle_q_s) || // documentation same as above
-		(king.is_black() && black_can_castle_q_s))
-	{
-		if (piece_at(rank, file - 1).is_empty() &&
-			piece_at(rank, file - 2).is_empty() &&
-			piece_at(rank, file - 3).is_empty() && // we need to check that this square is empty for the rook to move through, but no check test is needed
-			!is_king_in_check(king, rank, file) &&
-			!Board(*this, rank, file, rank, file - 1).is_king_in_check(king, rank, file - 1) &&
-			!Board(*this, rank, file, rank, file - 2).is_king_in_check(king, rank, file - 2))
-		{
-			child_boards.emplace_back(*this, rank, file, rank, file - 2);
-		}
-	}
-}
-
-bool Board::is_king_in_check(const color check_color) const
-{
-	for (int rank = 0; rank < 8; ++rank)
-	{
-		for (int file = 0; file < 8; ++file)
-		{
-			// if the piece is a king of the color we're looking for
-			if (piece_at(rank, file).is_king())
+			if (bounds_check(rank + 1)) // only validate moving forwards once
 			{
-				// extract the king (50% chance we won't have to do this again)
-				const Piece & king = piece_at(rank, file);
-				// if this king is the color for which to test for check
-				if (king.is_color(check_color))
+				// check for moving forward one square
+				if (piece_at(rank + 1, file).is_empty())
 				{
-					return is_king_in_check(king, rank, file);
+					if (rank == 6) // if the pawn is on the second last rank
+					{
+						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black_queen));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black_rook));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black_bishop));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black_knight));
+					}
+					else // the pawn is moving without promotion
+					{
+						child_boards.emplace_back(*this, rank, file, rank + 1, file);
+					}
+				}
+				// check for moving forward two squares
+				if (rank == 1 && piece_at(2, file).is_empty() && piece_at(3, file).is_empty())
+				{
+					child_boards.emplace_back(*this, rank, file, 3, file);
+				}
+				// check for captures
+				if (bounds_check(file + 1) && piece_at(rank + 1, file + 1).is_white())
+				{
+					if (rank == 6) // if the pawn is on the second last rank
+					{
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black_queen));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black_rook));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black_bishop));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black_knight));
+					}
+					else // the pawn is capturing without promotion
+					{
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1);
+					}
+				}
+				if (bounds_check(file - 1) && piece_at(rank + 1, file - 1).is_white())
+				{
+					if (rank == 6) // if the pawn is on the second last rank
+					{
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black_queen));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black_rook));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black_bishop));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black_knight));
+					}
+					else // the pawn is capturing without promotion
+					{
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1);
+					}
+				}
+				// check for en passant
+				if (rank == 4)
+				{
+					if (en_passant_flag == file - 1 && bounds_check(file - 1) && piece_at(rank, file - 1).is_pawn())
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1);
+					else if (en_passant_flag == file + 1 && bounds_check(file + 1) && piece_at(rank, file + 1).is_pawn())
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1);
 				}
 			}
 		}
 	}
-
-	return false;
-}
-
-bool Board::is_king_in_check(const Piece king, const Rank rank, const File file) const
-{
-	// iterate over all adjacent squares to check for a king
-	for (int rank_d = -1; rank_d <= 1; ++rank_d)
+	void Board::find_rook_moves(board_list& child_boards, const int rank, const int file) const
 	{
-		for (int file_d = -1; file_d <= 1; ++file_d)
+		// rank descending
+		for (int end_rank = rank - 1; end_rank >= 0; --end_rank)
 		{
-			if (rank_d == 0 && file_d == 0) continue; // don't examine the current square
-			if (bounds_check(rank + rank_d, file + file_d) && piece_at(rank + rank_d, file + file_d).is_king())
+			if (!bounds_check(end_rank)) break; // out of bounds; don't keep iterating in this direction
+
+			if (piece_at(end_rank, file).is_empty()) // if the square is empty, the rook can move here
 			{
-				return true; // the king is in check
+				child_boards.emplace_back(*this, rank, file, end_rank, file);
+				continue; // keep searching in the current direction
+			}
+			// if the rook has encountered an enemy piece
+			else if (piece_at(end_rank, file).is_opposing_color(color_to_move))
+			{
+				// the rook can capture...
+				child_boards.emplace_back(*this, rank, file, end_rank, file);
+				break; // ...but the rook cannot keep moving
+			}
+			else break; // the rook cannot move into a friendly piece; stop searching this way
+		}
+
+		// rank ascending (documentation same as above)
+		for (int end_rank = rank + 1; end_rank < 8; ++end_rank)
+		{
+			if (!bounds_check(end_rank)) break;
+
+			if (piece_at(end_rank, file).is_empty())
+			{
+				child_boards.emplace_back(*this, rank, file, end_rank, file);
+				continue;
+			}
+			else if (piece_at(end_rank, file).is_opposing_color(color_to_move))
+			{
+				child_boards.emplace_back(*this, rank, file, end_rank, file);
+				break;
+			}
+			else break;
+		}
+
+		// file descending (documentation same as above)
+		for (int end_file = file - 1; end_file >= 0; --end_file)
+		{
+			if (!bounds_check(end_file)) break;
+
+			if (piece_at(rank, end_file).is_empty())
+			{
+				child_boards.emplace_back(*this, rank, file, rank, end_file);
+				continue;
+			}
+			else if (piece_at(rank, end_file).is_opposing_color(color_to_move))
+			{
+				child_boards.emplace_back(*this, rank, file, rank, end_file);
+				break;
+			}
+			else break;
+		}
+
+		// file ascending (documentation same as above)
+		for (int end_file = file + 1; end_file < 8; ++end_file)
+		{
+			if (!bounds_check(end_file)) break;
+
+			if (piece_at(rank, end_file).is_empty())
+			{
+				child_boards.emplace_back(*this, rank, file, rank, end_file);
+				continue;
+			}
+			else if (piece_at(rank, end_file).is_opposing_color(color_to_move))
+			{
+				child_boards.emplace_back(*this, rank, file, rank, end_file);
+				break;
+			}
+			else break;
+		}
+	}
+	void Board::find_bishop_moves(board_list& child_boards, const int rank, const int file) const
+	{
+		// working diagonally (rank and file descending)
+		for (int offset = 1; offset < 8; ++offset)
+		{
+			// if the location is off of the board, stop searching in this direction
+			if (!bounds_check(rank - offset, file - offset)) break;
+
+			// if the square is empty
+			if (piece_at(rank - offset, file - offset).is_empty())
+			{
+				// the bishop can move here
+				child_boards.emplace_back(*this, rank, file, rank - offset, file - offset);
+				continue; // keep searching in this direction
+			}
+			// if the square is occupied by an enemy piece, the bishop can capture it
+			else if (piece_at(rank - offset, file - offset).is_opposing_color(color_to_move))
+			{
+				child_boards.emplace_back(*this, rank, file, rank - offset, file - offset);
+				// the bishop made a capture, stop searching in this direction
+				break;
+			}
+			// else, the square is occupied by a friendly piece, stop searching in this direction
+			else break;
+		}
+
+		// working diagonally (rank descending and file ascending) (documentation same as above)
+		for (int offset = 1; offset < 8; ++offset)
+		{
+			if (!bounds_check(rank - offset, file + offset)) break;
+
+			if (piece_at(rank - offset, file + offset).is_empty())
+			{
+				child_boards.emplace_back(*this, rank, file, rank - offset, file + offset);
+				continue;
+			}
+			else if (piece_at(rank - offset, file + offset).is_opposing_color(color_to_move))
+			{
+				child_boards.emplace_back(*this, rank, file, rank - offset, file + offset);
+				break;
+			}
+			else break;
+		}
+
+		// working diagonally (rank ascending and file descending) (documentation same as above)
+		for (int offset = 1; offset < 8; ++offset)
+		{
+			if (!bounds_check(rank + offset, file - offset)) break;
+
+			if (piece_at(rank + offset, file - offset).is_empty())
+			{
+				child_boards.emplace_back(*this, rank, file, rank + offset, file - offset);
+				continue;
+			}
+			else if (piece_at(rank + offset, file - offset).is_opposing_color(color_to_move))
+			{
+				child_boards.emplace_back(*this, rank, file, rank + offset, file - offset);
+				break;
+			}
+			else break;
+		}
+
+		// working diagonally (rank and file ascending) (documentation same as above)
+		for (int offset = 1; offset < 8; ++offset)
+		{
+			if (!bounds_check(rank + offset, file + offset)) break;
+
+			if (piece_at(rank + offset, file + offset).is_empty())
+			{
+				child_boards.emplace_back(*this, rank, file, rank + offset, file + offset);
+				continue;
+			}
+			else if (piece_at(rank + offset, file + offset).is_opposing_color(color_to_move))
+			{
+				child_boards.emplace_back(*this, rank, file, rank + offset, file + offset);
+				break;
+			}
+			else break;
+		}
+	}
+	void Board::find_knight_moves(board_list& child_boards, const int rank, const int file) const
+	{
+		if (bounds_check(rank - 2, file + 1) && !piece_at(rank - 2, file + 1).is_color(color_to_move))
+			child_boards.emplace_back(*this, rank, file, rank - 2, file + 1);
+		if (bounds_check(rank - 1, file + 2) && !piece_at(rank - 1, file + 2).is_color(color_to_move))
+			child_boards.emplace_back(*this, rank, file, rank - 1, file + 2);
+
+		if (bounds_check(rank + 1, file + 2) && !piece_at(rank + 1, file + 2).is_color(color_to_move))
+			child_boards.emplace_back(*this, rank, file, rank + 1, file + 2);
+		if (bounds_check(rank + 2, file + 1) && !piece_at(rank + 2, file + 1).is_color(color_to_move))
+			child_boards.emplace_back(*this, rank, file, rank + 2, file + 1);
+
+		if (bounds_check(rank + 2, file - 1) && !piece_at(rank + 2, file - 1).is_color(color_to_move))
+			child_boards.emplace_back(*this, rank, file, rank + 2, file - 1);
+		if (bounds_check(rank + 1, file - 2) && !piece_at(rank + 1, file - 2).is_color(color_to_move))
+			child_boards.emplace_back(*this, rank, file, rank + 1, file - 2);
+
+		if (bounds_check(rank - 1, file - 2) && !piece_at(rank - 1, file - 2).is_color(color_to_move))
+			child_boards.emplace_back(*this, rank, file, rank - 1, file - 2);
+		if (bounds_check(rank - 2, file - 1) && !piece_at(rank - 2, file - 1).is_color(color_to_move))
+			child_boards.emplace_back(*this, rank, file, rank - 2, file - 1);
+	}
+	void Board::find_queen_moves(board_list& child_boards, const int rank, const int file) const
+	{
+		// the function calls themselves are piece-agnostic, so there's no reason this shouldn't work
+		find_rook_moves(child_boards, rank, file);
+		find_bishop_moves(child_boards, rank, file);
+	}
+	void Board::find_king_moves(board_list& child_boards, const int rank, const int file) const
+	{
+		// iterate over all adjacent squares
+		for (int rank_d = -1; rank_d <= 1; ++rank_d)
+		{
+			for (int file_d = -1; file_d <= 1; ++file_d)
+			{
+				// if the square is not occupied by a friendly piece
+				if (bounds_check(rank + rank_d, file + file_d) && !piece_at(rank + rank_d, file + file_d).is_color(color_to_move))
+				{
+					child_boards.emplace_back(*this, rank, file, rank + rank_d, file + file_d);
+				}
+			}
+		}
+
+		const piece& king = piece_at(rank, file);
+
+		if ((king.is_white() && white_can_castle_k_s) ||
+			(king.is_black() && black_can_castle_k_s))
+		{
+			if (// If white can castle to kingside, then we already know the king and rook are in place.
+				// Check if the squares in between are empty. 
+				piece_at(rank, file + 1).is_empty() && // Check if the squares in between are empty.
+				piece_at(rank, file + 2).is_empty() &&
+				!is_king_in_check(king, rank, file) && // check if the king is in check now...			
+				!Board(*this, rank, file, rank, file + 1).is_king_in_check(king, rank, file + 1) && // ...on his way...
+				!Board(*this, rank, file, rank, file + 2).is_king_in_check(king, rank, file + 2)) // ...or at his destination.
+			{
+				child_boards.emplace_back(*this, rank, file, rank, file + 2); // the board constructor will detect a castle and move the rook as well
+			}
+		}
+
+		if ((king.is_white() && white_can_castle_q_s) || // documentation same as above
+			(king.is_black() && black_can_castle_q_s))
+		{
+			if (piece_at(rank, file - 1).is_empty() &&
+				piece_at(rank, file - 2).is_empty() &&
+				piece_at(rank, file - 3).is_empty() && // we need to check that this square is empty for the rook to move through, but no check test is needed
+				!is_king_in_check(king, rank, file) &&
+				!Board(*this, rank, file, rank, file - 1).is_king_in_check(king, rank, file - 1) &&
+				!Board(*this, rank, file, rank, file - 2).is_king_in_check(king, rank, file - 2))
+			{
+				child_boards.emplace_back(*this, rank, file, rank, file - 2);
 			}
 		}
 	}
 
-	// iterate in all four vertical and horizontal directions to check for a rook or queen (these loops only look within bounds)
-
-	// rank descending
-	for (int other_rank = rank - 1; other_rank >= 0; --other_rank)
+	bool Board::is_king_in_check(const color check_color) const
 	{
-		// if a square is found that is not empty
-		if (piece_at(other_rank, file).is_occupied())
+		for (int rank = 0; rank < 8; ++rank)
 		{
-			// if the piece is a rook/queen AND is hostile, the king is in check
-			if ((piece_at(other_rank, file).is_rook() || piece_at(other_rank, file).is_queen())
-				&& piece_at(other_rank, file).is_opposing_color(king)) return true;
-			break; // a piece was found in this direction, stop checking in this direction
+			for (int file = 0; file < 8; ++file)
+			{
+				const piece piece = piece_at(rank, file);
+				if (piece.is_king() && piece.is_color(check_color))
+				{
+					return is_king_in_check(piece, rank, file);
+				}
+			}
 		}
+
+		return false;
 	}
-	// rank ascending (documentation same as above)
-	for (int other_rank = rank + 1; other_rank < 8; ++other_rank)
+
+	bool Board::is_king_in_check(const piece king, const rank rank, const file file) const
 	{
-		if (piece_at(other_rank, file).is_occupied())
+		// iterate over all adjacent squares to check for a king
+		for (auto rank_d = -1; rank_d <= 1; ++rank_d)
 		{
-			if ((piece_at(other_rank, file).is_rook() || piece_at(other_rank, file).is_queen())
-				&& piece_at(other_rank, file).is_opposing_color(king)) return true;
-			break;
+			for (auto file_d = -1; file_d <= 1; ++file_d)
+			{
+				if (rank_d == 0 && file_d == 0) continue; // don't examine the current square
+				if (bounds_check(rank_d + rank, file_d + file) &&
+					piece_at(rank_d + rank, file_d + file).is_king())
+				{
+					return true; // the king is in check
+				}
+			}
 		}
-	}
-	// file descending (documentation same as above)
-	for (int other_file = file - 1; other_file >= 0; --other_file)
-	{
-		if (piece_at(rank, other_file).is_occupied())
+
+		// iterate in all four vertical and horizontal directions to check for a rook or queen (these loops only look within bounds)
+
+		// rank descending
+		for (int other_rank = rank - 1; other_rank >= 0; --other_rank)
 		{
-			if ((piece_at(rank, other_file).is_rook() || piece_at(rank, other_file).is_queen())
-				&& piece_at(rank, other_file).is_opposing_color(king)) return true;
-			break;
+			// if a square is found that is not empty
+			if (piece_at(other_rank, file).is_occupied())
+			{
+				// if the piece is a rook/queen AND is hostile, the king is in check
+				if ((piece_at(other_rank, file).is_rook() || piece_at(other_rank, file).is_queen())
+					&& piece_at(other_rank, file).is_opposing_color(king)) return true;
+				break; // a piece was found in this direction, stop checking in this direction
+			}
 		}
-	}
-	// file ascending (documentation same as above)
-	for (int other_file = file + 1; other_file < 8; ++other_file)
-	{
-		if (piece_at(rank, other_file).is_occupied())
+		// rank ascending (documentation same as above)
+		for (int other_rank = rank + 1; other_rank < 8; ++other_rank)
 		{
-			if ((piece_at(rank, other_file).is_rook() || piece_at(rank, other_file).is_queen())
-				&& piece_at(rank, other_file).is_opposing_color(king)) return true;
-			break;
+			if (piece_at(other_rank, file).is_occupied())
+			{
+				if ((piece_at(other_rank, file).is_rook() || piece_at(other_rank, file).is_queen())
+					&& piece_at(other_rank, file).is_opposing_color(king)) return true;
+				break;
+			}
 		}
-	}
-
-	// iterate in all four diagonal directions to find a bishop or queen
-
-	// search rank and file descending
-	for (int offset = 1; offset < 8; ++offset)
-	{
-		// if the coordinates are in bounds
-		if (!bounds_check(rank - offset, file - offset)) break;
-
-		// if there is a piece here
-		if (piece_at(rank - offset, file - offset).is_occupied())
+		// file descending (documentation same as above)
+		for (int other_file = file - 1; other_file >= 0; --other_file)
 		{
-			// if the piece is a bishop/queen of the opposing color, the king is in check
-			if ((piece_at(rank - offset, file - offset).is_bishop() || piece_at(rank - offset, file - offset).is_queen())
-				&& piece_at(rank - offset, file - offset).is_opposing_color(king)) return true;
-			break; // a piece is here, don't keep searching in this direction
+			if (piece_at(rank, other_file).is_occupied())
+			{
+				if ((piece_at(rank, other_file).is_rook() || piece_at(rank, other_file).is_queen())
+					&& piece_at(rank, other_file).is_opposing_color(king)) return true;
+				break;
+			}
 		}
-	}
-
-	// search rank descending and file ascending (documentation same as above)
-	for (int offset = 1; offset < 8; ++offset)
-	{
-		if (!bounds_check(rank - offset, file + offset)) break;
-
-		if (piece_at(rank - offset, file + offset).is_occupied())
+		// file ascending (documentation same as above)
+		for (int other_file = file + 1; other_file < 8; ++other_file)
 		{
-			if ((piece_at(rank - offset, file + offset).is_bishop() || piece_at(rank - offset, file + offset).is_queen())
-				&& piece_at(rank - offset, file + offset).is_opposing_color(king)) return true;
-			break;
+			if (piece_at(rank, other_file).is_occupied())
+			{
+				if ((piece_at(rank, other_file).is_rook() || piece_at(rank, other_file).is_queen())
+					&& piece_at(rank, other_file).is_opposing_color(king)) return true;
+				break;
+			}
 		}
-	}
 
-	// search rank ascending and file descending (documentation same as above)
-	for (int offset = 1; offset < 8; ++offset)
-	{
-		if (!bounds_check(rank + offset, file - offset)) break;
+		// iterate in all four diagonal directions to find a bishop or queen
 
-		if (piece_at(rank + offset, file - offset).is_occupied())
+		// search rank and file descending
+		for (int offset = 1; offset < 8; ++offset)
 		{
-			if ((piece_at(rank + offset, file - offset).is_bishop() || piece_at(rank + offset, file - offset).is_queen())
-				&& piece_at(rank + offset, file - offset).is_opposing_color(king)) return true;
-			break;
+			// if the coordinates are in bounds
+			if (!bounds_check(rank - offset, file - offset)) break;
+
+			// if there is a piece here
+			if (piece_at(rank - offset, file - offset).is_occupied())
+			{
+				// if the piece is a bishop/queen of the opposing color, the king is in check
+				if ((piece_at(rank - offset, file - offset).is_bishop() || piece_at(rank - offset, file - offset).is_queen())
+					&& piece_at(rank - offset, file - offset).is_opposing_color(king)) return true;
+				break; // a piece is here, don't keep searching in this direction
+			}
 		}
-	}
 
-	// search rank and file ascending (documentation same as above)
-	for (int offset = 1; offset < 8; ++offset)
-	{
-		if (!bounds_check(rank + offset, file + offset)) break;
-
-		if (piece_at(rank + offset, file + offset).is_occupied())
+		// search rank descending and file ascending (documentation same as above)
+		for (int offset = 1; offset < 8; ++offset)
 		{
-			if ((piece_at(rank + offset, file + offset).is_bishop() || piece_at(rank + offset, file + offset).is_queen())
-				&& piece_at(rank + offset, file + offset).is_opposing_color(king)) return true;
-			break;
+			if (!bounds_check(rank - offset, file + offset)) break;
+
+			if (piece_at(rank - offset, file + offset).is_occupied())
+			{
+				if ((piece_at(rank - offset, file + offset).is_bishop() || piece_at(rank - offset, file + offset).is_queen())
+					&& piece_at(rank - offset, file + offset).is_opposing_color(king)) return true;
+				break;
+			}
 		}
+
+		// search rank ascending and file descending (documentation same as above)
+		for (int offset = 1; offset < 8; ++offset)
+		{
+			if (!bounds_check(rank + offset, file - offset)) break;
+
+			if (piece_at(rank + offset, file - offset).is_occupied())
+			{
+				if ((piece_at(rank + offset, file - offset).is_bishop() || piece_at(rank + offset, file - offset).is_queen())
+					&& piece_at(rank + offset, file - offset).is_opposing_color(king)) return true;
+				break;
+			}
+		}
+
+		// search rank and file ascending (documentation same as above)
+		for (int offset = 1; offset < 8; ++offset)
+		{
+			if (!bounds_check(rank + offset, file + offset)) break;
+
+			if (piece_at(rank + offset, file + offset).is_occupied())
+			{
+				if ((piece_at(rank + offset, file + offset).is_bishop() || piece_at(rank + offset, file + offset).is_queen())
+					&& piece_at(rank + offset, file + offset).is_opposing_color(king)) return true;
+				break;
+			}
+		}
+
+		// manually check eight locations for a knight
+		if (bounds_check(rank - 2, file + 1) && piece_at(rank - 2, file + 1).is_knight() && piece_at(rank - 2, file + 1).is_opposing_color(king)) return true;
+		if (bounds_check(rank - 1, file + 2) && piece_at(rank - 1, file + 2).is_knight() && piece_at(rank - 1, file + 2).is_opposing_color(king)) return true;
+		if (bounds_check(rank + 1, file + 2) && piece_at(rank + 1, file + 2).is_knight() && piece_at(rank + 1, file + 2).is_opposing_color(king)) return true;
+		if (bounds_check(rank + 2, file + 1) && piece_at(rank + 2, file + 1).is_knight() && piece_at(rank + 2, file + 1).is_opposing_color(king)) return true;
+		if (bounds_check(rank + 2, file - 1) && piece_at(rank + 2, file - 1).is_knight() && piece_at(rank + 2, file - 1).is_opposing_color(king)) return true;
+		if (bounds_check(rank + 1, file - 2) && piece_at(rank + 1, file - 2).is_knight() && piece_at(rank + 1, file - 2).is_opposing_color(king)) return true;
+		if (bounds_check(rank - 1, file - 2) && piece_at(rank - 1, file - 2).is_knight() && piece_at(rank - 1, file - 2).is_opposing_color(king)) return true;
+		if (bounds_check(rank - 2, file - 1) && piece_at(rank - 2, file - 1).is_knight() && piece_at(rank - 2, file - 1).is_opposing_color(king)) return true;
+
+		// check if the white king is under attack by a black pawn
+		if (king.is_white())
+		{
+			if ((bounds_check(rank - 1, file + 1) && piece_at(rank - 1, file + 1).is(piece::black_pawn)) ||
+				(bounds_check(rank - 1, file - 1) && piece_at(rank - 1, file - 1).is(piece::black_pawn))) return true;
+		}
+		// check if the black king is under attack by a white pawn
+		else if (king.is_black())
+		{
+			if ((bounds_check(rank + 1, file + 1) && piece_at(rank + 1, file + 1).is(piece::white_pawn)) ||
+				(bounds_check(rank + 1, file - 1) && piece_at(rank + 1, file - 1).is(piece::white_pawn))) return true;
+		}
+
+		return false;
 	}
 
-	// manually check eight locations for a knight
-	if (bounds_check(rank - 2, file + 1) && piece_at(rank - 2, file + 1).is_knight() && piece_at(rank - 2, file + 1).is_opposing_color(king)) return true;
-	if (bounds_check(rank - 1, file + 2) && piece_at(rank - 1, file + 2).is_knight() && piece_at(rank - 1, file + 2).is_opposing_color(king)) return true;
-	if (bounds_check(rank + 1, file + 2) && piece_at(rank + 1, file + 2).is_knight() && piece_at(rank + 1, file + 2).is_opposing_color(king)) return true;
-	if (bounds_check(rank + 2, file + 1) && piece_at(rank + 2, file + 1).is_knight() && piece_at(rank + 2, file + 1).is_opposing_color(king)) return true;
-	if (bounds_check(rank + 2, file - 1) && piece_at(rank + 2, file - 1).is_knight() && piece_at(rank + 2, file - 1).is_opposing_color(king)) return true;
-	if (bounds_check(rank + 1, file - 2) && piece_at(rank + 1, file - 2).is_knight() && piece_at(rank + 1, file - 2).is_opposing_color(king)) return true;
-	if (bounds_check(rank - 1, file - 2) && piece_at(rank - 1, file - 2).is_knight() && piece_at(rank - 1, file - 2).is_opposing_color(king)) return true;
-	if (bounds_check(rank - 2, file - 1) && piece_at(rank - 2, file - 1).is_knight() && piece_at(rank - 2, file - 1).is_opposing_color(king)) return true;
-
-	// check if the white king is under attack by a black pawn
-	if (king.is_white())
-	{
-		if ((bounds_check(rank - 1, file + 1) && piece_at(rank - 1, file + 1).is(black_pawn)) ||
-			(bounds_check(rank - 1, file - 1) && piece_at(rank - 1, file - 1).is(black_pawn))) return true;
-	}
-	// check if the black king is under attack by a white pawn
-	else if (king.is_black())
-	{
-		if ((bounds_check(rank + 1, file + 1) && piece_at(rank + 1, file + 1).is(white_pawn)) ||
-			(bounds_check(rank + 1, file - 1) && piece_at(rank + 1, file - 1).is(white_pawn))) return true;
-	}
-
-	return false;
 }

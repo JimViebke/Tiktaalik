@@ -1,43 +1,48 @@
 
-#include "board_layouts.h"
+#include "board_layouts.hpp"
 
-#define empty Piece(piece::empty)
+// Finish implementing FEN parsing and remove all of this.
 
-#define white_king Piece(piece::white_king)
-#define white_queen Piece(white_queen)
-#define white_rook Piece(white_rook)
-#define white_bishop Piece(white_bishop)
-#define white_knight Piece(white_knight)
-#define white_pawn Piece(white_pawn)
+#define empty piece(piece::empty)
 
-#define black_king Piece(black_king)
-#define black_queen Piece(black_queen)
-#define black_rook Piece(black_rook)
-#define black_bishop Piece(black_bishop)
-#define black_knight Piece(black_knight)
-#define black_pawn Piece(black_pawn)
+#define white_king piece(piece::white_king)
+#define white_queen piece(piece::white_queen)
+#define white_rook piece(piece::white_rook)
+#define white_bishop piece(piece::white_bishop)
+#define white_knight piece(piece::white_knight)
+#define white_pawn piece(piece::white_pawn)
 
-std::array<Piece, 64> layouts::test_board = {
-	black_rook, empty, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook,
-	black_pawn, black_pawn, black_pawn, black_pawn, empty, black_pawn, black_pawn, black_pawn,
-	empty, empty, black_knight, empty, empty, empty, empty, empty,
-	empty, empty, empty, empty, black_pawn, empty, empty, empty,
-	empty, empty, empty, empty, white_pawn, empty, empty, empty,
-	empty, empty, empty, empty, empty, white_knight, empty, empty,
-	white_pawn, white_pawn, white_pawn, white_pawn, empty, white_pawn, white_pawn, white_pawn,
-	white_rook, white_knight, white_bishop, white_queen, white_king, white_bishop, empty, white_rook
-};
+#define black_king piece(piece::black_king)
+#define black_queen piece(piece::black_queen)
+#define black_rook piece(piece::black_rook)
+#define black_bishop piece(piece::black_bishop)
+#define black_knight piece(piece::black_knight)
+#define black_pawn piece(piece::black_pawn)
 
-std::array<Piece, 64> layouts::start_board = {
-	black_rook, black_knight, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook,
-	black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn,
-	empty, empty, empty, empty, empty, empty, empty, empty,
-	empty, empty, empty, empty, empty, empty, empty, empty,
-	empty, empty, empty, empty, empty, empty, empty, empty,
-	empty, empty, empty, empty, empty, empty, empty, empty,
-	white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn,
-	white_rook, white_knight, white_bishop, white_queen, white_king, white_bishop, white_knight, white_rook
-};
+namespace chess
+{
+	position layouts::test_board = {
+		black_rook, empty, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook,
+		black_pawn, black_pawn, black_pawn, black_pawn, empty, black_pawn, black_pawn, black_pawn,
+		empty, empty, black_knight, empty, empty, empty, empty, empty,
+		empty, empty, empty, empty, black_pawn, empty, empty, empty,
+		empty, empty, empty, empty, white_pawn, empty, empty, empty,
+		empty, empty, empty, empty, empty, white_knight, empty, empty,
+		white_pawn, white_pawn, white_pawn, white_pawn, empty, white_pawn, white_pawn, white_pawn,
+		white_rook, white_knight, white_bishop, white_queen, white_king, white_bishop, empty, white_rook
+	};
+
+	position layouts::start_board = {
+		black_rook, black_knight, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook,
+		black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn,
+		empty, empty, empty, empty, empty, empty, empty, empty,
+		empty, empty, empty, empty, empty, empty, empty, empty,
+		empty, empty, empty, empty, empty, empty, empty, empty,
+		empty, empty, empty, empty, empty, empty, empty, empty,
+		white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn,
+		white_rook, white_knight, white_bishop, white_queen, white_king, white_bishop, white_knight, white_rook
+	};
+}
 
 #undef empty
 
