@@ -5,8 +5,6 @@
 
 namespace chess
 {
-	using evaluation = float;
-
 	enum class result : int8_t
 	{
 		unknown,
@@ -26,11 +24,5 @@ namespace chess
 
 	using piece_t = int8_t;
 
+	using evaluation_t = float;
 }
-
-
-
-
-
-
-

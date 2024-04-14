@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "board_layouts.hpp"
+#include "evaluations.hpp"
 #include "types.hpp"
 
 namespace chess
@@ -221,9 +222,9 @@ namespace chess
 			return !is_empty(rank, file);
 		}
 
-		int evaluate_position() const
+		evaluation_t evaluate_position() const
 		{
-			int material_value = 0;
+			evaluation_t material_value = 0;
 
 			// evaluate material
 			for (unsigned i = 0; i < 64; ++i)
@@ -264,27 +265,25 @@ namespace chess
 
 		static void remove_invalid_boards(board_list& boards);
 
-		int evaluate_piece(const piece& piece) const
+		evaluation_t evaluate_piece(const piece& piece) const
 		{
 			if (piece.is_empty()) return 0;
 
 			if (piece.is_white())
 			{
-				if (piece.is_pawn()) return constants::PAWN_VALUE;
-				else if (piece.is_knight()) return constants::KNIGHT_VALUE;
-				else if (piece.is_bishop()) return constants::BISHOP_VALUE;
-				else if (piece.is_rook()) return constants::ROOK_VALUE;
-				else if (piece.is_queen()) return constants::QUEEN_VALUE;
-				else if (piece.is_king()) return constants::KING_VALUE;
+				if (piece.is_pawn()) return evaluations::pawn;
+				else if (piece.is_knight()) return evaluations::knight;
+				else if (piece.is_bishop()) return evaluations::bishop;
+				else if (piece.is_rook()) return evaluations::rook;
+				else if (piece.is_queen()) return evaluations::queen;
 			}
 			else
 			{
-				if (piece.is_pawn()) return -constants::PAWN_VALUE;
-				else if (piece.is_knight()) return -constants::KNIGHT_VALUE;
-				else if (piece.is_bishop()) return -constants::BISHOP_VALUE;
-				else if (piece.is_rook()) return -constants::ROOK_VALUE;
-				else if (piece.is_queen()) return -constants::QUEEN_VALUE;
-				else if (piece.is_king()) return -constants::KING_VALUE;
+				if (piece.is_pawn()) return -evaluations::pawn;
+				else if (piece.is_knight()) return -evaluations::knight;
+				else if (piece.is_bishop()) return -evaluations::bishop;
+				else if (piece.is_rook()) return -evaluations::rook;
+				else if (piece.is_queen()) return -evaluations::queen;
 			}
 
 			return 0; // should never happen

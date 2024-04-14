@@ -40,7 +40,7 @@
     <ClInclude Include="board_layouts.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="constants.hpp">
+    <ClInclude Include="evaluations.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="node.hpp">

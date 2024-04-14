@@ -1,6 +1,5 @@
 #pragma once
 
-#include "constants.hpp"
 #include "types.hpp"
 
 namespace chess
