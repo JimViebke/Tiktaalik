@@ -14,7 +14,6 @@ namespace chess
 		Board board;
 		std::vector<Node> children;
 
-		// explicit Node(const std::vector<Piece> & set_board);
 		explicit Node(const Board& set_board);
 
 		bool is_terminal() const
@@ -38,7 +37,7 @@ namespace chess
 				return;
 			}
 
-			Board::board_list child_boards = board.generate_child_boards();
+			const Board::board_list child_boards = board.generate_child_boards();
 
 			children.reserve(child_boards.size());
 			for (const Board& child_board : child_boards)
