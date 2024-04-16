@@ -411,6 +411,11 @@ namespace chess
 
 			move_list << (root.board.white_to_move() ? "White to move\n\n" : "Black to move\n\n");
 
+			if (best_move.size() != 0)
+			{
+				move_list << "Best move: " << best_move << "\n\n";
+			}
+
 			move_list << root.children.size() << " moves:\n";
 			for (const Node& child_node : root.children)
 			{
@@ -519,6 +524,8 @@ namespace chess
 		sf::Font arial;
 		sf::Text overlay; // easy way to add text on the screen
 		sf::Text overlay_right; // the move list
+
+		std::string best_move;
 
 		Node root; // move graph, rooted on the current position
 
