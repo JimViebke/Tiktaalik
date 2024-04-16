@@ -4,6 +4,7 @@
 #include <map>
 
 #include "board.hpp"
+#include "types.hpp"
 
 namespace chess
 {
@@ -20,6 +21,11 @@ namespace chess
 		{
 			// Anything other than "unknown" is a terminal (end) state.
 			return board.get_result() != result::unknown;
+		}
+
+		evaluation_t evaluation() const
+		{
+			return board.evaluate_position();
 		}
 
 		void generate_child_boards()

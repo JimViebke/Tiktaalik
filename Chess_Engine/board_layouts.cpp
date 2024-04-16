@@ -5,19 +5,19 @@
 
 #define empty piece(piece::empty)
 
-#define white_king piece(piece::white_king)
-#define white_queen piece(piece::white_queen)
-#define white_rook piece(piece::white_rook)
-#define white_bishop piece(piece::white_bishop)
-#define white_knight piece(piece::white_knight)
-#define white_pawn piece(piece::white_pawn)
+#define white_king piece(piece::white | piece::king)
+#define white_queen piece(piece::white | piece::queen)
+#define white_rook piece(piece::white | piece::rook)
+#define white_bishop piece(piece::white | piece::bishop)
+#define white_knight piece(piece::white | piece::knight)
+#define white_pawn piece(piece::white | piece::pawn)
 
-#define black_king piece(piece::black_king)
-#define black_queen piece(piece::black_queen)
-#define black_rook piece(piece::black_rook)
-#define black_bishop piece(piece::black_bishop)
-#define black_knight piece(piece::black_knight)
-#define black_pawn piece(piece::black_pawn)
+#define black_king piece(piece::black | piece::king)
+#define black_queen piece(piece::black | piece::queen)
+#define black_rook piece(piece::black | piece::rook)
+#define black_bishop piece(piece::black | piece::bishop)
+#define black_knight piece(piece::black | piece::knight)
+#define black_pawn piece(piece::black | piece::pawn)
 
 namespace chess
 {

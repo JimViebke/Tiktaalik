@@ -522,7 +522,7 @@ namespace chess
 
 		Node root; // move graph, rooted on the current position
 
-		const color human_color = color::white;
+		const color_t human_color = white;
 
 		sf::Texture wk_texture;
 		sf::Texture wq_texture;

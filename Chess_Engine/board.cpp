@@ -92,7 +92,7 @@ namespace chess
 			for (int file = 0; file < 8; ++file)
 			{
 				// if this piece can move
-				if (piece_at(rank, file).is_color(color_to_move))
+				if (piece_at(rank, file).is_occupied() && piece_at(rank, file).is_color(color_to_move))
 				{
 					if (piece_at(rank, file).is_pawn())
 					{
@@ -126,11 +126,11 @@ namespace chess
 
 		if (child_boards.size() == 0)
 		{
-			if (white_to_move() && is_king_in_check(color::white))
+			if (white_to_move() && is_king_in_check(white))
 			{
 				_result = result::black_wins_by_checkmate;
 			}
-			else if (black_to_move() && is_king_in_check(color::black))
+			else if (black_to_move() && is_king_in_check(black))
 			{
 				_result = result::white_wins_by_checkmate;
 			}
@@ -174,10 +174,10 @@ namespace chess
 				{
 					if (rank == 1) // if the pawn is on the second last rank
 					{
-						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white_queen));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white_rook));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white_bishop));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white_knight));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white | piece::queen));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white | piece::rook));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white | piece::bishop));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white | piece::knight));
 					}
 					else // the pawn is moving without promotion
 					{
@@ -190,28 +190,28 @@ namespace chess
 					child_boards.emplace_back(*this, rank, file, 4, file);
 				}
 				// check for captures
-				if (bounds_check(file + 1) && piece_at(rank - 1, file + 1).is_black())
+				if (bounds_check(file + 1) && piece_at(rank - 1, file + 1).is_occupied() && piece_at(rank - 1, file + 1).is_black())
 				{
 					if (rank == 1) // if the pawn is on the second last rank
 					{
-						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white_queen));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white_rook));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white_bishop));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white_knight));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white | piece::queen));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white | piece::rook));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white | piece::bishop));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white | piece::knight));
 					}
 					else // the pawn is capturing without promotion
 					{
 						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1);
 					}
 				}
-				if (bounds_check(file - 1) && piece_at(rank - 1, file - 1).is_black())
+				if (bounds_check(file - 1) && piece_at(rank - 1, file - 1).is_occupied() && piece_at(rank - 1, file - 1).is_black())
 				{
 					if (rank == 1) // if the pawn is on the second last rank
 					{
-						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white_queen));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white_rook));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white_bishop));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white_knight));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white | piece::queen));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white | piece::rook));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white | piece::bishop));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white | piece::knight));
 					}
 					else // the pawn is capturing without promotion
 					{
@@ -237,10 +237,10 @@ namespace chess
 				{
 					if (rank == 6) // if the pawn is on the second last rank
 					{
-						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black_queen));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black_rook));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black_bishop));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black_knight));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black | piece::queen));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black | piece::rook));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black | piece::bishop));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black | piece::knight));
 					}
 					else // the pawn is moving without promotion
 					{
@@ -253,28 +253,28 @@ namespace chess
 					child_boards.emplace_back(*this, rank, file, 3, file);
 				}
 				// check for captures
-				if (bounds_check(file + 1) && piece_at(rank + 1, file + 1).is_white())
+				if (bounds_check(file + 1) && piece_at(rank + 1, file + 1).is_occupied() && piece_at(rank + 1, file + 1).is_white())
 				{
 					if (rank == 6) // if the pawn is on the second last rank
 					{
-						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black_queen));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black_rook));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black_bishop));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black_knight));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black | piece::queen));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black | piece::rook));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black | piece::bishop));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black | piece::knight));
 					}
 					else // the pawn is capturing without promotion
 					{
 						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1);
 					}
 				}
-				if (bounds_check(file - 1) && piece_at(rank + 1, file - 1).is_white())
+				if (bounds_check(file - 1) && piece_at(rank + 1, file - 1).is_occupied() && piece_at(rank + 1, file - 1).is_white())
 				{
 					if (rank == 6) // if the pawn is on the second last rank
 					{
-						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black_queen));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black_rook));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black_bishop));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black_knight));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black | piece::queen));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black | piece::rook));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black | piece::bishop));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black | piece::knight));
 					}
 					else // the pawn is capturing without promotion
 					{
@@ -450,24 +450,24 @@ namespace chess
 	}
 	void Board::find_knight_moves(board_list& child_boards, const int rank, const int file) const
 	{
-		if (bounds_check(rank - 2, file + 1) && !piece_at(rank - 2, file + 1).is_color(color_to_move))
+		if (bounds_check(rank - 2, file + 1) && !(piece_at(rank - 2, file + 1).is_occupied() && piece_at(rank - 2, file + 1).is_color(color_to_move)))
 			child_boards.emplace_back(*this, rank, file, rank - 2, file + 1);
-		if (bounds_check(rank - 1, file + 2) && !piece_at(rank - 1, file + 2).is_color(color_to_move))
+		if (bounds_check(rank - 1, file + 2) && !(piece_at(rank - 1, file + 2).is_occupied() && piece_at(rank - 1, file + 2).is_color(color_to_move)))
 			child_boards.emplace_back(*this, rank, file, rank - 1, file + 2);
 
-		if (bounds_check(rank + 1, file + 2) && !piece_at(rank + 1, file + 2).is_color(color_to_move))
+		if (bounds_check(rank + 1, file + 2) && !(piece_at(rank + 1, file + 2).is_occupied() && piece_at(rank + 1, file + 2).is_color(color_to_move)))
 			child_boards.emplace_back(*this, rank, file, rank + 1, file + 2);
-		if (bounds_check(rank + 2, file + 1) && !piece_at(rank + 2, file + 1).is_color(color_to_move))
+		if (bounds_check(rank + 2, file + 1) && !(piece_at(rank + 2, file + 1).is_occupied() && piece_at(rank + 2, file + 1).is_color(color_to_move)))
 			child_boards.emplace_back(*this, rank, file, rank + 2, file + 1);
 
-		if (bounds_check(rank + 2, file - 1) && !piece_at(rank + 2, file - 1).is_color(color_to_move))
+		if (bounds_check(rank + 2, file - 1) && !(piece_at(rank + 2, file - 1).is_occupied() && piece_at(rank + 2, file - 1).is_color(color_to_move)))
 			child_boards.emplace_back(*this, rank, file, rank + 2, file - 1);
-		if (bounds_check(rank + 1, file - 2) && !piece_at(rank + 1, file - 2).is_color(color_to_move))
+		if (bounds_check(rank + 1, file - 2) && !(piece_at(rank + 1, file - 2).is_occupied() && piece_at(rank + 1, file - 2).is_color(color_to_move)))
 			child_boards.emplace_back(*this, rank, file, rank + 1, file - 2);
 
-		if (bounds_check(rank - 1, file - 2) && !piece_at(rank - 1, file - 2).is_color(color_to_move))
+		if (bounds_check(rank - 1, file - 2) && !(piece_at(rank - 1, file - 2).is_occupied() && piece_at(rank - 1, file - 2).is_color(color_to_move)))
 			child_boards.emplace_back(*this, rank, file, rank - 1, file - 2);
-		if (bounds_check(rank - 2, file - 1) && !piece_at(rank - 2, file - 1).is_color(color_to_move))
+		if (bounds_check(rank - 2, file - 1) && !(piece_at(rank - 2, file - 1).is_occupied() && piece_at(rank - 2, file - 1).is_color(color_to_move)))
 			child_boards.emplace_back(*this, rank, file, rank - 2, file - 1);
 	}
 	void Board::find_queen_moves(board_list& child_boards, const int rank, const int file) const
@@ -484,7 +484,9 @@ namespace chess
 			for (int file_d = -1; file_d <= 1; ++file_d)
 			{
 				// if the square is not occupied by a friendly piece
-				if (bounds_check(rank + rank_d, file + file_d) && !piece_at(rank + rank_d, file + file_d).is_color(color_to_move))
+				if (bounds_check(rank + rank_d, file + file_d) &&
+					!(piece_at(rank + rank_d, file + file_d).is_occupied() &&
+					piece_at(rank + rank_d, file + file_d).is_color(color_to_move)))
 				{
 					child_boards.emplace_back(*this, rank, file, rank + rank_d, file + file_d);
 				}
@@ -523,7 +525,7 @@ namespace chess
 		}
 	}
 
-	bool Board::is_king_in_check(const color check_color) const
+	bool Board::is_king_in_check(const color_t check_color) const
 	{
 		for (int rank = 0; rank < 8; ++rank)
 		{
@@ -671,14 +673,14 @@ namespace chess
 		// check if the white king is under attack by a black pawn
 		if (king.is_white())
 		{
-			if ((bounds_check(rank - 1, file + 1) && piece_at(rank - 1, file + 1).is(piece::black_pawn)) ||
-				(bounds_check(rank - 1, file - 1) && piece_at(rank - 1, file - 1).is(piece::black_pawn))) return true;
+			if ((bounds_check(rank - 1, file + 1) && piece_at(rank - 1, file + 1).is(piece::black | piece::pawn)) ||
+				(bounds_check(rank - 1, file - 1) && piece_at(rank - 1, file - 1).is(piece::black | piece::pawn))) return true;
 		}
 		// check if the black king is under attack by a white pawn
 		else if (king.is_black())
 		{
-			if ((bounds_check(rank + 1, file + 1) && piece_at(rank + 1, file + 1).is(piece::white_pawn)) ||
-				(bounds_check(rank + 1, file - 1) && piece_at(rank + 1, file - 1).is(piece::white_pawn))) return true;
+			if ((bounds_check(rank + 1, file + 1) && piece_at(rank + 1, file + 1).is(piece::white | piece::pawn)) ||
+				(bounds_check(rank + 1, file - 1) && piece_at(rank + 1, file - 1).is(piece::white | piece::pawn))) return true;
 		}
 
 		return false;

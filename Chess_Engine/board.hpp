@@ -16,7 +16,7 @@ namespace chess
 	private:
 		position _position;
 		char move[4] = "   ";
-		color color_to_move = color::white;
+		color_t color_to_move = white;
 
 		file en_passant_flag = -1;
 		bool white_can_castle_k_s = true;
@@ -199,10 +199,10 @@ namespace chess
 			return result;
 		}
 
-		const color get_color_to_move() const { return color_to_move; }
+		const color_t get_color_to_move() const { return color_to_move; }
 
-		bool white_to_move() const { return color_to_move == color::white; }
-		bool black_to_move() const { return color_to_move == color::black; }
+		bool white_to_move() const { return color_to_move == white; }
+		bool black_to_move() const { return color_to_move == black; }
 
 		const piece& piece_at(const rank rank, const file file) const
 		{
@@ -227,15 +227,17 @@ namespace chess
 			evaluation_t material_value = 0;
 
 			// evaluate material
-			for (unsigned i = 0; i < 64; ++i)
-				material_value += evaluate_piece(_position[i]);
+			for (const auto& piece : _position)
+			{
+				material_value += piece.eval();
+			}
 
 			return material_value;
 		}
 
 		position get_position() const { return _position; }
 
-		bool is_king_in_check(const color check_color) const;
+		bool is_king_in_check(const color_t check_color) const;
 
 		board_list generate_child_boards();
 
@@ -256,7 +258,7 @@ namespace chess
 			move[3] = ((end_rank * -1) + 8 + '0');
 		}
 
-		void set_color_to_move(const color set_color_to_move) { color_to_move = set_color_to_move; }
+		void set_color_to_move(const color_t set_color_to_move) { color_to_move = set_color_to_move; }
 
 		template<typename T> bool bounds_check(const T rank_or_file) const { return rank_or_file < 8 && rank_or_file >= 0; }
 		template<typename T> bool bounds_check(const T rank, const T file) const { return bounds_check(rank) && bounds_check(file); }
@@ -264,30 +266,6 @@ namespace chess
 		bool is_valid_position() const;
 
 		static void remove_invalid_boards(board_list& boards);
-
-		evaluation_t evaluate_piece(const piece& piece) const
-		{
-			if (piece.is_empty()) return 0;
-
-			if (piece.is_white())
-			{
-				if (piece.is_pawn()) return evaluations::pawn;
-				else if (piece.is_knight()) return evaluations::knight;
-				else if (piece.is_bishop()) return evaluations::bishop;
-				else if (piece.is_rook()) return evaluations::rook;
-				else if (piece.is_queen()) return evaluations::queen;
-			}
-			else
-			{
-				if (piece.is_pawn()) return -evaluations::pawn;
-				else if (piece.is_knight()) return -evaluations::knight;
-				else if (piece.is_bishop()) return -evaluations::bishop;
-				else if (piece.is_rook()) return -evaluations::rook;
-				else if (piece.is_queen()) return -evaluations::queen;
-			}
-
-			return 0; // should never happen
-		}
 
 		void find_pawn_moves(board_list& child_boards, const int rank, const int file) const;
 		void find_rook_moves(board_list& child_boards, const int rank, const int file) const;
@@ -298,7 +276,7 @@ namespace chess
 
 		bool is_king_in_check(const piece piece, const rank rank, const file file) const;
 
-		static color other_color(const color other_color) { return (other_color == color::white) ? color::black : color::white; }
+		static color_t other_color(const color_t other_color) { return (other_color == white) ? black : white; }
 	};
 
 }

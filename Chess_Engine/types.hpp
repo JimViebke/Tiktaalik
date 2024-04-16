@@ -3,6 +3,8 @@
 #include <array>
 #include <stdint.h>
 
+#include "piece.hpp"
+
 namespace chess
 {
 	enum class result : int8_t
@@ -15,14 +17,7 @@ namespace chess
 
 	using rank = int8_t;
 	using file = int8_t;
-	
-	enum color : int8_t
-	{
-		black = -1,
-		white = 1,
-	};
 
-	using piece_t = int8_t;
-
-	using evaluation_t = float;
+	static constexpr color_t white = piece::white;
+	static constexpr color_t black = piece::black;
 }
