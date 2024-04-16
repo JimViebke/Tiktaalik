@@ -31,7 +31,7 @@ namespace chess
 		using board_list = std::vector<Board>;
 
 		explicit Board(const position& set_position) : _position(set_position) {}
-		explicit Board(const Board& parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file)
+		explicit Board(const Board& parent_board, const rank start_rank, const file start_file, const rank end_rank, const file end_file)
 		{
 			// copy the position
 			_position = parent_board._position;
@@ -45,12 +45,12 @@ namespace chess
 			// toggle color to move
 			color_to_move = other_color(parent_board.get_color_to_move());
 			// check if the en passant indicator needs to be set
-			en_passant_flag = (parent_board.piece_at(start_rank, start_file).is_pawn() && abs(start_rank - end_rank) == 2)
+			en_passant_flag = (parent_board.piece_at(start_rank, start_file).is_pawn() && std::abs(rank{ start_rank - end_rank }.value()) == 2)
 				? start_file : -1;
 
 			// check for en passant captures
 			if (piece_at(start_rank, start_file).is_pawn() &&
-				abs(start_rank - end_rank) == 1 && start_file != end_file &&
+				abs(rank{ start_rank - end_rank }.value()) == 1 && start_file != end_file &&
 				piece_at(end_rank, end_file).is_empty())
 			{
 				fifty_move_rule = 0;
@@ -65,7 +65,7 @@ namespace chess
 				else // the moving king is black
 					black_can_castle_k_s = black_can_castle_q_s = false;
 
-				if (abs(start_file - end_file) > 1) // if the king is castling, move the rook
+				if (abs(file{ start_file - end_file }.value()) > 1) // if the king is castling, move the rook
 				{
 					if (start_file < end_file) // kingside castle
 						move_piece(start_rank, 7, start_rank, 5); // move the rook
@@ -111,7 +111,7 @@ namespace chess
 			// record the move
 			save_move(start_rank, start_file, end_rank, end_file);
 		}
-		explicit Board(const Board& parent_board, const int start_rank, const int start_file, const int end_rank, const int end_file, const piece& promote_to)
+		explicit Board(const Board& parent_board, const rank start_rank, const file start_file, const rank end_rank, const file end_file, const piece& promote_to)
 			: Board(parent_board, start_rank, start_file, end_rank, end_file)
 		{
 			// call this constructor (four times) for pawn promotion
@@ -206,14 +206,14 @@ namespace chess
 
 		const piece& piece_at(const rank rank, const file file) const
 		{
-			return _position[(size_t)rank * 8 + file];
+			return _position[rank.value() * 8ull + file.value()];
 		}
 		piece& piece_at(const rank rank, const file file)
 		{
-			return _position[(size_t)rank * 8 + file];
+			return _position[rank.value() * 8ull + file.value()];
 		}
 
-		bool is_empty(const rank rank, const file file) const
+		bool is_empty(const auto rank, const auto file) const
 		{
 			return piece_at(rank, file).is_empty();
 		}
@@ -252,27 +252,27 @@ namespace chess
 
 		void save_move(const rank start_rank, const file start_file, const rank end_rank, const file end_file)
 		{
-			move[0] = (start_file + 'a');
-			move[1] = ((start_rank * -1) + 8 + '0');
-			move[2] = (end_file + 'a');
-			move[3] = ((end_rank * -1) + 8 + '0');
+			move[0] = start_file.value() + 'a';
+			move[1] = (start_rank.value() * -1) + 8 + '0';
+			move[2] = end_file.value() + 'a';
+			move[3] = (end_rank.value() * -1) + 8 + '0';
 		}
 
 		void set_color_to_move(const color_t set_color_to_move) { color_to_move = set_color_to_move; }
 
-		template<typename T> bool bounds_check(const T rank_or_file) const { return rank_or_file < 8 && rank_or_file >= 0; }
-		template<typename T> bool bounds_check(const T rank, const T file) const { return bounds_check(rank) && bounds_check(file); }
+		template<typename T> bool bounds_check(const T rank_or_file) const { return rank_or_file.value() < 8 && rank_or_file.value() >= 0; }
+		template<typename T1, typename T2> bool bounds_check(const T1 rank, const T2 file) const { return bounds_check(rank) && bounds_check(file); }
 
 		bool is_valid_position() const;
 
 		static void remove_invalid_boards(board_list& boards);
 
-		void find_pawn_moves(board_list& child_boards, const int rank, const int file) const;
-		void find_rook_moves(board_list& child_boards, const int rank, const int file) const;
-		void find_bishop_moves(board_list& child_boards, const int rank, const int file) const;
-		void find_knight_moves(board_list& child_boards, const int rank, const int file) const;
-		void find_queen_moves(board_list& child_boards, const int rank, const int file) const;
-		void find_king_moves(board_list& child_boards, const int rank, const int file) const;
+		void find_pawn_moves(board_list& child_boards, const rank rank, const file file) const;
+		void find_rook_moves(board_list& child_boards, const rank rank, const file file) const;
+		void find_bishop_moves(board_list& child_boards, const rank rank, const file file) const;
+		void find_knight_moves(board_list& child_boards, const rank rank, const file file) const;
+		void find_queen_moves(board_list& child_boards, const rank rank, const file file) const;
+		void find_king_moves(board_list& child_boards, const rank rank, const file file) const;
 
 		bool is_king_in_check(const piece piece, const rank rank, const file file) const;
 

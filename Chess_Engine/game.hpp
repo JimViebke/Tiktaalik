@@ -150,13 +150,13 @@ namespace chess
 			Typically, x increases to the right, and y increases downward.
 			In chess, rank increases upward, and file increases to the right.
 			This requires some translation. */
-			if (root.board.is_empty((int)mouse_square_y, (int)mouse_square_x))
+			if (root.board.is_empty(mouse_square_y, mouse_square_x))
 			{
 				std::cout << "No piece to drag\n";
 				return;
 			}
 
-			if (!root.board.piece_at((int)mouse_square_y, (int)mouse_square_x).is_color(root.board.get_color_to_move()))
+			if (!root.board.piece_at(mouse_square_y, mouse_square_x).is_color(root.board.get_color_to_move()))
 			{
 				std::cout << "Not this color's turn\n";
 				return;
@@ -166,13 +166,13 @@ namespace chess
 			for (const Node& child_node : root.children)
 			{
 				const std::string legal_move = child_node.board.move_to_string();
-				const size_t legal_move_x = file_to_x(legal_move[0]);
-				const size_t legal_move_y = rank_to_y(legal_move[1]);
+				const file legal_move_x = char_to_file(legal_move[0]);
+				const rank legal_move_y = char_to_rank(legal_move[1]);
 
 				if (legal_move_x == mouse_square_x && legal_move_y == mouse_square_y)
 				{
 					dragging = true;
-					dragging_piece = root.board.piece_at((int)mouse_square_y, (int)mouse_square_x);
+					dragging_piece = root.board.piece_at(mouse_square_y, mouse_square_x);
 					dragging_from_x = mouse_square_x;
 					dragging_from_y = mouse_square_y;
 					std::cout << "drag...\n";
@@ -215,10 +215,10 @@ namespace chess
 			for (const Node& child_node : root.children)
 			{
 				const std::string legal_move = child_node.board.move_to_string();
-				const size_t legal_start_x = file_to_x(legal_move[0]);
-				const size_t legal_start_y = rank_to_y(legal_move[1]);
-				const size_t legal_end_x = file_to_x(legal_move[2]);
-				const size_t legal_end_y = rank_to_y(legal_move[3]);
+				const auto legal_start_x = char_to_file(legal_move[0]);
+				const auto legal_start_y = char_to_rank(legal_move[1]);
+				const auto legal_end_x = char_to_file(legal_move[2]);
+				const auto legal_end_y = char_to_rank(legal_move[3]);
 
 				if (dragging_from_x == legal_start_x &&
 					dragging_from_y == legal_start_y &&
@@ -332,8 +332,8 @@ namespace chess
 			}
 		}
 
-		size_t file_to_x(const char c) { return c - 'a'; }
-		size_t rank_to_y(const char c) { return 8 - (c - '0'); }
+		file char_to_file(const char c) { return c - 'a'; }
+		rank char_to_rank(const char c) { return 8 - (c - '0'); }
 
 		void render_game_board()
 		{
@@ -381,21 +381,21 @@ namespace chess
 				for (const Node& child_node : root.children)
 				{
 					const std::string move = child_node.board.move_to_string();
-					const size_t move_x = file_to_x(move[0]);
-					const size_t move_y = rank_to_y(move[1]);
+					const auto move_x = char_to_file(move[0]);
+					const auto move_y = char_to_rank(move[1]);
 
 					if (dragging_from_x == move_x &&
 						dragging_from_y == move_y)
 					{
-						const size_t move_to_x = file_to_x(move[2]);
-						const size_t move_to_y = rank_to_y(move[3]);
+						const auto move_to_x = char_to_file(move[2]);
+						const auto move_to_y = char_to_rank(move[3]);
 
 						// Add half of a tile's size, then remove the marker's radius
 						constexpr float adjust = (detail::tile_size_px / 2) - legal_marker_radius_px;
 
 						legal_marker.setPosition(
-							float(board_x + detail::tile_size_px * move_to_x + adjust),
-							float(board_y + detail::tile_size_px * move_to_y + adjust));
+							float(board_x + detail::tile_size_px * move_to_x.value() + adjust),
+							float(board_y + detail::tile_size_px * move_to_y.value() + adjust));
 
 						window->draw(legal_marker);
 					}
@@ -420,8 +420,8 @@ namespace chess
 			for (const Node& child_node : root.children)
 			{
 				const std::string legal_move = child_node.board.move_to_string();
-				const int x = (int)file_to_x(legal_move[0]);
-				const int y = (int)rank_to_y(legal_move[1]);
+				const auto x = char_to_file(legal_move[0]);
+				const auto y = char_to_rank(legal_move[1]);
 
 				// todo: find a cleaner way to handle x,y coordinate flipping?
 				const piece piece = root.board.piece_at(y, x);
@@ -439,8 +439,8 @@ namespace chess
 					// Add logic for en passant captures
 				}
 
-				const int target_x = (int)file_to_x(legal_move[2]);
-				const int target_y = (int)rank_to_y(legal_move[3]);
+				const file target_x = char_to_file(legal_move[2]);
+				const rank target_y = char_to_rank(legal_move[3]);
 				if (root.board.is_occupied(target_y, target_x))
 				{
 					if (root.board.piece_at(y, x).is_pawn())

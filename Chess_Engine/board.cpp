@@ -10,12 +10,12 @@ namespace chess
 {
 	void Board::print_board(const Board& board, const unsigned& offset)
 	{
-		for (unsigned rank = 0; rank < 8; ++rank)
+		for (rank rank = 0; rank < 8; ++rank)
 		{
 			// add indent
 			for (unsigned i = 0; i < offset * 9; ++i) std::cout << ' ';
 
-			for (unsigned file = 0; file < 8; ++file)
+			for (file file = 0; file < 8; ++file)
 			{
 				const piece& piece = board.piece_at(rank, file);
 
@@ -43,12 +43,12 @@ namespace chess
 	}
 	void Board::print_board(const board_list& boards)
 	{
-		for (unsigned rank = 0; rank < 8; ++rank)
+		for (rank rank = 0; rank < 8; ++rank)
 		{
 			// render this rank for each board
 			for (board_list::const_iterator it = boards.cbegin(); it != boards.cend(); ++it)
 			{
-				for (unsigned file = 0; file < 8; ++file)
+				for (file file = 0; file < 8; ++file)
 				{
 					const piece& piece = it->piece_at(rank, file);
 
@@ -87,9 +87,9 @@ namespace chess
 	{
 		board_list child_boards;
 
-		for (int rank = 0; rank < 8; ++rank)
+		for (rank rank = 0; rank < 8; ++rank)
 		{
-			for (int file = 0; file < 8; ++file)
+			for (file file = 0; file < 8; ++file)
 			{
 				// if this piece can move
 				if (piece_at(rank, file).is_occupied() && piece_at(rank, file).is_color(color_to_move))
@@ -163,7 +163,7 @@ namespace chess
 
 	// these are in the same order that they are called in the generation function, which acts in order of probable piece frequency
 
-	void Board::find_pawn_moves(board_list& child_boards, const int rank, const int file) const
+	void Board::find_pawn_moves(board_list& child_boards, const rank rank, const file file) const
 	{
 		if (piece_at(rank, file).is_white())
 		{
@@ -292,10 +292,10 @@ namespace chess
 			}
 		}
 	}
-	void Board::find_rook_moves(board_list& child_boards, const int rank, const int file) const
+	void Board::find_rook_moves(board_list& child_boards, const rank rank, const file file) const
 	{
 		// rank descending
-		for (int end_rank = rank - 1; end_rank >= 0; --end_rank)
+		for (chess::rank end_rank = rank - 1; end_rank >= 0; --end_rank)
 		{
 			if (!bounds_check(end_rank)) break; // out of bounds; don't keep iterating in this direction
 
@@ -315,7 +315,7 @@ namespace chess
 		}
 
 		// rank ascending (documentation same as above)
-		for (int end_rank = rank + 1; end_rank < 8; ++end_rank)
+		for (chess::rank end_rank = rank + 1; end_rank < 8; ++end_rank)
 		{
 			if (!bounds_check(end_rank)) break;
 
@@ -333,7 +333,7 @@ namespace chess
 		}
 
 		// file descending (documentation same as above)
-		for (int end_file = file - 1; end_file >= 0; --end_file)
+		for (chess::file end_file = file - 1; end_file >= 0; --end_file)
 		{
 			if (!bounds_check(end_file)) break;
 
@@ -351,7 +351,7 @@ namespace chess
 		}
 
 		// file ascending (documentation same as above)
-		for (int end_file = file + 1; end_file < 8; ++end_file)
+		for (chess::file end_file = file + 1; end_file < 8; ++end_file)
 		{
 			if (!bounds_check(end_file)) break;
 
@@ -368,7 +368,7 @@ namespace chess
 			else break;
 		}
 	}
-	void Board::find_bishop_moves(board_list& child_boards, const int rank, const int file) const
+	void Board::find_bishop_moves(board_list& child_boards, const rank rank, const file file) const
 	{
 		// working diagonally (rank and file descending)
 		for (int offset = 1; offset < 8; ++offset)
@@ -448,7 +448,7 @@ namespace chess
 			else break;
 		}
 	}
-	void Board::find_knight_moves(board_list& child_boards, const int rank, const int file) const
+	void Board::find_knight_moves(board_list& child_boards, const rank rank, const file file) const
 	{
 		if (bounds_check(rank - 2, file + 1) && !(piece_at(rank - 2, file + 1).is_occupied() && piece_at(rank - 2, file + 1).is_color(color_to_move)))
 			child_boards.emplace_back(*this, rank, file, rank - 2, file + 1);
@@ -470,13 +470,13 @@ namespace chess
 		if (bounds_check(rank - 2, file - 1) && !(piece_at(rank - 2, file - 1).is_occupied() && piece_at(rank - 2, file - 1).is_color(color_to_move)))
 			child_boards.emplace_back(*this, rank, file, rank - 2, file - 1);
 	}
-	void Board::find_queen_moves(board_list& child_boards, const int rank, const int file) const
+	void Board::find_queen_moves(board_list& child_boards, const rank rank, const file file) const
 	{
 		// the function calls themselves are piece-agnostic, so there's no reason this shouldn't work
 		find_rook_moves(child_boards, rank, file);
 		find_bishop_moves(child_boards, rank, file);
 	}
-	void Board::find_king_moves(board_list& child_boards, const int rank, const int file) const
+	void Board::find_king_moves(board_list& child_boards, const rank rank, const file file) const
 	{
 		// iterate over all adjacent squares
 		for (int rank_d = -1; rank_d <= 1; ++rank_d)
@@ -486,7 +486,7 @@ namespace chess
 				// if the square is not occupied by a friendly piece
 				if (bounds_check(rank + rank_d, file + file_d) &&
 					!(piece_at(rank + rank_d, file + file_d).is_occupied() &&
-					piece_at(rank + rank_d, file + file_d).is_color(color_to_move)))
+					  piece_at(rank + rank_d, file + file_d).is_color(color_to_move)))
 				{
 					child_boards.emplace_back(*this, rank, file, rank + rank_d, file + file_d);
 				}
@@ -527,9 +527,9 @@ namespace chess
 
 	bool Board::is_king_in_check(const color_t check_color) const
 	{
-		for (int rank = 0; rank < 8; ++rank)
+		for (rank rank = 0; rank < 8; ++rank)
 		{
-			for (int file = 0; file < 8; ++file)
+			for (file file = 0; file < 8; ++file)
 			{
 				const piece piece = piece_at(rank, file);
 				if (piece.is_king() && piece.is_color(check_color))
@@ -561,7 +561,7 @@ namespace chess
 		// iterate in all four vertical and horizontal directions to check for a rook or queen (these loops only look within bounds)
 
 		// rank descending
-		for (int other_rank = rank - 1; other_rank >= 0; --other_rank)
+		for (auto other_rank = rank - 1; other_rank >= 0; --other_rank)
 		{
 			// if a square is found that is not empty
 			if (piece_at(other_rank, file).is_occupied())
@@ -573,7 +573,7 @@ namespace chess
 			}
 		}
 		// rank ascending (documentation same as above)
-		for (int other_rank = rank + 1; other_rank < 8; ++other_rank)
+		for (auto other_rank = rank + 1; other_rank < 8; ++other_rank)
 		{
 			if (piece_at(other_rank, file).is_occupied())
 			{
@@ -583,7 +583,7 @@ namespace chess
 			}
 		}
 		// file descending (documentation same as above)
-		for (int other_file = file - 1; other_file >= 0; --other_file)
+		for (auto other_file = file - 1; other_file >= 0; --other_file)
 		{
 			if (piece_at(rank, other_file).is_occupied())
 			{
@@ -593,7 +593,7 @@ namespace chess
 			}
 		}
 		// file ascending (documentation same as above)
-		for (int other_file = file + 1; other_file < 8; ++other_file)
+		for (auto other_file = file + 1; other_file < 8; ++other_file)
 		{
 			if (piece_at(rank, other_file).is_occupied())
 			{

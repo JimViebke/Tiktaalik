@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "piece.hpp"
+#include "util.hpp"
 
 namespace chess
 {
@@ -15,8 +16,19 @@ namespace chess
 		draw_by_stalemate
 	};
 
-	using rank = int8_t;
-	using file = int8_t;
+	namespace detail
+	{
+		struct file_tag{};
+		struct rank_tag{};
+	}
+
+	using file = util::strong_alias<int8_t, detail::file_tag>;
+	using rank = util::strong_alias<int8_t, detail::rank_tag>;
+
+	static_assert(std::is_assignable<file, file>::value);
+	static_assert(std::is_assignable<rank, rank>::value);
+	static_assert(not std::is_assignable<file, rank>::value);
+	static_assert(not std::is_assignable<rank, file>::value);
 
 	static constexpr color_t white = piece::white;
 	static constexpr color_t black = piece::black;
