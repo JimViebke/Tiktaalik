@@ -71,10 +71,10 @@ namespace chess
 			overlay.setCharacterSize(20);
 			overlay.setFillColor(sf::Color::Black);
 
-			overlay_right.setFont(arial);
-			overlay_right.setCharacterSize(20);
-			overlay_right.setFillColor(sf::Color::Black);
-			overlay_right.setPosition({ detail::board_size_px + detail::board_x * 2, detail::board_y / 2 });
+			right_overlay.setFont(arial);
+			right_overlay.setCharacterSize(20);
+			right_overlay.setFillColor(sf::Color::Black);
+			right_overlay.setPosition({ detail::board_size_px + detail::board_x * 2, detail::board_y / 2 });
 
 			if (!wk_texture.loadFromFile("../Chess_Engine/res/wk.png"))
 				std::cout << "wk failed to load";
@@ -405,18 +405,18 @@ namespace chess
 			}
 		}
 
-		void render_move_list()
+		void render_right_overlay()
 		{
-			std::stringstream move_list;
+			std::stringstream ss;
 
-			move_list << (root.board.white_to_move() ? "White to move\n\n" : "Black to move\n\n");
+			ss << (root.board.white_to_move() ? "White to move\n\n" : "Black to move\n\n");
 
 			if (best_move.size() != 0)
 			{
-				move_list << "Best move: " << best_move << "\n\n";
+				ss << "Best move: " << best_move << "\n\n";
 			}
 
-			move_list << root.children.size() << " moves:\n";
+			ss << root.children.size() << " moves:\n";
 			for (const Node& child_node : root.children)
 			{
 				const std::string legal_move = child_node.board.move_to_string();
@@ -425,14 +425,14 @@ namespace chess
 
 				// todo: find a cleaner way to handle x,y coordinate flipping?
 				const piece piece = root.board.piece_at(y, x);
-				if (piece.is_queen()) { move_list << 'Q'; }
-				else if (piece.is_rook()) { move_list << 'R'; }
-				else if (piece.is_bishop()) { move_list << 'B'; }
-				else if (piece.is_knight()) { move_list << 'N'; }
+				if (piece.is_queen()) { ss << 'Q'; }
+				else if (piece.is_rook()) { ss << 'R'; }
+				else if (piece.is_bishop()) { ss << 'B'; }
+				else if (piece.is_knight()) { ss << 'N'; }
 				else if (piece.is_king())
 				{
 					// Add logic for castling
-					move_list << 'K';
+					ss << 'K';
 				}
 				else if (piece.is_pawn())
 				{
@@ -445,27 +445,27 @@ namespace chess
 				{
 					if (root.board.piece_at(y, x).is_pawn())
 					{
-						move_list << legal_move[0];
+						ss << legal_move[0];
 					}
 
-					move_list << 'x';
+					ss << 'x';
 				}
 
 				// add the destination coordinates
-				move_list << legal_move[2] << legal_move[3];
+				ss << legal_move[2] << legal_move[3];
 
 				// use the child board here, not the current board
 				if (child_node.board.is_king_in_check(
 					child_node.board.get_color_to_move()))
 				{
-					move_list << '+';
+					ss << '+';
 				}
 
-				move_list << '\n';
+				ss << '\n';
 			}
 
-			overlay_right.setString(move_list.str());
-			window->draw(overlay_right);
+			right_overlay.setString(ss.str());
+			window->draw(right_overlay);
 		}
 
 		void render()
@@ -484,7 +484,7 @@ namespace chess
 			overlay.setString(debug.str());
 			window->draw(overlay);
 
-			render_move_list();
+			render_right_overlay();
 		}
 
 		void worker_thread();
@@ -525,12 +525,13 @@ namespace chess
 
 		std::unique_ptr<sf::RenderWindow> window;
 		sf::Font arial;
-		sf::Text overlay; // easy way to add text on the screen
-		sf::Text overlay_right; // the move list
-
-		std::string best_move;
+		sf::Text overlay; // starts in the very top left
+		sf::Text right_overlay; // main text overlay
 
 		Node root; // move graph, rooted on the current position
+
+		// engine info
+		std::string best_move;
 
 		const color_t human_color = white;
 
