@@ -475,6 +475,7 @@ namespace chess
 			render_game_board();
 
 			std::stringstream debug;
+			debug << tick_counter % 60 << '\n';
 			debug << mouse_x << ", " << mouse_y << '\n';
 			if (mouse_on_board())
 			{
