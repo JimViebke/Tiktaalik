@@ -4,11 +4,7 @@
 
 namespace chess::util
 {
-	auto time_in_ms()
-	{
-		using namespace std::chrono;
-		return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
-	}
+	long long time_in_ms();
 
 	template<typename T, typename tag>
 	class strong_alias
