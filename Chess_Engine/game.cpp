@@ -18,4 +18,52 @@ namespace chess
 			best_move = alpha_beta(root, 5, root.board.white_to_move());
 		}
 	}
+
+	void Game::menu()
+	{
+		const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
+		window->setVisible(false);
+
+		while (true)
+		{
+			std::cout << "\nEnter a command:\n"
+				"\tperft [n]\n"
+				"\tdivide [n]\n"
+				"\tquit\n";
+
+			std::string input;
+			std::getline(std::cin, input);
+			std::stringstream ss(input);
+
+			std::string command;
+			ss >> command;
+
+			if (command == "perft" || command == "divide")
+			{
+				size_t depth = 0;
+				ss >> depth;
+				if (depth < 1)
+				{
+					depth = 1;
+					std::cout << "depth adjusted to " << depth << '\n';
+				}
+				else if (depth > 10)
+				{
+					depth = 10;
+					std::cout << "depth adjusted to " << depth << '\n';
+				}
+
+				root.children.clear(); // suppress a debug printout (todo: remove this)
+
+				if (command == "perft")
+					root.perft(depth);
+				else
+					root.divide(depth);
+			}
+			else if (command == "quit" || command == "q")
+			{
+				return;
+			}
+		}
+	}
 }

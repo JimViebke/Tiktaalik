@@ -489,6 +489,8 @@ namespace chess
 		void worker_thread();
 
 	public:
+		void menu();
+
 		void run()
 		{
 			while (window->isOpen())
