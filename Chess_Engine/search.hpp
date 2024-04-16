@@ -47,7 +47,7 @@ namespace chess
 		}
 	}
 
-	std::string alpha_beta(Node& root, size_t depth, bool maximizing_player, size_t& n_of_evals)
+	Node* alpha_beta(Node& root, size_t depth, bool maximizing_player, size_t& n_of_evals)
 	{
 		// The root node will usually already have all of its immediate children,
 		// but have this here for correctness.
@@ -90,9 +90,8 @@ namespace chess
 		if (best_move == nullptr)
 		{
 			std::cout << "No best move found (node is likely terminal).\n";
-			return "";
 		}
 
-		return best_move->board.move_to_string();
+		return best_move;
 	}
 }

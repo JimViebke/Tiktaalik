@@ -54,6 +54,16 @@ namespace chess
 		bool is_knight() const { return (_piece & type_mask) == piece::knight; }
 		bool is_pawn() const { return (_piece & type_mask) == piece::pawn; }
 
+		char to_algebraic_char() const
+		{
+			if (is_knight()) return 'N';
+			else if (is_bishop()) return 'B';
+			else if (is_rook()) return 'R';
+			else if (is_queen()) return 'Q';
+			else if (is_king()) return 'K';
+			else return '?';
+		}
+
 		// check piece type and color
 		bool is(const piece compare_piece) const { return compare_piece._piece == _piece; }
 		bool is(const piece_t compare_piece) const { return compare_piece == _piece; }

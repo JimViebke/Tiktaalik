@@ -225,6 +225,10 @@ namespace chess
 					mouse_square_x == legal_end_x &&
 					mouse_square_y == legal_end_y)
 				{
+					// reset these, because we're about to invalidate them
+					parent_of_best_move = nullptr;
+					result_of_best_move = nullptr;
+
 					// Move a ply-1 child node to become the root node
 					// This preserves the relevant subset of the move graph.
 					const Node temp = child_node;
@@ -405,6 +409,46 @@ namespace chess
 			}
 		}
 
+		void move_to_notation(std::stringstream& ss,
+							  const Node* parent_node,
+							  const Node* result_node)
+		{
+			if (parent_node == nullptr || result_node == nullptr) return;
+			
+			const std::string move = result_node->board.move_to_string();
+			const auto start_file = char_to_file(move[0]);
+			const auto start_rank = char_to_rank(move[1]);
+
+			const piece piece = parent_node->board.piece_at(start_rank, start_file);
+			if (!piece.is_pawn())
+			{
+				ss << piece.to_algebraic_char();
+			}
+			// todo: Add logic for castling
+			// todo: Add logic for en passant captures
+			// todo: Add logic for promotion
+
+			const auto target_file = char_to_file(move[2]);
+			const auto target_rank = char_to_rank(move[3]);
+			if (parent_node->board.is_occupied(target_rank, target_file))
+			{
+				if (parent_node->board.piece_at(start_rank, start_file).is_pawn())
+				{
+					ss << move[0]; // a pawn is capturing; append the pawn's file
+				}
+				ss << 'x';
+			}
+
+			// add the destination coordinates
+			ss << move[2] << move[3];
+
+			if (result_node->board.is_king_in_check(
+				result_node->board.get_color_to_move()))
+			{
+				ss << '+';
+			}
+		}
+
 		void render_right_overlay()
 		{
 			std::stringstream ss;
@@ -412,56 +456,18 @@ namespace chess
 			ss << (root.board.white_to_move() ? "White to move\n\n" : "Black to move\n\n");
 
 			ss << n_of_evals << " positions evaluated\n";
-			if (best_move.size() != 0)
+			if (parent_of_best_move && result_of_best_move)
 			{
-				ss << "Best move: " << best_move << "\n\n";
+				ss << "Best move: ";
+				move_to_notation(ss, parent_of_best_move, result_of_best_move);
+				ss << '\n';
 			}
+			ss << '\n';
 
 			ss << root.children.size() << " moves:\n";
 			for (const Node& child_node : root.children)
 			{
-				const std::string legal_move = child_node.board.move_to_string();
-				const auto x = char_to_file(legal_move[0]);
-				const auto y = char_to_rank(legal_move[1]);
-
-				// todo: find a cleaner way to handle x,y coordinate flipping?
-				const piece piece = root.board.piece_at(y, x);
-				if (piece.is_queen()) { ss << 'Q'; }
-				else if (piece.is_rook()) { ss << 'R'; }
-				else if (piece.is_bishop()) { ss << 'B'; }
-				else if (piece.is_knight()) { ss << 'N'; }
-				else if (piece.is_king())
-				{
-					// Add logic for castling
-					ss << 'K';
-				}
-				else if (piece.is_pawn())
-				{
-					// Add logic for en passant captures
-				}
-
-				const file target_x = char_to_file(legal_move[2]);
-				const rank target_y = char_to_rank(legal_move[3]);
-				if (root.board.is_occupied(target_y, target_x))
-				{
-					if (root.board.piece_at(y, x).is_pawn())
-					{
-						ss << legal_move[0];
-					}
-
-					ss << 'x';
-				}
-
-				// add the destination coordinates
-				ss << legal_move[2] << legal_move[3];
-
-				// use the child board here, not the current board
-				if (child_node.board.is_king_in_check(
-					child_node.board.get_color_to_move()))
-				{
-					ss << '+';
-				}
-
+				move_to_notation(ss, &root, &child_node);
 				ss << '\n';
 			}
 
@@ -532,7 +538,8 @@ namespace chess
 		Node root; // move graph, rooted on the current position
 
 		// engine info
-		std::string best_move;
+		Node* parent_of_best_move = nullptr;
+		Node* result_of_best_move = nullptr;
 		size_t n_of_evals = 0;
 
 		const color_t human_color = white;
