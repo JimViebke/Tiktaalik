@@ -411,6 +411,7 @@ namespace chess
 
 			ss << (root.board.white_to_move() ? "White to move\n\n" : "Black to move\n\n");
 
+			ss << n_of_evals << " positions evaluated\n";
 			if (best_move.size() != 0)
 			{
 				ss << "Best move: " << best_move << "\n\n";
@@ -532,6 +533,7 @@ namespace chess
 
 		// engine info
 		std::string best_move;
+		size_t n_of_evals = 0;
 
 		const color_t human_color = white;
 

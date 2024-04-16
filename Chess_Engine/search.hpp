@@ -6,10 +6,18 @@ namespace chess
 {
 	namespace detail
 	{
-		float alpha_beta(Node& node, size_t depth, float alpha, float beta, bool maximizing_player)
+		template<bool count_evals = false>
+		float alpha_beta(Node& node, size_t depth, float alpha, float beta, bool maximizing_player, size_t& n_of_evals)
 		{
 			if (depth == 0 || node.is_terminal())
+			{
+				if constexpr (count_evals)
+				{
+					++n_of_evals;
+				}
+
 				return node.evaluation();
+			}
 
 			if (node.children.size() == 0)
 				node.generate_child_boards();
@@ -19,7 +27,7 @@ namespace chess
 				evaluation_t eval = -INFINITY;
 				for (Node& child : node.children)
 				{
-					eval = std::max(eval, alpha_beta(child, depth - 1, alpha, beta, false));
+					eval = std::max(eval, alpha_beta<count_evals>(child, depth - 1, alpha, beta, false, n_of_evals));
 					if (eval > beta) break; // beta cutoff
 					alpha = std::max(alpha, eval);
 				}
@@ -30,7 +38,7 @@ namespace chess
 				evaluation_t eval = INFINITY;
 				for (Node& child : node.children)
 				{
-					eval = std::min(eval, alpha_beta(child, depth - 1, alpha, beta, true));
+					eval = std::min(eval, alpha_beta<count_evals>(child, depth - 1, alpha, beta, true, n_of_evals));
 					if (eval < alpha) break; // alpha cutoff
 					beta = std::min(beta, eval);
 				}
@@ -39,7 +47,7 @@ namespace chess
 		}
 	}
 
-	std::string alpha_beta(Node& root, size_t depth, bool maximizing_player)
+	std::string alpha_beta(Node& root, size_t depth, bool maximizing_player, size_t& n_of_evals)
 	{
 		// The root node will usually already have all of its immediate children,
 		// but have this here for correctness.
@@ -55,7 +63,7 @@ namespace chess
 			evaluation_t eval = -INFINITY;
 			for (Node& child : root.children)
 			{
-				const auto ab = detail::alpha_beta(child, depth - 1, alpha, beta, false);
+				const auto ab = detail::alpha_beta<true>(child, depth - 1, alpha, beta, false, n_of_evals);
 				if (ab > eval)
 				{
 					eval = ab;
@@ -69,7 +77,7 @@ namespace chess
 			evaluation_t eval = INFINITY;
 			for (Node& child : root.children)
 			{
-				const auto ab = detail::alpha_beta(child, depth - 1, alpha, beta, true);
+				const auto ab = detail::alpha_beta<true>(child, depth - 1, alpha, beta, true, n_of_evals);
 				if (ab < eval)
 				{
 					eval = ab;

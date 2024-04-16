@@ -15,7 +15,8 @@ namespace chess
 
 			const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
 
-			best_move = alpha_beta(root, 5, root.board.white_to_move());
+			n_of_evals = 0;
+			best_move = alpha_beta(root, 5, root.board.white_to_move(), n_of_evals);
 		}
 	}
 
