@@ -16,17 +16,6 @@ namespace chess
 
 		explicit Node(const Board& set_board);
 
-		bool is_terminal() const
-		{
-			// Anything other than "unknown" is a terminal (end) state.
-			return board.get_result() != result::unknown;
-		}
-
-		evaluation_t evaluation() const
-		{
-			return board.evaluate_position();
-		}
-
 		void generate_child_boards()
 		{
 			// Generate all immediate child nodes with boards.
@@ -42,6 +31,17 @@ namespace chess
 			children.reserve(child_boards.size());
 			for (const Board& child_board : child_boards)
 				children.emplace_back(child_board);
+		}
+
+		bool is_terminal() const
+		{
+			// Anything other than "unknown" is a terminal (end) state.
+			return board.get_result() != result::unknown;
+		}
+
+		evaluation_t evaluation() const
+		{
+			return board.evaluate_position();
 		}
 
 		void perft(const size_t max_depth);
