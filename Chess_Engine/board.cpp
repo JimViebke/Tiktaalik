@@ -472,7 +472,6 @@ namespace chess
 	}
 	void Board::find_queen_moves(board_list& child_boards, const rank rank, const file file) const
 	{
-		// the function calls themselves are piece-agnostic, so there's no reason this shouldn't work
 		find_rook_moves(child_boards, rank, file);
 		find_bishop_moves(child_boards, rank, file);
 	}
