@@ -455,7 +455,7 @@ namespace chess
 
 			ss << (root.board.white_to_move() ? "White to move\n\n" : "Black to move\n\n");
 
-			ss << n_of_evals << " positions evaluated\n";
+			ss << n_of_evals << " positions evaluated in " << engine_time << " ms\n";
 			if (parent_of_best_move && result_of_best_move)
 			{
 				ss << "Best move: ";
@@ -541,6 +541,7 @@ namespace chess
 		Node* parent_of_best_move = nullptr;
 		Node* result_of_best_move = nullptr;
 		size_t n_of_evals = 0;
+		util::timepoint engine_time = 0;
 
 		const color_t human_color = white;
 

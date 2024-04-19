@@ -15,9 +15,13 @@ namespace chess
 
 			const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
 
+			const auto start_time = util::time_in_ms();
+
 			n_of_evals = 0;
 			parent_of_best_move = &root; // currently, this is always the case
 			result_of_best_move = alpha_beta(root, 5, root.board.white_to_move(), n_of_evals);
+
+			engine_time = util::time_in_ms() - start_time;
 		}
 	}
 
