@@ -4,7 +4,8 @@
 
 namespace chess::util
 {
-	long long time_in_ms();
+	using timepoint = std::chrono::milliseconds::rep;
+	timepoint time_in_ms();
 
 	template<typename T, typename tag>
 	class strong_alias
