@@ -7,7 +7,7 @@ namespace chess
 	namespace detail
 	{
 		template<bool count_evals = false>
-		float alpha_beta(Node& node, size_t depth, float alpha, float beta, bool maximizing_player, size_t& n_of_evals)
+		float alpha_beta(Node& node, size_t depth, float alpha, float beta, size_t& n_of_evals)
 		{
 			if (node.children.size() == 0)
 				node.generate_child_boards();
@@ -22,31 +22,15 @@ namespace chess
 				return node.evaluation();
 			}
 
-			if (node.children.size() == 0)
-				node.generate_child_boards();
+			evaluation_t eval = -INFINITY;
+			for (Node& child : node.children)
+			{
+				eval = std::max(eval, -alpha_beta<count_evals>(child, depth - 1, -beta, -alpha, n_of_evals));
+				if (eval > beta) break; // beta cutoff
+				alpha = std::max(alpha, eval);
+			}
 
-			if (maximizing_player)
-			{
-				evaluation_t eval = -INFINITY;
-				for (Node& child : node.children)
-				{
-					eval = std::max(eval, alpha_beta<count_evals>(child, depth - 1, alpha, beta, false, n_of_evals));
-					if (eval > beta) break; // beta cutoff
-					alpha = std::max(alpha, eval);
-				}
-				return eval;
-			}
-			else
-			{
-				evaluation_t eval = INFINITY;
-				for (Node& child : node.children)
-				{
-					eval = std::min(eval, alpha_beta<count_evals>(child, depth - 1, alpha, beta, true, n_of_evals));
-					if (eval < alpha) break; // alpha cutoff
-					beta = std::min(beta, eval);
-				}
-				return eval;
-			}
+			return eval;
 		}
 	}
 
@@ -66,7 +50,7 @@ namespace chess
 			evaluation_t eval = -INFINITY;
 			for (Node& child : root.children)
 			{
-				const auto ab = detail::alpha_beta<true>(child, depth - 1, alpha, beta, false, n_of_evals);
+				const auto ab = -detail::alpha_beta<true>(child, depth - 1, -beta, -alpha, n_of_evals);
 				if (ab > eval)
 				{
 					eval = ab;
@@ -80,7 +64,7 @@ namespace chess
 			evaluation_t eval = INFINITY;
 			for (Node& child : root.children)
 			{
-				const auto ab = detail::alpha_beta<true>(child, depth - 1, alpha, beta, true, n_of_evals);
+				const auto ab = detail::alpha_beta<true>(child, depth - 1, alpha, beta, n_of_evals);
 				if (ab < eval)
 				{
 					eval = ab;
