@@ -9,6 +9,9 @@ namespace chess
 		template<bool count_evals = false>
 		float alpha_beta(Node& node, size_t depth, float alpha, float beta, bool maximizing_player, size_t& n_of_evals)
 		{
+			if (node.children.size() == 0)
+				node.generate_child_boards();
+
 			if (depth == 0 || node.is_terminal())
 			{
 				if constexpr (count_evals)
