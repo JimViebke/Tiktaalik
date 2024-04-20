@@ -545,18 +545,23 @@ namespace chess
 
 	bool Board::is_king_in_check(const piece king, const rank rank, const file file) const
 	{
-		// iterate over all adjacent squares to check for a king
-		for (auto rank_d = -1; rank_d <= 1; ++rank_d)
+		// Check adjacent squares for a king.
+		// Check rank first, because a king is likely on a top or bottom rank.
+		if (bounds_check(rank - 1))
 		{
-			for (auto file_d = -1; file_d <= 1; ++file_d)
-			{
-				if (rank_d == 0 && file_d == 0) continue; // don't examine the current square
-				if (bounds_check(rank_d + rank, file_d + file) &&
-					piece_at(rank_d + rank, file_d + file).is_king())
-				{
-					return true; // the king is in check
-				}
-			}
+			if (bounds_check(file - 1) && piece_at(rank - 1, file - 1).is_king()) return true;
+			if (piece_at(rank - 1, file).is_king()) return true;
+			if (bounds_check(file + 1) && piece_at(rank - 1, file + 1).is_king()) return true;
+		}
+
+		if (bounds_check(file - 1) && piece_at(rank, file - 1).is_king()) return true;
+		if (bounds_check(file + 1) && piece_at(rank, file + 1).is_king()) return true;
+
+		if (bounds_check(rank + 1))
+		{
+			if (bounds_check(file - 1) && piece_at(rank + 1, file - 1).is_king()) return true;
+			if (piece_at(rank + 1, file).is_king()) return true;
+			if (bounds_check(file + 1) && piece_at(rank + 1, file + 1).is_king()) return true;
 		}
 
 		// iterate in all four vertical and horizontal directions to check for a rook or queen (these loops only look within bounds)
