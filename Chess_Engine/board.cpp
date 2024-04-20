@@ -5,6 +5,7 @@ Mar 14 2016 */
 #include <iostream>
 
 #include "board.hpp"
+#include "capture.hpp"
 
 namespace chess
 {
@@ -565,23 +566,53 @@ namespace chess
 
 	bool Board::is_king_in_check(const piece king, const rank rank, const file file) const
 	{
-		// Check adjacent squares for a king.
-		// Check rank first, because a king is likely on a top or bottom rank.
-		if (bounds_check(rank - 1))
+		bool do_pawn_checks = false;
+		bool do_knight_checks = false;
+		bool do_king_checks = false;
+
+		// If the last move is known, and a player is starting their turn, some piece checks can be skipped.
+		if (board_has_move() && king.is_color(color_to_move))
 		{
-			if (bounds_check(file - 1) && piece_at(rank - 1, file - 1).is_king()) return true;
-			if (piece_at(rank - 1, file).is_king()) return true;
-			if (bounds_check(file + 1) && piece_at(rank - 1, file + 1).is_king()) return true;
+			const piece last_moved = last_moved_piece();
+
+			// Only look for pawn checks if the last moved piece is a pawn.
+			if (last_moved.is_pawn())
+				do_pawn_checks = true;
+			// Only look for knight checks if the last moved piece is a knight.
+			else if (last_moved.is_knight())
+				do_knight_checks = true;
+			// Only look for king checks if the last moved piece is a king.
+			else if (last_moved.is_king())
+				do_king_checks = true;
+		}
+		else
+		{
+			// We don't know what move created this position, or it is not the king's color's turn to move; do all checks.
+			do_pawn_checks = true;
+			do_knight_checks = true;
+			do_king_checks = true;
 		}
 
-		if (bounds_check(file - 1) && piece_at(rank, file - 1).is_king()) return true;
-		if (bounds_check(file + 1) && piece_at(rank, file + 1).is_king()) return true;
-
-		if (bounds_check(rank + 1))
+		if (do_king_checks)
 		{
-			if (bounds_check(file - 1) && piece_at(rank + 1, file - 1).is_king()) return true;
-			if (piece_at(rank + 1, file).is_king()) return true;
-			if (bounds_check(file + 1) && piece_at(rank + 1, file + 1).is_king()) return true;
+			// Check adjacent squares for a king.
+			// Check rank first, because a king is likely on a top or bottom rank.
+			if (bounds_check(rank - 1))
+			{
+				if (bounds_check(file - 1) && piece_at(rank - 1, file - 1).is_king()) return true;
+				if (piece_at(rank - 1, file).is_king()) return true;
+				if (bounds_check(file + 1) && piece_at(rank - 1, file + 1).is_king()) return true;
+			}
+
+			if (bounds_check(file - 1) && piece_at(rank, file - 1).is_king()) return true;
+			if (bounds_check(file + 1) && piece_at(rank, file + 1).is_king()) return true;
+
+			if (bounds_check(rank + 1))
+			{
+				if (bounds_check(file - 1) && piece_at(rank + 1, file - 1).is_king()) return true;
+				if (piece_at(rank + 1, file).is_king()) return true;
+				if (bounds_check(file + 1) && piece_at(rank + 1, file + 1).is_king()) return true;
+			}
 		}
 
 		// iterate in all four vertical and horizontal directions to check for a rook or queen (these loops only look within bounds)
@@ -686,27 +717,26 @@ namespace chess
 			}
 		}
 
-		// manually check eight locations for a knight
-		if (bounds_check(rank - 2, file + 1) && piece_at(rank - 2, file + 1).is_knight() && piece_at(rank - 2, file + 1).is_opposing_color(king)) return true;
-		if (bounds_check(rank - 1, file + 2) && piece_at(rank - 1, file + 2).is_knight() && piece_at(rank - 1, file + 2).is_opposing_color(king)) return true;
-		if (bounds_check(rank + 1, file + 2) && piece_at(rank + 1, file + 2).is_knight() && piece_at(rank + 1, file + 2).is_opposing_color(king)) return true;
-		if (bounds_check(rank + 2, file + 1) && piece_at(rank + 2, file + 1).is_knight() && piece_at(rank + 2, file + 1).is_opposing_color(king)) return true;
-		if (bounds_check(rank + 2, file - 1) && piece_at(rank + 2, file - 1).is_knight() && piece_at(rank + 2, file - 1).is_opposing_color(king)) return true;
-		if (bounds_check(rank + 1, file - 2) && piece_at(rank + 1, file - 2).is_knight() && piece_at(rank + 1, file - 2).is_opposing_color(king)) return true;
-		if (bounds_check(rank - 1, file - 2) && piece_at(rank - 1, file - 2).is_knight() && piece_at(rank - 1, file - 2).is_opposing_color(king)) return true;
-		if (bounds_check(rank - 2, file - 1) && piece_at(rank - 2, file - 1).is_knight() && piece_at(rank - 2, file - 1).is_opposing_color(king)) return true;
+		if (do_knight_checks)
+		{
+			const piece_t opposing_knight = other_color(king.get_color()) | piece::knight;
+			if (knight_attacks[to_index(rank, file)](_position, opposing_knight)) return true;
+		}
 
 		// check if the white king is under attack by a black pawn
-		if (king.is_white())
+		if (do_pawn_checks)
 		{
-			if ((bounds_check(rank - 1, file + 1) && piece_at(rank - 1, file + 1).is(piece::black | piece::pawn)) ||
-				(bounds_check(rank - 1, file - 1) && piece_at(rank - 1, file - 1).is(piece::black | piece::pawn))) return true;
-		}
-		// check if the black king is under attack by a white pawn
-		else if (king.is_black())
-		{
-			if ((bounds_check(rank + 1, file + 1) && piece_at(rank + 1, file + 1).is(piece::white | piece::pawn)) ||
-				(bounds_check(rank + 1, file - 1) && piece_at(rank + 1, file - 1).is(piece::white | piece::pawn))) return true;
+			if (king.is_white())
+			{
+				if ((bounds_check(rank - 1, file + 1) && piece_at(rank - 1, file + 1).is(piece::black | piece::pawn)) ||
+					(bounds_check(rank - 1, file - 1) && piece_at(rank - 1, file - 1).is(piece::black | piece::pawn))) return true;
+			}
+			// check if the black king is under attack by a white pawn
+			else if (king.is_black())
+			{
+				if ((bounds_check(rank + 1, file + 1) && piece_at(rank + 1, file + 1).is(piece::white | piece::pawn)) ||
+					(bounds_check(rank + 1, file - 1) && piece_at(rank + 1, file - 1).is(piece::white | piece::pawn))) return true;
+			}
 		}
 
 		return false;
