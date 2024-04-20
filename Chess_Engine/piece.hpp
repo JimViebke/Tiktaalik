@@ -32,6 +32,9 @@ namespace chess
 		explicit piece() : _piece(piece::empty) {}
 		explicit piece(const piece_t piece) : _piece(piece) {}
 
+		piece_t get_piece() const { return _piece; }
+		color_t get_color() const { return _piece & color_mask; }
+
 		evaluation_t eval() const { return evaluations::eval_lookup[_piece]; }
 
 		// check empty
