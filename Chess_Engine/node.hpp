@@ -26,8 +26,7 @@ namespace chess
 				return;
 			}
 
-			const Board::board_list child_boards = board.generate_child_boards();
-
+			const auto& child_boards = board.generate_child_boards();
 			children.reserve(child_boards.size());
 			for (const Board& child_board : child_boards)
 				children.emplace_back(child_board);

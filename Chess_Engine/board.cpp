@@ -83,9 +83,11 @@ namespace chess
 		std::cout << std::endl;
 	}
 
-	Board::board_list Board::generate_child_boards()
+	Board::board_list& Board::generate_child_boards()
 	{
-		board_list child_boards;
+		static board_list child_boards;
+
+		child_boards.clear();
 
 		for (rank rank = 0; rank < 8; ++rank)
 		{

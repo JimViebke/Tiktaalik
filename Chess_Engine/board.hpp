@@ -239,7 +239,7 @@ namespace chess
 
 		bool is_king_in_check(const color_t check_color) const;
 
-		board_list generate_child_boards();
+		board_list& generate_child_boards();
 
 	private:
 		// Make this private at least for now.
