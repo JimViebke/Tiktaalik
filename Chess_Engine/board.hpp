@@ -11,12 +11,31 @@
 
 namespace chess
 {
+	template<typename T>
+	constexpr bool bounds_check(const T rank_or_file)
+	{
+		return rank_or_file.value() < 8 && rank_or_file.value() >= 0;
+	}
+	constexpr bool bounds_check(const rank rank, const file file)
+	{
+		return bounds_check(rank) && bounds_check(file);
+	}
+
+	constexpr size_t to_index(const rank rank, const file file)
+	{
+		return rank.value() * 8ull + file.value();
+	}
+
 	class Board
 	{
 	private:
 		position _position;
-		char move[4] = "   ";
 		color_t color_to_move = white;
+
+		rank _start_rank = -1; // the move that resulted in this position
+		file _start_file = -1;
+		rank _end_rank = -1;
+		file _end_file = -1;
 
 		file en_passant_flag = -1;
 		bool white_can_castle_k_s = true;
@@ -35,18 +54,26 @@ namespace chess
 		{
 			// copy the position
 			_position = parent_board._position;
+			// toggle color to move
+			color_to_move = other_color(parent_board.get_color_to_move());
+
+			// record the move that resulted in this position
+			_start_rank = start_rank;
+			_start_file = start_file;
+			_end_rank = end_rank;
+			_end_file = end_file;
+
+			// check if the en passant indicator needs to be set
+			en_passant_flag = (parent_board.piece_at(start_rank, start_file).is_pawn() && std::abs(rank{ start_rank - end_rank }.value()) == 2)
+				? start_file : -1;
 			// copy castle flags
 			white_can_castle_k_s = parent_board.white_can_castle_k_s;
 			white_can_castle_q_s = parent_board.white_can_castle_q_s;
 			black_can_castle_k_s = parent_board.black_can_castle_k_s;
 			black_can_castle_q_s = parent_board.black_can_castle_q_s;
+
 			// update 50 move rule - increment for a non-pawn-move or non-capture move
 			if (!piece_at(end_rank, end_file).is_pawn() || piece_at(end_rank, end_file).is_empty()) ++fifty_move_rule; else fifty_move_rule = 0;
-			// toggle color to move
-			color_to_move = other_color(parent_board.get_color_to_move());
-			// check if the en passant indicator needs to be set
-			en_passant_flag = (parent_board.piece_at(start_rank, start_file).is_pawn() && std::abs(rank{ start_rank - end_rank }.value()) == 2)
-				? start_file : -1;
 
 			// check for en passant captures
 			if (piece_at(start_rank, start_file).is_pawn() &&
@@ -68,9 +95,9 @@ namespace chess
 				if (abs(file{ start_file - end_file }.value()) > 1) // if the king is castling, move the rook
 				{
 					if (start_file < end_file) // kingside castle
-						move_piece(start_rank, 7, start_rank, 5); // move the rook
+						make_move(start_rank, 7, start_rank, 5); // move the rook
 					else if (start_file > end_file) // queenside castle
-						move_piece(start_rank, 0, start_rank, 3); // move the rook
+						make_move(start_rank, 0, start_rank, 3); // move the rook
 				}
 			}
 
@@ -106,10 +133,7 @@ namespace chess
 			}
 
 			// move the piece
-			move_piece(start_rank, start_file, end_rank, end_file);
-
-			// record the move
-			save_move(start_rank, start_file, end_rank, end_file);
+			make_move(start_rank, start_file, end_rank, end_file);
 		}
 		explicit Board(const Board& parent_board, const rank start_rank, const file start_file, const rank end_rank, const file end_file, const piece& promote_to)
 			: Board(parent_board, start_rank, start_file, end_rank, end_file)
@@ -191,11 +215,11 @@ namespace chess
 
 		const std::string move_to_string() const
 		{
-			std::string result = "";
-			result += move[0];
-			result += move[1];
-			result += move[2];
-			result += move[3];
+			std::string result;
+			result += _start_file.value() + 'a';
+			result += (_start_rank.value() * -1) + 8 + '0';
+			result += _end_file.value() + 'a';
+			result += (_end_rank.value() * -1) + 8 + '0';
 			return result;
 		}
 
@@ -206,11 +230,11 @@ namespace chess
 
 		const piece& piece_at(const rank rank, const file file) const
 		{
-			return _position[rank.value() * 8ull + file.value()];
+			return _position[to_index(rank, file)];
 		}
 		piece& piece_at(const rank rank, const file file)
 		{
-			return _position[rank.value() * 8ull + file.value()];
+			return _position[to_index(rank, file)];
 		}
 
 		bool is_empty(const auto rank, const auto file) const
@@ -242,26 +266,24 @@ namespace chess
 		board_list& generate_child_boards();
 
 	private:
-		// Make this private at least for now.
-		// External users should be using the constructor, not modifying an existing board.
-		void move_piece(const rank start_rank, const file start_file, const rank end_rank, const file end_file)
+		void make_move(const rank start_rank, const file start_file, const rank end_rank, const file end_file)
 		{
-			piece_at(end_rank, end_file) = piece_at(start_rank, start_file);
-			piece_at(start_rank, start_file) = piece(piece::empty);
+			auto& start = piece_at(start_rank, start_file);
+			piece_at(end_rank, end_file) = start;
+			start = piece(piece::empty);
 		}
 
-		void save_move(const rank start_rank, const file start_file, const rank end_rank, const file end_file)
+		bool board_has_move() const
 		{
-			move[0] = start_file.value() + 'a';
-			move[1] = (start_rank.value() * -1) + 8 + '0';
-			move[2] = end_file.value() + 'a';
-			move[3] = (end_rank.value() * -1) + 8 + '0';
+			// if any of start/end file/rank are valid (not -1), all are valid
+			return _start_rank != rank{ -1 };
+		}
+		const piece& last_moved_piece() const
+		{
+			return piece_at(_end_rank, _end_file);
 		}
 
 		void set_color_to_move(const color_t set_color_to_move) { color_to_move = set_color_to_move; }
-
-		template<typename T> bool bounds_check(const T rank_or_file) const { return rank_or_file.value() < 8 && rank_or_file.value() >= 0; }
-		template<typename T1, typename T2> bool bounds_check(const T1 rank, const T2 file) const { return bounds_check(rank) && bounds_check(file); }
 
 		bool is_valid_position() const;
 
