@@ -533,16 +533,31 @@ namespace chess
 
 	bool Board::is_king_in_check(const color_t check_color) const
 	{
-		for (rank rank = 0; rank < 8; ++rank)
+		static_assert(sizeof(piece) == 1);
+
+		// load the 64 bytes of the board into two ymm registers
+		uint256_t ymm0 = _mm256_loadu_si256((uint256_t*)_position.data() + 0);
+		uint256_t ymm1 = _mm256_loadu_si256((uint256_t*)(_position.data() + 32));
+
+		// broadcast the target piece (king | color) to all positions of a vector
+		const uint256_t target_mask = _mm256_set1_epi8(piece(piece::king | check_color).get_piece());
+
+		// find the matching byte
+		ymm0 = _mm256_cmpeq_epi8(ymm0, target_mask);
+		ymm1 = _mm256_cmpeq_epi8(ymm1, target_mask);
+		// extract 2x 32-bit bitmasks
+		const uint64_t mask_low = _mm256_movemask_epi8(ymm0);
+		const uint64_t mask_high = _mm256_movemask_epi8(ymm1);
+		// merge 2x 32-bit bitmasks to 1x 64-bit bitmask
+		const uint64_t mask = (mask_high << 32) | mask_low;
+
+		// Scan for the position of the first set bit in the mask.
+		// tzcnt returns the width of the type if a bit is not found.
+		size_t index = _tzcnt_u64(mask);
+
+		if (index < 64)
 		{
-			for (file file = 0; file < 8; ++file)
-			{
-				const piece piece = piece_at(rank, file);
-				if (piece.is_king() && piece.is_color(check_color))
-				{
-					return is_king_in_check(piece, rank, file);
-				}
-			}
+			return is_king_in_check(_position[index], index / 8, index % 8);
 		}
 
 		return false;
