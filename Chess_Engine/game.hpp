@@ -23,7 +23,8 @@ namespace chess
 		constexpr size_t board_x = 50;
 		constexpr size_t board_y = 100;
 
-		const sf::Color background = { 70, 70, 70 };
+		const sf::Color background = { 30, 30, 30 };
+		const sf::Color text_color = sf::Color::White;
 		const sf::Color brown = { 153, 76, 0 }; // brown
 		const sf::Color cream = { 248, 194, 150 }; // cream
 
@@ -49,7 +50,7 @@ namespace chess
 			window = std::make_unique<sf::RenderWindow>(
 				sf::VideoMode((uint32_t)detail::window_width, (uint32_t)detail::window_height),
 				"Chess engine",
-				sf::Style::Titlebar,
+				sf::Style::Close,
 				settings);
 
 			window->setFramerateLimit(60);
@@ -69,11 +70,11 @@ namespace chess
 
 			overlay.setFont(arial);
 			overlay.setCharacterSize(20);
-			overlay.setFillColor(sf::Color::Black);
+			overlay.setFillColor(detail::text_color);
 
 			right_overlay.setFont(arial);
 			right_overlay.setCharacterSize(20);
-			right_overlay.setFillColor(sf::Color::Black);
+			right_overlay.setFillColor(detail::text_color);
 			right_overlay.setPosition({ detail::board_size_px + detail::board_x * 2, detail::board_y / 2 });
 
 			if (!wk_texture.loadFromFile("../Chess_Engine/res/wk.png"))
