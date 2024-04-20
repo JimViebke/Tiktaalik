@@ -105,6 +105,7 @@
   <ItemGroup>
     <ClInclude Include="board.hpp" />
     <ClInclude Include="board_layouts.hpp" />
+    <ClInclude Include="capture.hpp" />
     <ClInclude Include="evaluations.hpp" />
     <ClInclude Include="game.hpp" />
     <ClInclude Include="node.hpp" />
