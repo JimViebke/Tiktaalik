@@ -5,9 +5,11 @@
 
 namespace chess
 {
+	constexpr size_t engine_depth = 6;
+
 	void Game::worker_thread()
 	{
-		std::cout << "worker thread started\n";
+		std::cout << "Worker thread started with depth " << engine_depth << '\n';
 
 		while (1)
 		{
@@ -19,7 +21,7 @@ namespace chess
 
 			n_of_evals = 0;
 			parent_of_best_move = &root; // currently, this is always the case
-			result_of_best_move = alpha_beta(root, 5, root.board.white_to_move(), n_of_evals);
+			result_of_best_move = alpha_beta(root, engine_depth, root.board.white_to_move(), n_of_evals);
 
 			engine_time = util::time_in_ms() - start_time;
 		}
