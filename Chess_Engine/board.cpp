@@ -147,13 +147,18 @@ namespace chess
 
 	void Board::remove_invalid_boards(board_list& boards)
 	{
-		for (auto it = boards.begin(); it != boards.end(); )
+		static board_list valid_boards;
+
+		for (auto& board : boards)
 		{
-			if (!it->is_valid_position())
-				it = boards.erase(it);
-			else
-				++it;
+			if (board.is_valid_position())
+			{
+				valid_boards.push_back(board);
+			}
 		}
+
+		boards.swap(valid_boards);
+		valid_boards.clear();
 	}
 
 	bool Board::is_valid_position() const
