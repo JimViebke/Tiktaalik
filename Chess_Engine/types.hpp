@@ -3,6 +3,8 @@
 #include <array>
 #include <stdint.h>
 
+#include <immintrin.h>
+
 #include "piece.hpp"
 #include "util.hpp"
 
@@ -32,4 +34,7 @@ namespace chess
 
 	static constexpr color_t white = piece::white;
 	static constexpr color_t black = piece::black;
+
+	using uint128_t = __m128i;
+	using uint256_t = __m256i;
 }
