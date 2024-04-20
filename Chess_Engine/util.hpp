@@ -11,6 +11,8 @@ namespace chess::util
 	class strong_alias
 	{
 	public:
+		using type = T;
+
 		constexpr strong_alias() : _value{} {}
 
 		constexpr strong_alias(T set_value) : _value{ set_value } {}
@@ -19,7 +21,7 @@ namespace chess::util
 			requires std::is_integral<other_type>::value
 		constexpr strong_alias(other_type set_value) : _value(T(set_value)) {}
 
-		T value() const { return _value; }
+		constexpr T value() const { return _value; }
 
 		constexpr bool operator< (const auto& rhs) const { return _value < rhs._value; }
 		template<typename T2>
@@ -30,10 +32,10 @@ namespace chess::util
 		constexpr bool operator<=(const auto& rhs) const { return !(*this > rhs); }
 		constexpr bool operator>=(const auto& rhs) const { return !(*this < rhs); }
 
-		auto& operator++() { ++_value; return *this; }
-		auto operator++(int) { auto t = *this; operator++(); return t; }
-		auto& operator--() { --_value; return *this; }
-		auto operator--(int) { auto t = *this; operator--(); return t; }
+		constexpr auto& operator++() { ++_value; return *this; }
+		constexpr auto operator++(int) { auto t = *this; operator++(); return t; }
+		constexpr auto& operator--() { --_value; return *this; }
+		constexpr auto operator--(int) { auto t = *this; operator--(); return t; }
 
 	private:
 		T _value;
