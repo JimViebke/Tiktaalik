@@ -21,7 +21,10 @@ namespace chess
 
 			n_of_evals = 0;
 			parent_of_best_move = &root; // currently, this is always the case
-			result_of_best_move = alpha_beta(root, engine_depth, root.board.white_to_move(), n_of_evals);
+			if (root.board.white_to_move())
+				result_of_best_move = alpha_beta<true>(root, engine_depth, n_of_evals);
+			else
+				result_of_best_move = alpha_beta<false>(root, engine_depth, n_of_evals);
 
 			engine_time = util::time_in_ms() - start_time;
 		}
