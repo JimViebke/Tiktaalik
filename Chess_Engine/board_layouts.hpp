@@ -6,6 +6,8 @@
 
 namespace chess::layouts
 {
-	extern position test_board;
 	extern position start_board;
+	extern position test_board;
+
+	extern position black_to_move_ply_4;
 }

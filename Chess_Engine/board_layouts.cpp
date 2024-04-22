@@ -3,59 +3,71 @@
 
 // Finish implementing FEN parsing and remove all of this.
 
-#define empty piece(piece::empty)
+#define _ piece(piece::empty)
 
-#define white_king piece(piece::white | piece::king)
-#define white_queen piece(piece::white | piece::queen)
-#define white_rook piece(piece::white | piece::rook)
-#define white_bishop piece(piece::white | piece::bishop)
-#define white_knight piece(piece::white | piece::knight)
-#define white_pawn piece(piece::white | piece::pawn)
+#define K piece(piece::white | piece::king)
+#define Q piece(piece::white | piece::queen)
+#define R piece(piece::white | piece::rook)
+#define B piece(piece::white | piece::bishop)
+#define N piece(piece::white | piece::knight)
+#define P piece(piece::white | piece::pawn)
 
-#define black_king piece(piece::black | piece::king)
-#define black_queen piece(piece::black | piece::queen)
-#define black_rook piece(piece::black | piece::rook)
-#define black_bishop piece(piece::black | piece::bishop)
-#define black_knight piece(piece::black | piece::knight)
-#define black_pawn piece(piece::black | piece::pawn)
+#define k piece(piece::black | piece::king)
+#define q piece(piece::black | piece::queen)
+#define r piece(piece::black | piece::rook)
+#define b piece(piece::black | piece::bishop)
+#define n piece(piece::black | piece::knight)
+#define p piece(piece::black | piece::pawn)
 
 namespace chess
 {
-	position layouts::test_board = {
-		black_rook, empty, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook,
-		black_pawn, black_pawn, black_pawn, black_pawn, empty, black_pawn, black_pawn, black_pawn,
-		empty, empty, black_knight, empty, empty, empty, empty, empty,
-		empty, empty, empty, empty, black_pawn, empty, empty, empty,
-		empty, empty, empty, empty, white_pawn, empty, empty, empty,
-		empty, empty, empty, empty, empty, white_knight, empty, empty,
-		white_pawn, white_pawn, white_pawn, white_pawn, empty, white_pawn, white_pawn, white_pawn,
-		white_rook, white_knight, white_bishop, white_queen, white_king, white_bishop, empty, white_rook
-	};
 
 	position layouts::start_board = {
-		black_rook, black_knight, black_bishop, black_queen, black_king, black_bishop, black_knight, black_rook,
-		black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn,
-		empty, empty, empty, empty, empty, empty, empty, empty,
-		empty, empty, empty, empty, empty, empty, empty, empty,
-		empty, empty, empty, empty, empty, empty, empty, empty,
-		empty, empty, empty, empty, empty, empty, empty, empty,
-		white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn,
-		white_rook, white_knight, white_bishop, white_queen, white_king, white_bishop, white_knight, white_rook
+		r, n, b, q, k, b, n, r,
+		p, p, p, p, p, p, p, p,
+		_, _, _, _, _, _, _, _,
+		_, _, _, _, _, _, _, _,
+		_, _, _, _, _, _, _, _,
+		_, _, _, _, _, _, _, _,
+		P, P, P, P, P, P, P, P,
+		R, N, B, Q, K, B, N, R
+	};
+
+	position layouts::test_board = {
+		r, n, b, q, k, b, _, _,
+		p, p, p, p, p, p, p, p,
+		_, _, _, _, _, _, _, _,
+		_, _, _, r, _, n, _, _,
+		_, _, _, _, P, _, _, _,
+		_, _, P, _, _, _, Q, _,
+		P, P, P, N, _, P, P, P,
+		R, _, B, _, K, B, N, R
+	};
+
+	position layouts::black_to_move_ply_4 = {
+		r, _, b, q, k, b, _, _,
+		p, p, p, p, _, p, p, Q,
+		_, _, n, _, p, _, _, _,
+		_, _, _, _, r, _, _, _,
+		_, _, _, _, N, _, _, _,
+		_, _, P, _, _, P, _, _,
+		P, P, P, _, _, _, P, P,
+		R, _, B, _, K, B, N, R
 	};
 }
 
-#undef empty
+#undef _
 
-#undef white_king
-#undef white_queen
-#undef white_rook
-#undef white_bishop
-#undef white_knight
-#undef white_pawn
+#undef K
+#undef Q
+#undef R
+#undef B
+#undef N
+#undef P
 
-#undef black_king
-#undef black_queen
-#undef black_rook
-#undef black_bishop
-#undef black_knight
-#undef black_pawn
+#undef k
+#undef q
+#undef r
+#undef b
+#undef n
+#undef p

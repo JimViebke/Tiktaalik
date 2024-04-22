@@ -49,7 +49,7 @@ namespace chess
 	public:
 		using board_list = std::vector<Board>;
 
-		explicit Board(const position& set_position) : _position(set_position) {}
+		explicit Board(const position& set_position, const color_t& set_to_move) : _position(set_position), color_to_move(set_to_move) {}
 		explicit Board(const Board& parent_board, const rank start_rank, const file start_file, const rank end_rank, const file end_file)
 		{
 			// copy the position

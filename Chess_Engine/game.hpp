@@ -39,7 +39,7 @@ namespace chess
 	class Game
 	{
 	public:
-		Game() : root{ Board{ layouts::start_board } }
+		Game() : root{ Board{ layouts::start_board, white } }
 		{
 			sf::ContextSettings settings;
 			settings.antialiasingLevel = 8;
