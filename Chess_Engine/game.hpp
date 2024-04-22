@@ -12,6 +12,7 @@
 #include <thread>
 
 #include "node.hpp"
+#include "notation.hpp"
 
 namespace chess
 {
@@ -337,9 +338,6 @@ namespace chess
 			}
 		}
 
-		file char_to_file(const char c) { return c - 'a'; }
-		rank char_to_rank(const char c) { return 8 - (c - '0'); }
-
 		void render_game_board()
 		{
 			using namespace detail;
@@ -410,45 +408,7 @@ namespace chess
 			}
 		}
 
-		void move_to_notation(std::stringstream& ss,
-							  const Node* parent_node,
-							  const Node* result_node)
-		{
-			if (parent_node == nullptr || result_node == nullptr) return;
-			
-			const std::string move = result_node->board.move_to_string();
-			const auto start_file = char_to_file(move[0]);
-			const auto start_rank = char_to_rank(move[1]);
 
-			const piece piece = parent_node->board.piece_at(start_rank, start_file);
-			if (!piece.is_pawn())
-			{
-				ss << piece.to_algebraic_char();
-			}
-			// todo: Add logic for castling
-			// todo: Add logic for en passant captures
-			// todo: Add logic for promotion
-
-			const auto target_file = char_to_file(move[2]);
-			const auto target_rank = char_to_rank(move[3]);
-			if (parent_node->board.is_occupied(target_rank, target_file))
-			{
-				if (parent_node->board.piece_at(start_rank, start_file).is_pawn())
-				{
-					ss << move[0]; // a pawn is capturing; append the pawn's file
-				}
-				ss << 'x';
-			}
-
-			// add the destination coordinates
-			ss << move[2] << move[3];
-
-			if (result_node->board.is_king_in_check(
-				result_node->board.get_color_to_move()))
-			{
-				ss << '+';
-			}
-		}
 
 		void render_right_overlay()
 		{
@@ -457,10 +417,11 @@ namespace chess
 			ss << (root.board.white_to_move() ? "White to move\n\n" : "Black to move\n\n");
 
 			ss << n_of_evals << " positions evaluated in " << engine_time << " ms\n";
+			// parent_of_best_move is always this->root for now
 			if (parent_of_best_move && result_of_best_move)
 			{
 				ss << "Best move: ";
-				move_to_notation(ss, parent_of_best_move, result_of_best_move);
+				move_to_notation(ss, *parent_of_best_move, *result_of_best_move);
 				ss << '\n';
 			}
 			ss << '\n';
@@ -468,7 +429,7 @@ namespace chess
 			ss << root.children.size() << " moves:\n";
 			for (const Node& child_node : root.children)
 			{
-				move_to_notation(ss, &root, &child_node);
+				move_to_notation(ss, root, child_node);
 				ss << '\n';
 			}
 

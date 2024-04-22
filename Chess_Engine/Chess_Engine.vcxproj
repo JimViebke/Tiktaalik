@@ -99,6 +99,7 @@
     <ClCompile Include="game.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="node.cpp" />
+    <ClCompile Include="notation.cpp" />
     <ClCompile Include="piece.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
@@ -109,6 +110,7 @@
     <ClInclude Include="evaluations.hpp" />
     <ClInclude Include="game.hpp" />
     <ClInclude Include="node.hpp" />
+    <ClInclude Include="notation.hpp" />
     <ClInclude Include="piece.hpp" />
     <ClInclude Include="position.hpp" />
     <ClInclude Include="search.hpp" />
