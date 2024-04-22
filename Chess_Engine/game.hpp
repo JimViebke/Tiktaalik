@@ -213,7 +213,7 @@ namespace chess
 			}
 
 			// Check that [from_x, from_y, to_x, to_y] is a legal move
-			for (const Node& child_node : root.children)
+			for (Node& child_node : root.children)
 			{
 				const std::string legal_move = child_node.board.move_to_string();
 				const auto legal_start_x = char_to_file(legal_move[0]);
@@ -232,8 +232,8 @@ namespace chess
 
 					// Move a ply-1 child node to become the root node
 					// This preserves the relevant subset of the move graph.
-					const Node temp = child_node;
-					root = temp;
+					Node temp = std::move(child_node);
+					root = std::move(temp);
 
 					// Make sure all ply-1 child nodes have been generated.
 					// A worker thread will almost certainly have generated these by now, but do this anyway
