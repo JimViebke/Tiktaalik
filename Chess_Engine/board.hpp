@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "board_layouts.hpp"
-#include "evaluations.hpp"
+#include "evaluation.hpp"
 #include "types.hpp"
 
 namespace chess
@@ -246,9 +246,9 @@ namespace chess
 			return !is_empty(rank, file);
 		}
 
-		evaluation_t evaluate_position() const
+		eval_t evaluate_position() const
 		{
-			evaluation_t material_value = 0;
+			eval_t material_value = 0;
 
 			// evaluate material
 			for (const auto& piece : _position)

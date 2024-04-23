@@ -38,7 +38,7 @@ namespace chess
 			return board.get_result() != result::unknown;
 		}
 
-		evaluation_t evaluation() const
+		eval_t evaluation() const
 		{
 			return board.evaluate_position();
 		}

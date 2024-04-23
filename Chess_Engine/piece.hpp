@@ -1,31 +1,32 @@
 #pragma once
 
-#include "evaluations.hpp"
+#include "evaluation.hpp"
+#include "piece_defines.hpp"
 
 namespace chess
 {
-	using piece_t = int8_t;
-	using color_t = piece_t;
+	using piece_t = piece_defines::piece_t;
+	using color_t = piece_defines::color_t;
 
 	class piece
 	{
 	public:
-		static constexpr piece_t empty = 0;
+		static constexpr piece_t empty = piece_defines::empty;
 
-		static constexpr piece_t pawn = 1;
-		static constexpr piece_t knight = 2;
-		static constexpr piece_t bishop = 3;
-		static constexpr piece_t rook = 4;
-		static constexpr piece_t queen = 5;
-		static constexpr piece_t king = 6;
+		static constexpr piece_t pawn = piece_defines::pawn;
+		static constexpr piece_t knight = piece_defines::knight;
+		static constexpr piece_t bishop = piece_defines::bishop;
+		static constexpr piece_t rook = piece_defines::rook;
+		static constexpr piece_t queen = piece_defines::queen;
+		static constexpr piece_t king = piece_defines::king;
 
-		static constexpr piece_t white = 0 << 3;
-		static constexpr piece_t black = 1 << 3;
-
-		static constexpr piece_t type_mask = 0b0111;
-		static constexpr piece_t color_mask = 0b1000;
+		static constexpr piece_t white = piece_defines::white;
+		static constexpr piece_t black = piece_defines::black;
 
 	private:
+		static constexpr auto type_mask = piece_defines::type_mask;
+		static constexpr auto color_mask = piece_defines::color_mask;
+
 		piece_t _piece;
 
 	public:
@@ -35,7 +36,7 @@ namespace chess
 		piece_t get_piece() const { return _piece; }
 		color_t get_color() const { return _piece & color_mask; }
 
-		evaluation_t eval() const { return evaluations::eval_lookup[_piece]; }
+		eval_t eval() const { return eval::eval_lookup[_piece]; }
 
 		// check empty
 		bool is_empty() const { return _piece == piece::empty; }

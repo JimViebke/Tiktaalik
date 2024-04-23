@@ -7,7 +7,7 @@ namespace chess
 	namespace detail
 	{
 		template<bool maximizing_player, bool count_evals = false>
-		evaluation_t alpha_beta(Node& node, size_t depth, evaluation_t alpha, evaluation_t beta, size_t& n_of_evals)
+		eval_t alpha_beta(Node& node, size_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
 		{
 			if (node.children.size() == 0)
 				node.generate_child_boards();
@@ -19,11 +19,11 @@ namespace chess
 				return node.evaluation();
 			}
 
-			evaluation_t eval = (maximizing_player ? -INFINITY : INFINITY);
+			eval_t eval = (maximizing_player ? eval::eval_min : eval::eval_max);
 
 			for (Node& child : node.children)
 			{
-				const evaluation_t ab = alpha_beta<!maximizing_player, count_evals>(child, depth - 1, alpha, beta, n_of_evals);
+				const eval_t ab = alpha_beta<!maximizing_player, count_evals>(child, depth - 1, alpha, beta, n_of_evals);
 
 				if constexpr (maximizing_player)
 				{
@@ -53,13 +53,13 @@ namespace chess
 
 		Node* best_move = nullptr;
 
-		evaluation_t alpha = -INFINITY;
-		evaluation_t beta = INFINITY;
-		evaluation_t eval = (maximizing_player ? -INFINITY : INFINITY);
+		eval_t alpha = eval::eval_min;
+		eval_t beta = eval::eval_max;
+		eval_t eval = (maximizing_player ? eval::eval_min : eval::eval_max);
 
 		for (Node& child : root.children)
 		{
-			const evaluation_t ab = detail::alpha_beta<!maximizing_player, true>(child, depth - 1, alpha, beta, n_of_evals);
+			const eval_t ab = detail::alpha_beta<!maximizing_player, true>(child, depth - 1, alpha, beta, n_of_evals);
 
 			if constexpr (maximizing_player)
 			{

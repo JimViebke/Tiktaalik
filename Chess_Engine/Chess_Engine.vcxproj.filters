@@ -32,6 +32,9 @@
     <ClCompile Include="util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="notation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="board.hpp">
@@ -43,7 +46,7 @@
     <ClInclude Include="board_layouts.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="evaluations.hpp">
+    <ClInclude Include="evaluation.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="node.hpp">
@@ -65,6 +68,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="capture.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="notation.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="piece_defines.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
