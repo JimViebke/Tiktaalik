@@ -36,7 +36,10 @@ namespace chess
 		if (result_node.board.is_king_in_check(
 			result_node.board.get_color_to_move()))
 		{
-			ss << '+';
+			if (result_node.is_terminal())
+				ss << '#';
+			else
+				ss << '+';
 		}
 	}
 
