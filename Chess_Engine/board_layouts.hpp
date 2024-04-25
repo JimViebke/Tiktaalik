@@ -7,7 +7,7 @@
 namespace chess::layouts
 {
 	extern position start_board;
-	extern position test_board;
 
-	extern position black_to_move_ply_4;
+	extern position bad_capture_for_white;
+	extern position late_generation;
 }

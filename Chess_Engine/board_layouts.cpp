@@ -33,7 +33,7 @@ namespace chess
 		R, N, B, Q, K, B, N, R
 	};
 
-	position layouts::test_board = {
+	position layouts::bad_capture_for_white = {
 		r, n, b, q, k, b, _, _,
 		p, p, p, p, p, p, p, p,
 		_, _, _, _, _, _, _, _,
@@ -44,14 +44,14 @@ namespace chess
 		R, _, B, _, K, B, N, R
 	};
 
-	position layouts::black_to_move_ply_4 = {
-		r, _, b, q, k, b, _, _,
-		p, p, p, p, _, p, p, Q,
-		_, _, n, _, p, _, _, _,
-		_, _, _, _, r, _, _, _,
-		_, _, _, _, N, _, _, _,
-		_, _, P, _, _, P, _, _,
-		P, P, P, _, _, _, P, P,
+	position layouts::late_generation = {
+		r, n, b, q, k, b, _, _,
+		p, p, p, p, p, p, p, p,
+		_, _, _, _, _, _, _, _,
+		_, _, _, r, P, n, _, _,
+		_, _, _, _, _, _, _, _,
+		_, _, P, _, _, _, Q, _,
+		P, P, P, N, _, P, P, P,
 		R, _, B, _, K, B, N, R
 	};
 }
