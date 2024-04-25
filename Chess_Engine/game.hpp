@@ -408,8 +408,6 @@ namespace chess
 			}
 		}
 
-
-
 		void render_right_overlay()
 		{
 			std::stringstream ss;
@@ -422,7 +420,7 @@ namespace chess
 			{
 				ss << "Best move: ";
 				move_to_notation(ss, *parent_of_best_move, *result_of_best_move);
-				ss << '\n';
+				ss << ' ' << result_of_best_move->get_eval() << '\n';
 			}
 			ss << '\n';
 
