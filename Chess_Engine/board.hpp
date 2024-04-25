@@ -208,6 +208,11 @@ namespace chess
 			// 6. Fullmove number. The number of the full move. It starts at 1, and is incremented after Black's move.
 		}*/
 
+		void set_white_can_castle_k_s(bool flag) { white_can_castle_k_s = flag; }
+		void set_white_can_castle_q_s(bool flag) { white_can_castle_q_s = flag; }
+		void set_black_can_castle_k_s(bool flag) { black_can_castle_k_s = flag; }
+		void set_black_can_castle_q_s(bool flag) { black_can_castle_q_s = flag; }
+
 		result get_result() const { return _result; }
 
 		static void print_board(const Board& board, const unsigned& offset = 0);
