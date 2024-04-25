@@ -51,11 +51,11 @@ namespace chess
 		if (!root.has_generated_children())
 			root.generate_child_boards();
 
-		Node* best_move = nullptr;
-
 		eval_t alpha = eval::eval_min;
 		eval_t beta = eval::eval_max;
 		eval_t eval = (maximizing_player ? eval::eval_min : eval::eval_max);
+		// default to first move if one exists
+		Node* best_move = (root.children.size() > 0) ? root.children.data() : nullptr;
 
 		for (Node& child : root.children)
 		{
