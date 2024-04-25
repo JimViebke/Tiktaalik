@@ -20,6 +20,9 @@ namespace chess
 
 		bool has_generated_children() const { return node_mask & generated_children; }
 
+		void set_eval(const eval_t set_eval) { eval = set_eval; }
+		eval_t get_eval() const { return eval; }
+
 		void generate_child_boards()
 		{
 			// Generate all immediate child nodes with boards.
@@ -50,16 +53,20 @@ namespace chess
 			{
 				const result result = board.get_result();
 				if (result == result::white_wins_by_checkmate)
-					return eval::eval_max;
+					eval = eval::eval_max;
 				else if (result == result::black_wins_by_checkmate)
-					return eval::eval_min;
+					eval = eval::eval_min;
 				else if (result == result::draw_by_stalemate)
-					return 0;
+					eval = 0;
 				else
 					std::cout << "Unknown terminal state: [" << size_t(result) << "]\n";
 			}
+			else
+			{
+				eval = board.evaluate_position();
+			}
 
-			return board.evaluate_position();
+			return eval;
 		}
 
 		void perft(const size_t max_depth);
@@ -69,6 +76,10 @@ namespace chess
 		static constexpr node_mask_t generated_children = 1 << 0;
 
 		void set_has_generated_children() { node_mask |= generated_children; }
+
+		eval_t eval = 0;
+
+		node_mask_t node_mask = 0;
 
 		// inner perft
 		void perft(const size_t depth,
