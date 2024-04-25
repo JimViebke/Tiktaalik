@@ -16,7 +16,7 @@ namespace chess
 			{
 				if constexpr (count_evals) ++n_of_evals;
 
-				return node.evaluation();
+				return node.evaluate_position();
 			}
 
 			eval_t eval = (maximizing_player ? eval::eval_min : eval::eval_max);

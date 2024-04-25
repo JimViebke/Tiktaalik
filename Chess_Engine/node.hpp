@@ -44,7 +44,7 @@ namespace chess
 			return board.get_result() != result::unknown;
 		}
 
-		eval_t evaluation() const
+		eval_t evaluate_position()
 		{
 			if (is_terminal())
 			{
