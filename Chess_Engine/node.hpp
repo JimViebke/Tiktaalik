@@ -14,13 +14,17 @@ namespace chess
 		Board board;
 		std::vector<Node> children;
 
+		using node_mask_t = uint8_t;
+
 		explicit Node(const Board& set_board);
+
+		bool has_generated_children() const { return node_mask & generated_children; }
 
 		void generate_child_boards()
 		{
 			// Generate all immediate child nodes with boards.
 			// If any child node exists, all exist.
-			if (children.size() != 0)
+			if (has_generated_children())
 			{
 				std::cout << "(skipping generating child boards for move " << board.move_to_string() << " with " << children.size() << " children)\n";
 				return;
@@ -30,6 +34,8 @@ namespace chess
 			children.reserve(child_boards.size());
 			for (const Board& child_board : child_boards)
 				children.emplace_back(child_board);
+
+			set_has_generated_children();
 		}
 
 		bool is_terminal() const
@@ -60,6 +66,10 @@ namespace chess
 		void divide(const size_t max_depth);
 
 	private:
+		static constexpr node_mask_t generated_children = 1 << 0;
+
+		void set_has_generated_children() { node_mask |= generated_children; }
+
 		// inner perft
 		void perft(const size_t depth,
 				   const size_t max_depth,

@@ -9,7 +9,7 @@ namespace chess
 		template<bool maximizing_player, bool count_evals = false>
 		eval_t alpha_beta(Node& node, size_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
 		{
-			if (node.children.size() == 0)
+			if (node.has_generated_children())
 				node.generate_child_boards();
 
 			if (depth == 0 || node.is_terminal())
@@ -48,7 +48,7 @@ namespace chess
 	{
 		// The root node will usually already have all of its immediate children,
 		// but have this here for correctness.
-		if (root.children.size() == 0)
+		if (!root.has_generated_children())
 			root.generate_child_boards();
 
 		Node* best_move = nullptr;
