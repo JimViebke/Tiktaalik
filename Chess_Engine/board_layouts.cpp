@@ -1,28 +1,28 @@
 
 #include "board_layouts.hpp"
+#include "piece.hpp"
 
 // Finish implementing FEN parsing and remove all of this.
 
-#define _ piece(piece::empty)
-
-#define K piece(piece::white | piece::king)
-#define Q piece(piece::white | piece::queen)
-#define R piece(piece::white | piece::rook)
-#define B piece(piece::white | piece::bishop)
-#define N piece(piece::white | piece::knight)
-#define P piece(piece::white | piece::pawn)
-
-#define k piece(piece::black | piece::king)
-#define q piece(piece::black | piece::queen)
-#define r piece(piece::black | piece::rook)
-#define b piece(piece::black | piece::bishop)
-#define n piece(piece::black | piece::knight)
-#define p piece(piece::black | piece::pawn)
-
-namespace chess
+namespace chess::layouts
 {
+	const auto _ = piece(piece::empty);
 
-	position layouts::start_board = {
+	const auto K = piece(piece::white | piece::king);
+	const auto Q = piece(piece::white | piece::queen);
+	const auto R = piece(piece::white | piece::rook);
+	const auto B = piece(piece::white | piece::bishop);
+	const auto N = piece(piece::white | piece::knight);
+	const auto P = piece(piece::white | piece::pawn);
+
+	const auto k = piece(piece::black | piece::king);
+	const auto q = piece(piece::black | piece::queen);
+	const auto r = piece(piece::black | piece::rook);
+	const auto b = piece(piece::black | piece::bishop);
+	const auto n = piece(piece::black | piece::knight);
+	const auto p = piece(piece::black | piece::pawn);
+
+	position start_board = {
 		r, n, b, q, k, b, n, r,
 		p, p, p, p, p, p, p, p,
 		_, _, _, _, _, _, _, _,
@@ -33,7 +33,7 @@ namespace chess
 		R, N, B, Q, K, B, N, R
 	};
 
-	position layouts::bad_capture_for_white = {
+	position bad_capture_for_white = {
 		r, n, b, q, k, b, _, _,
 		p, p, p, p, p, p, p, p,
 		_, _, _, _, _, _, _, _,
@@ -44,7 +44,7 @@ namespace chess
 		R, _, B, _, K, B, N, R
 	};
 
-	position layouts::late_generation = {
+	position late_generation = {
 		r, n, b, q, k, b, _, _,
 		p, p, p, p, p, p, p, p,
 		_, _, _, _, _, _, _, _,
@@ -54,20 +54,26 @@ namespace chess
 		P, P, P, N, _, P, P, P,
 		R, _, B, _, K, B, N, R
 	};
+
+	position grau_v_colle_white_mate_in_3 = {
+		_, k, _, _, _, _, _, r,
+		p, P, _, _, _, p, p, p,
+		_, _, _, p, _, _, b, _,
+		_, B, N, _, n, _, _, _,
+		_, Q, _, _, P, _, _, _,
+		P, _, B, _, _, _, _, _,
+		K, P, _, _, _, P, _, P,
+		_, _, _, _, _, _, _, q
+	};
+
+	position white_to_gain_material_in_3 = {
+		_, _, r, r, _, q, _, _,
+		_, _, p, _, _, _, k, _,
+		p, p, Q, _, _, b, p, _,
+		_, _, _, _, _, _, _, p,
+		P, _, B, p, _, _, _, _,
+		_, _, _, P, _, R, _, P,
+		_, _, _, B, _, _, P, _,
+		_, _, _, _, _, _, _, K
+	};
 }
-
-#undef _
-
-#undef K
-#undef Q
-#undef R
-#undef B
-#undef N
-#undef P
-
-#undef k
-#undef q
-#undef r
-#undef b
-#undef n
-#undef p
