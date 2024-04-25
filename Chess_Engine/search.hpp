@@ -10,7 +10,20 @@ namespace chess
 		eval_t alpha_beta(Node& node, size_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
 		{
 			if (node.has_generated_children())
+			{
+				std::stable_sort(node.children.begin(), node.children.end(), [](const Node& a, const Node& b)
+				{
+					if constexpr (maximizing_player)
+						return a.get_eval() > b.get_eval();
+					else
+						return a.get_eval() < b.get_eval();
+				});
+			}
+			else if (depth > 0)
+			{
+				// Generate child boards if this is not a leaf node.
 				node.generate_child_boards();
+			}
 
 			if (depth == 0 || node.is_terminal())
 			{
@@ -20,6 +33,11 @@ namespace chess
 			}
 
 			eval_t eval = (maximizing_player ? eval::eval_min : eval::eval_max);
+
+			for (Node& child : node.children)
+			{
+				child.set_eval(eval);
+			}
 
 			for (Node& child : node.children)
 			{
@@ -39,6 +57,8 @@ namespace chess
 				}
 			}
 
+			node.set_eval(eval);
+
 			return eval;
 		}
 	}
@@ -46,6 +66,17 @@ namespace chess
 	template<bool maximizing_player>
 	Node* alpha_beta(Node& root, size_t depth, size_t& n_of_evals)
 	{
+		if (root.has_generated_children())
+		{
+			std::stable_sort(root.children.begin(), root.children.end(), [](const Node& a, const Node& b)
+			{
+				if constexpr (maximizing_player)
+					return a.get_eval() > b.get_eval();
+				else
+					return a.get_eval() < b.get_eval();
+			});
+		}
+
 		// The root node will usually already have all of its immediate children,
 		// but have this here for correctness.
 		if (!root.has_generated_children())
