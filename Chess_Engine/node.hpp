@@ -11,8 +11,8 @@ namespace chess
 	class Node
 	{
 	public:
-		Board board;
 		std::vector<Node> children;
+		Board board;
 
 		using node_mask_t = uint8_t;
 
