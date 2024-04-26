@@ -55,6 +55,17 @@ namespace chess::layouts
 		R, _, B, _, K, B, N, R
 	};
 
+	position kiwipete = {
+		r, _, _, _, k, _, _, r,
+		p, _, p, p, q, p, b, _,
+		b, n, _, _, p, n, p, _,
+		_, _, _, P, N, _, _, _,
+		_, p, _, _, P, _, _, _,
+		_, _, N, _, _, Q, _, p,
+		P, P, P, B, B, P, P, P,
+		R, _, _, _, K, _, _, R,
+	};
+
 	position grau_v_colle_white_mate_in_3 = {
 		_, k, _, _, _, _, _, r,
 		p, P, _, _, _, p, p, p,
