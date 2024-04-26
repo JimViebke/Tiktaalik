@@ -40,7 +40,7 @@ namespace chess
 	class Game
 	{
 	public:
-		Game() : root{ Board{ layouts::start_board, white } }
+		Game() : root{ Board{ "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" } }
 		{
 			sf::ContextSettings settings;
 			settings.antialiasingLevel = 8;
