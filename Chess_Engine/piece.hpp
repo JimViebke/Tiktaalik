@@ -30,8 +30,8 @@ namespace chess
 		piece_t _piece;
 
 	public:
-		explicit piece() : _piece(piece::empty) {}
-		explicit piece(const piece_t piece) : _piece(piece) {}
+		constexpr explicit piece() : _piece(piece::empty) {}
+		constexpr explicit piece(const piece_t piece) : _piece(piece) {}
 
 		piece_t get_piece() const { return _piece; }
 		color_t get_color() const { return _piece & color_mask; }
@@ -72,5 +72,20 @@ namespace chess
 			else return '?';
 		}
 	};
+
+	static constexpr piece white_pawn{ piece::white | piece::pawn };
+	static constexpr piece white_knight{ piece::white | piece::knight };
+	static constexpr piece white_bishop{ piece::white | piece::bishop };
+	static constexpr piece white_rook{ piece::white | piece::rook };
+	static constexpr piece white_queen{ piece::white | piece::queen };
+	static constexpr piece white_king{ piece::white | piece::king };
+
+	static constexpr piece black_pawn{ piece::black | piece::pawn };
+	static constexpr piece black_knight{ piece::black | piece::knight };
+	static constexpr piece black_bishop{ piece::black | piece::bishop };
+	static constexpr piece black_rook{ piece::black | piece::rook };
+	static constexpr piece black_queen{ piece::black | piece::queen };
+	static constexpr piece black_king{ piece::black | piece::king };
+
 
 }
