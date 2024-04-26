@@ -236,6 +236,10 @@ namespace chess
 					Node temp = std::move(child_node);
 					root = std::move(temp);
 
+					// Decrement whatever the current depth is because we're advancing down the tree by one node.
+					if (engine_depth > 0)
+						--engine_depth;
+
 					// Make sure all ply-1 child nodes have been generated.
 					// A worker thread will almost certainly have generated these by now, but do this anyway
 					// for the sake of correctness.
