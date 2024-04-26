@@ -142,72 +142,7 @@ namespace chess
 		{			
 			piece_at(end_rank, end_file) = piece(promote_to);
 		}
-		/*
-		explicit Board(const std::string & FEN)
-		{
-			std::stringstream ss(FEN);
-			const std::istream_iterator<std::string> begin(ss);
-			const std::vector<std::string> strings(begin, std::istream_iterator<std::string>());
-
-			const std::map<const char, const piece> pieces = {
-				{ 'p', black_pawn },
-				{ 'n', black_knight },
-				{ 'b', black_bishop },
-				{ 'r', black_rook },
-				{ 'q', black_queen },
-				{ 'k', black_king },
-
-				{ 'P', white_pawn },
-				{ 'N', white_knight },
-				{ 'B', white_bishop },
-				{ 'R', white_rook },
-				{ 'Q', white_queen },
-				{ 'K', white_king } };
-
-			position.reserve(64);
-
-			// Edited from Wikipedia:
-
-			// A FEN record contains six fields. The separator between fields is a space. The fields are:
-
-			// 1. Piece placement (from white's perspective). Each rank is described, starting with rank 8 and ending with rank 1; within each rank, the contents of each
-			// square are described from file "a" through file "h". Following the Standard Algebraic Notation (SAN), each piece is identified by a single letter taken
-			// from the standard English names (pawn = "P", knight = "N", bishop = "B", rook = "R", queen = "Q" and king = "K"). White pieces are designated using
-			// upper-case letters ("PNBRQK") while black pieces use lowercase ("pnbrqk"). Empty squares are noted using digits 1 through 8 (the number of empty squares),
-			// and "/" separates ranks.
-
-			// for each charater
-			for (auto it = strings[0].cbegin(); it != strings[0].cend(); ++it)
-			{
-				// find the piece
-				const auto piece_type = pieces.find(*it);
-				if (piece_type != pieces.cend())
-					position.push_back(Piece(piece_type->second));
-				else if (*it >= '0' && *it <= '9')
-					for (int empty = 0; empty < (*it) - '0'; ++empty)
-						position.emplace_back(Piece(piece::empty));
-			}
-
-			// 2. Active color. "w" means White moves next, "b" means Black.
-
-			color_to_move = ((strings[1].find('w') != std::string::npos) ? white : black);
-
-			// 3. Castling availability. If neither side can castle, this is "-". Otherwise, this has one or more letters: "K" (White can castle kingside), "Q" (White
-			// can castle queenside), "k" (Black can castle kingside), and/or "q" (Black can castle queenside).
-
-			white_can_castle_k_s = (strings[2].find("K") != std::string::npos);
-			white_can_castle_q_s = (strings[2].find("Q") != std::string::npos);
-			black_can_castle_k_s = (strings[2].find("k") != std::string::npos);
-			black_can_castle_q_s = (strings[2].find("q") != std::string::npos);
-
-			// 4. En passant target square in algebraic notation. If there's no en passant target square, this is "-". If a pawn has just made a two-square move, this
-			// is the position "behind" the pawn. This is recorded regardless of whether there is a pawn in position to make an en passant capture.
-
-			// 5. Halfmove clock. This is the number of halfmoves since the last capture or pawn advance. This is used to determine if a draw can be claimed under the
-			// fifty - move rule.
-
-			// 6. Fullmove number. The number of the full move. It starts at 1, and is incremented after Black's move.
-		}*/
+		explicit Board(const std::string& fen); // simple, nonvalidating FEN parser
 
 		void set_white_can_castle_k_s(bool flag) { white_can_castle_k_s = flag; }
 		void set_white_can_castle_q_s(bool flag) { white_can_castle_q_s = flag; }
