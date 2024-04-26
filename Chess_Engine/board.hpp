@@ -89,7 +89,7 @@ namespace chess
 				// it can no longer castle either way
 				if (parent_board.piece_at(start_rank, start_file).is_white())
 					white_can_castle_k_s = white_can_castle_q_s = false;
-				else // the moving king is black
+				else
 					black_can_castle_k_s = black_can_castle_q_s = false;
 
 				if (abs(file{ start_file - end_file }.value()) > 1) // if the king is castling, move the rook
@@ -101,7 +101,7 @@ namespace chess
 				}
 			}
 
-			// if a rook moves out of its starting corner, it cannot be used to castle
+			// if a rook moves, it cannot be used to castle
 			if (start_rank == 0)
 			{
 				if (start_file == 0 && piece_at(start_rank, start_file).is_rook())
@@ -117,6 +117,7 @@ namespace chess
 					white_can_castle_k_s = false;
 			}
 
+			// if a rook is captured, it cannot be used to castle
 			if (end_rank == 0) // detect captures of black's rooks
 			{
 				if (end_file == 0) // queen's rook
@@ -135,10 +136,10 @@ namespace chess
 			// move the piece
 			make_move(start_rank, start_file, end_rank, end_file);
 		}
-		explicit Board(const Board& parent_board, const rank start_rank, const file start_file, const rank end_rank, const file end_file, const piece& promote_to)
+		explicit Board(const Board& parent_board, const rank start_rank, const file start_file, const rank end_rank, const file end_file,
+					   const piece& promote_to) // call this constructor for each pawn promotion
 			: Board(parent_board, start_rank, start_file, end_rank, end_file)
-		{
-			// call this constructor (four times) for pawn promotion
+		{			
 			piece_at(end_rank, end_file) = piece(promote_to);
 		}
 		/*
