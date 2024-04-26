@@ -5,7 +5,8 @@
 
 namespace chess
 {
-	constexpr size_t engine_depth = 6;
+	constexpr size_t engine_target_depth = 6;
+	constexpr size_t step = 1;
 
 	void Game::worker_thread()
 	{
@@ -17,16 +18,27 @@ namespace chess
 
 			const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
 
-			const auto start_time = util::time_in_ms();
+			if (engine_depth < engine_target_depth)
+			{
+				engine_depth += step;
 
-			n_of_evals = 0;
-			parent_of_best_move = &root; // currently, this is always the case
-			if (root.board.white_to_move())
-				result_of_best_move = alpha_beta<true>(root, engine_depth, n_of_evals);
-			else
-				result_of_best_move = alpha_beta<false>(root, engine_depth, n_of_evals);
+				std::cout << "Engine evaluating as " << (root.board.white_to_move() ? "white\n" : "black\n");
 
-			engine_time = util::time_in_ms() - start_time;
+				const auto start_time = util::time_in_ms();
+
+				parent_of_best_move = &root; // currently, this is always the case
+
+				n_of_evals = 0;
+				if (root.board.white_to_move())
+					result_of_best_move = alpha_beta<true>(root, engine_depth, n_of_evals);
+				else
+					result_of_best_move = alpha_beta<false>(root, engine_depth, n_of_evals);
+
+				engine_time = util::time_in_ms() - start_time;
+
+				std::cout << "depth " << engine_depth << ", " << n_of_evals << " evals, " << engine_time << " ms\n";
+			}
+
 		}
 	}
 

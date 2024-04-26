@@ -500,6 +500,7 @@ namespace chess
 		// engine info
 		Node* parent_of_best_move = nullptr;
 		Node* result_of_best_move = nullptr;
+		size_t engine_depth = 0;
 		size_t n_of_evals = 0;
 		util::timepoint engine_time = 0;
 
