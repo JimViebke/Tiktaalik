@@ -148,15 +148,30 @@ namespace chess
 			return array;
 		}();
 
+		inline constexpr eval_t piece_square_eval(const piece piece, const size_t index)
+		{
+			return piece_square_evals[piece.get_piece()][index];
+		}
+
+		inline constexpr eval_t piece_square_eval(const auto position)
+		{
+			eval_t eval = 0;
+			for (size_t i = 0; i < position.size(); ++i)
+			{
+				eval += piece_square_eval(position[i], i);
+			}
+			return eval;
+		}
+
 		// If a white knight on e3 is worth N points, then
 		// a black knight on e6 should be worth -N points.
-		static_assert(piece_square_evals[white_knight][to_index(rank(2), file(4))] ==
-					  piece_square_evals[black_knight][to_index(rank(5), file(4))] * -1);
+		static_assert(piece_square_eval(white_knight, to_index(rank(2), file(4))) ==
+					  piece_square_eval(black_knight, to_index(rank(5), file(4))) * -1);
 		// test queens
-		static_assert(piece_square_evals[white_queen][to_index(rank(0), file(7))] ==
-					  piece_square_evals[black_queen][to_index(rank(7), file(7))] * -1);
+		static_assert(piece_square_eval(white_queen, to_index(rank(0), file(7))) ==
+					  piece_square_eval(black_queen, to_index(rank(7), file(7))) * -1);
 		// test c pawns
-		static_assert(piece_square_evals[white_pawn][to_index(rank(1), file(2))] ==
-					  piece_square_evals[black_pawn][to_index(rank(6), file(2))] * -1);
+		static_assert(piece_square_eval(white_pawn, to_index(rank(1), file(2))) ==
+					  piece_square_eval(black_pawn, to_index(rank(6), file(2))) * -1);
 	}
 }

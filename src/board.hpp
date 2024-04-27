@@ -123,7 +123,7 @@ namespace chess
 		explicit Board(const Board& parent_board, const rank start_rank, const file start_file, const rank end_rank, const file end_file,
 					   const piece& promote_to) // call this constructor for each pawn promotion
 			: Board(parent_board, start_rank, start_file, end_rank, end_file)
-		{			
+		{
 			piece_at(end_rank, end_file) = piece(promote_to);
 		}
 		explicit Board(const std::string& fen); // simple, nonvalidating FEN parser
@@ -173,15 +173,15 @@ namespace chess
 
 		eval_t evaluate_position() const
 		{
-			eval_t material_value = 0;
+			eval_t eval = 0;
 
-			// evaluate material
-			for (const auto& piece : _position)
+			for (size_t i = 0; i < _position.size(); ++i)
 			{
-				material_value += eval::eval(piece);
+				eval += eval::eval(_position[i]); // evaluate material
+				eval += eval::piece_square_eval(_position[i], i); // evaluate position
 			}
 
-			return material_value;
+			return eval;
 		}
 
 		position get_position() const { return _position; }
