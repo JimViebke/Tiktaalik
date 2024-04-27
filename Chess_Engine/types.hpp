@@ -20,8 +20,8 @@ namespace chess
 
 	namespace detail
 	{
-		struct file_tag{};
-		struct rank_tag{};
+		struct file_tag {};
+		struct rank_tag {};
 	}
 
 	using file = util::strong_alias<int8_t, detail::file_tag>;
@@ -32,9 +32,8 @@ namespace chess
 	static_assert(not std::is_assignable<file, rank>::value);
 	static_assert(not std::is_assignable<rank, file>::value);
 
-	static constexpr color_t white = piece::white;
-	static constexpr color_t black = piece::black;
-
 	using uint128_t = __m128i;
 	using uint256_t = __m256i;
+
+	using eval_t = int16_t;
 }

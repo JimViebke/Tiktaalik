@@ -6,25 +6,11 @@
 #include <vector>
 
 #include "evaluation.hpp"
+#include "position.hpp"
 #include "types.hpp"
 
 namespace chess
 {
-	template<typename T>
-	constexpr bool bounds_check(const T rank_or_file)
-	{
-		return rank_or_file.value() < 8 && rank_or_file.value() >= 0;
-	}
-	constexpr bool bounds_check(const rank rank, const file file)
-	{
-		return bounds_check(rank) && bounds_check(file);
-	}
-
-	constexpr size_t to_index(const rank rank, const file file)
-	{
-		return rank.value() * 8ull + file.value();
-	}
-
 	class Board
 	{
 	private:
@@ -79,7 +65,7 @@ namespace chess
 				piece_at(end_rank, end_file).is_empty())
 			{
 				fifty_move_rule = 0;
-				piece_at(start_rank, end_file) = piece(piece::empty); // the captured pawn will always be on the same rank that the pawn started, and at the same file that the pawn ended
+				piece_at(start_rank, end_file) = piece(empty); // the captured pawn will always be on the same rank that the pawn started, and at the same file that the pawn ended
 			}
 			// if a king is moving
 			else if (piece_at(start_rank, start_file).is_king())
@@ -192,7 +178,7 @@ namespace chess
 			// evaluate material
 			for (const auto& piece : _position)
 			{
-				material_value += piece.eval();
+				material_value += eval::eval(piece);
 			}
 
 			return material_value;
@@ -209,7 +195,7 @@ namespace chess
 		{
 			auto& start = piece_at(start_rank, start_file);
 			piece_at(end_rank, end_file) = start;
-			start = piece(piece::empty);
+			start = piece(empty);
 		}
 
 		bool board_has_move() const

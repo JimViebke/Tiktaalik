@@ -263,10 +263,10 @@ namespace chess
 				{
 					if (rank == 1) // if the pawn is on the second last rank
 					{
-						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white | piece::queen));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white | piece::rook));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white | piece::bishop));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file, piece(piece::white | piece::knight));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file, white_queen);
+						child_boards.emplace_back(*this, rank, file, rank - 1, file, white_rook);
+						child_boards.emplace_back(*this, rank, file, rank - 1, file, white_bishop);
+						child_boards.emplace_back(*this, rank, file, rank - 1, file, white_knight);
 					}
 					else // the pawn is moving without promotion
 					{
@@ -283,10 +283,10 @@ namespace chess
 				{
 					if (rank == 1) // if the pawn is on the second last rank
 					{
-						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white | piece::queen));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white | piece::rook));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white | piece::bishop));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, piece(piece::white | piece::knight));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, white_queen);
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, white_rook);
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, white_bishop);
+						child_boards.emplace_back(*this, rank, file, rank - 1, file + 1, white_knight);
 					}
 					else // the pawn is capturing without promotion
 					{
@@ -297,10 +297,10 @@ namespace chess
 				{
 					if (rank == 1) // if the pawn is on the second last rank
 					{
-						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white | piece::queen));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white | piece::rook));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white | piece::bishop));
-						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, piece(piece::white | piece::knight));
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, white_queen);
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, white_rook);
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, white_bishop);
+						child_boards.emplace_back(*this, rank, file, rank - 1, file - 1, white_knight);
 					}
 					else // the pawn is capturing without promotion
 					{
@@ -326,10 +326,10 @@ namespace chess
 				{
 					if (rank == 6) // if the pawn is on the second last rank
 					{
-						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black | piece::queen));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black | piece::rook));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black | piece::bishop));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file, piece(piece::black | piece::knight));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file, black_queen);
+						child_boards.emplace_back(*this, rank, file, rank + 1, file, black_rook);
+						child_boards.emplace_back(*this, rank, file, rank + 1, file, black_bishop);
+						child_boards.emplace_back(*this, rank, file, rank + 1, file, black_knight);
 					}
 					else // the pawn is moving without promotion
 					{
@@ -346,10 +346,10 @@ namespace chess
 				{
 					if (rank == 6) // if the pawn is on the second last rank
 					{
-						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black | piece::queen));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black | piece::rook));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black | piece::bishop));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, piece(piece::black | piece::knight));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, black_queen);
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, black_rook);
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, black_bishop);
+						child_boards.emplace_back(*this, rank, file, rank + 1, file + 1, black_knight);
 					}
 					else // the pawn is capturing without promotion
 					{
@@ -360,10 +360,10 @@ namespace chess
 				{
 					if (rank == 6) // if the pawn is on the second last rank
 					{
-						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black | piece::queen));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black | piece::rook));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black | piece::bishop));
-						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, piece(piece::black | piece::knight));
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, black_queen);
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, black_rook);
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, black_bishop);
+						child_boards.emplace_back(*this, rank, file, rank + 1, file - 1, black_knight);
 					}
 					else // the pawn is capturing without promotion
 					{
@@ -622,7 +622,7 @@ namespace chess
 		uint256_t ymm1 = _mm256_loadu_si256((uint256_t*)(_position.data() + 32));
 
 		// broadcast the target piece (king | color) to all positions of a vector
-		const uint256_t target_mask = _mm256_set1_epi8(piece(piece::king | check_color).get_piece());
+		const uint256_t target_mask = _mm256_set1_epi8(detail::king | check_color);
 
 		// find the matching byte
 		ymm0 = _mm256_cmpeq_epi8(ymm0, target_mask);
@@ -800,7 +800,7 @@ namespace chess
 
 		if (do_knight_checks)
 		{
-			const piece_t opposing_knight = other_color(king.get_color()) | piece::knight;
+			const piece_t opposing_knight = other_color(king.get_color()) | detail::knight;
 			if (knight_attacks[to_index(rank, file)](_position, opposing_knight)) return true;
 		}
 
@@ -809,14 +809,14 @@ namespace chess
 		{
 			if (king.is_white())
 			{
-				if ((bounds_check(rank - 1, file + 1) && piece_at(rank - 1, file + 1).is(piece::black | piece::pawn)) ||
-					(bounds_check(rank - 1, file - 1) && piece_at(rank - 1, file - 1).is(piece::black | piece::pawn))) return true;
+				if ((bounds_check(rank - 1, file + 1) && piece_at(rank - 1, file + 1).is(black_pawn)) ||
+					(bounds_check(rank - 1, file - 1) && piece_at(rank - 1, file - 1).is(black_pawn))) return true;
 			}
 			// check if the black king is under attack by a white pawn
 			else if (king.is_black())
 			{
-				if ((bounds_check(rank + 1, file + 1) && piece_at(rank + 1, file + 1).is(piece::white | piece::pawn)) ||
-					(bounds_check(rank + 1, file - 1) && piece_at(rank + 1, file - 1).is(piece::white | piece::pawn))) return true;
+				if ((bounds_check(rank + 1, file + 1) && piece_at(rank + 1, file + 1).is(white_pawn)) ||
+					(bounds_check(rank + 1, file - 1) && piece_at(rank + 1, file - 1).is(white_pawn))) return true;
 			}
 		}
 
