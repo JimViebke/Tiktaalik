@@ -13,6 +13,7 @@
 
 #include "node.hpp"
 #include "notation.hpp"
+#include "util/util.hpp"
 
 namespace chess
 {

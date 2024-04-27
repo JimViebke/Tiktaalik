@@ -6,7 +6,7 @@
 #include <immintrin.h>
 
 #include "piece.hpp"
-#include "util.hpp"
+#include "util/strong_alias.hpp"
 
 namespace chess
 {

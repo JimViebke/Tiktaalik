@@ -9,6 +9,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="Header Files\util">
+      <UniqueIdentifier>{20058a7e-5fff-4c43-9f7e-6bdc697c11f3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="board.cpp">
@@ -29,7 +32,7 @@
     <ClCompile Include="game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="util.cpp">
+    <ClCompile Include="util\util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="notation.cpp">
@@ -64,7 +67,7 @@
     <ClInclude Include="position.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="util.hpp">
+    <ClInclude Include="util\util.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="capture.hpp">
@@ -74,6 +77,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="piece_defines.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="util\strong_alias.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

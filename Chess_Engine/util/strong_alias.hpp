@@ -1,12 +1,7 @@
 #pragma once
 
-#include <chrono>
-
-namespace chess::util
+namespace util
 {
-	using timepoint = std::chrono::milliseconds::rep;
-	timepoint time_in_ms();
-
 	template<typename T, typename tag>
 	class strong_alias
 	{
@@ -62,5 +57,4 @@ namespace chess::util
 			return lhs._value / rhs._value;
 		}
 	};
-
 }

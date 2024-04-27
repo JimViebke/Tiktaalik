@@ -5,7 +5,7 @@ Mar 28 2016 */
 #include <algorithm>
 
 #include "node.hpp"
-#include "util.hpp"
+#include "util/util.hpp"
 
 namespace chess
 {
