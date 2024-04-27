@@ -95,7 +95,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="board.cpp" />
-    <ClCompile Include="board_layouts.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="node.cpp" />
@@ -105,7 +104,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="board.hpp" />
-    <ClInclude Include="board_layouts.hpp" />
     <ClInclude Include="capture.hpp" />
     <ClInclude Include="evaluation.hpp" />
     <ClInclude Include="game.hpp" />

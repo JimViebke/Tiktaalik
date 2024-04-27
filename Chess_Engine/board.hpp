@@ -5,7 +5,6 @@
 #include <sstream> // for parsing FENs
 #include <vector>
 
-#include "board_layouts.hpp"
 #include "evaluation.hpp"
 #include "types.hpp"
 
