@@ -2,21 +2,26 @@
 
 #include <iostream>
 #include <map>
+#include <variant>
 
 #include "board.hpp"
 #include "types.hpp"
+#include "util/util.hpp"
 
 namespace chess
 {
-	class Node
+	template<color_t color_to_move>
+	class node : public colorable<color_to_move>
 	{
 	public:
-		std::vector<Node> children;
-		Board board;
+		using other_node_t = node<other(color_to_move)>;
+
+		std::vector<other_node_t> children;
+		board<color_to_move> board;
 
 		using node_mask_t = uint8_t;
 
-		explicit Node(const Board& set_board);
+		explicit node(const chess::board<color_to_move> set_board) : board(set_board) {}
 
 		bool has_generated_children() const { return node_mask & generated_children; }
 
@@ -25,17 +30,15 @@ namespace chess
 
 		void generate_child_boards()
 		{
-			// Generate all immediate child nodes with boards.
+			// Generate all ply-1 child nodes.
 			// If any child node exists, all exist.
-			if (has_generated_children())
-			{
-				std::cout << "(skipping generating child boards for move " << board.move_to_string() << " with " << children.size() << " children)\n";
-				return;
-			}
+
+			// Skip generating child boards if they have already been generated
+			if (has_generated_children()) return;
 
 			const auto& child_boards = board.generate_child_boards();
 			children.reserve(child_boards.size());
-			for (const Board& child_board : child_boards)
+			for (const auto& child_board : child_boards)
 				children.emplace_back(child_board);
 
 			set_has_generated_children();
@@ -69,8 +72,54 @@ namespace chess
 			return eval;
 		}
 
-		void perft(const size_t max_depth);
-		void divide(const size_t max_depth);
+		void perft(const size_t max_depth)
+		{
+			if (max_depth == 0) return;
+
+			std::map<size_t, size_t> node_counter; // <depth, node count>
+			// hardcode start position
+			node_counter[0] = 1;
+
+			const auto start_time = util::time_in_ms();
+			perft(1, max_depth, node_counter);
+
+			std::cout << "Ply:\tNodes:\n";
+			for (auto& counter : node_counter)
+			{
+				std::cout << counter.first << '\t' << counter.second << '\n';
+			}
+
+			std::cout << "(" << util::time_in_ms() - start_time << " ms)\n";
+		}
+		void divide(const size_t max_depth)
+		{
+			if (max_depth < 1)
+			{
+				std::cout << "Divide depth must be at least one.\n";
+				return;
+			}
+
+			// generate child boards if they don't exist already
+			generate_child_boards();
+
+			size_t total_nodes = 0;
+
+			for (auto& node : children)
+			{
+				std::map<size_t, size_t> node_counter; // <depth, node count>
+				node.perft(1, max_depth - 1, node_counter);
+
+				const auto last = node_counter.crbegin();
+
+				if (last != node_counter.crend())
+				{
+					std::cout << node.board.move_to_string() << ": " << last->second << '\n';
+					total_nodes += last->second;
+				}
+			}
+
+			std::cout << "Total nodes: " << total_nodes << '\n';
+		}
 
 	private:
 		static constexpr node_mask_t generated_children = 1 << 0;
@@ -84,6 +133,28 @@ namespace chess
 		// inner perft
 		void perft(const size_t depth,
 				   const size_t max_depth,
-				   std::map<size_t, size_t>& node_counter);
+				   std::map<size_t, size_t>& node_counter)
+		{
+			generate_child_boards();
+
+			node_counter[depth] += children.size();
+
+			if (depth < max_depth)
+			{
+				for (auto& child : children)
+				{
+					child.perft(depth + 1, max_depth, node_counter);
+				}
+			}
+
+			// We're not going to use these nodes again; clear them.
+			children.clear();
+		}
+
+		friend node<white>;
+		friend node<black>;
 	};
+
+	using root_v = std::variant<node<white>, node<black>>;
+	using best_move_v = std::variant<node<white>*, node<black>*>;
 }

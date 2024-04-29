@@ -10,6 +10,19 @@ namespace chess
 	static constexpr piece_t white = 0;
 	static constexpr piece_t black = 1;
 
+	constexpr inline color_t other(const color_t color) { return (color == white) ? black : white; }
+
+	template<color_t color>
+	class colorable
+	{
+	public:
+		static consteval bool white_to_move() { return color == white; }
+		static consteval bool black_to_move() { return !white_to_move(); }
+
+		static consteval color_t color_to_move() { return color; }
+		static consteval color_t other_color() { return other(color); }
+	};
+
 	namespace detail
 	{
 		static constexpr piece_t pawn = 0 << 1;

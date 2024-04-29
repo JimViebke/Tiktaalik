@@ -1,92 +1,106 @@
 /* 2021 December 16 */
 
 #include "game.hpp"
-#include "search.hpp"
+#include "position.hpp"
 
 namespace chess
 {
-	constexpr size_t engine_target_depth = 6;
-	constexpr size_t step = 1;
-
-	void Game::worker_thread()
+	// Simple, nonvalidating FEN parser
+	root_v load_fen(const std::string& fen)
 	{
-		std::cout << "Worker thread started with depth " << engine_depth << '\n';
+		position _position;
 
-		while (1)
+		auto position_it = _position.begin();
+		auto fen_it = fen.cbegin();
+
+		// Edited from Wikipedia:
+
+		// A FEN record contains six fields. The separator between fields is a space. The fields are:
+
+		// 1. Piece placement (from white's perspective). Each rank is described, starting with rank 8 and ending with rank 1; within each rank, the contents of each square are described from file "a" through file "h". Following the Standard Algebraic Notation (SAN), each piece is identified by a single letter taken from the standard English names (pawn = "P", knight = "N", bishop = "B", rook = "R", queen = "Q" and king = "K"). White pieces are designated using upper-case letters ("PNBRQK") while black pieces use lowercase ("pnbrqk"). Empty squares are noted using digits 1 through 8 (the number of empty squares), and "/" separates ranks.
+
+		for (char c = *fen_it++; c != ' '; c = *fen_it++)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-			const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
-
-			if (engine_depth < engine_target_depth)
+			switch (c)
 			{
-				engine_depth += step;
+				case 'P': *position_it++ = white_pawn; break;
+				case 'N': *position_it++ = white_knight; break;
+				case 'B': *position_it++ = white_bishop; break;
+				case 'R': *position_it++ = white_rook; break;
+				case 'Q': *position_it++ = white_queen; break;
+				case 'K': *position_it++ = white_king; break;
+				case 'p': *position_it++ = black_pawn; break;
+				case 'n': *position_it++ = black_knight; break;
+				case 'b': *position_it++ = black_bishop; break;
+				case 'r': *position_it++ = black_rook; break;
+				case 'q': *position_it++ = black_queen; break;
+				case 'k': *position_it++ = black_king; break;
 
-				std::cout << "Engine evaluating as " << (root.board.white_to_move() ? "white\n" : "black\n");
-
-				const auto start_time = util::time_in_ms();
-
-				parent_of_best_move = &root; // currently, this is always the case
-
-				n_of_evals = 0;
-				if (root.board.white_to_move())
-					result_of_best_move = alpha_beta<true>(root, engine_depth, n_of_evals);
-				else
-					result_of_best_move = alpha_beta<false>(root, engine_depth, n_of_evals);
-
-				engine_time = util::time_in_ms() - start_time;
-
-				std::cout << "depth " << engine_depth << ", " << n_of_evals << " evals, " << engine_time << " ms\n";
+				default:
+				{
+					if (c >= '1' && c <= '8')
+					{
+						position_it += (size_t(c) - '0'); // advance N squares
+					}
+				}
 			}
-
 		}
-	}
 
-	void Game::menu()
-	{
-		const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
-		window->setVisible(false);
+		// 2. Active color. "w" means White moves next, "b" means Black.
 
-		while (true)
+		const color_t color_to_move = (*fen_it == 'w') ? white : black;
+
+		fen_it += 2; // step past color and space
+
+		// 3. Castling availability. If neither side can castle, this is "-". Otherwise, this has one or more letters: "K" (White can castle kingside), "Q" (White can castle queenside), "k" (Black can castle kingside), and/or "q" (Black can castle queenside).
+
+		bool white_can_castle_ks = false;
+		bool white_can_castle_qs = false;
+		bool black_can_castle_ks = false;
+		bool black_can_castle_qs = false;
+		for (char c = *fen_it++; c != ' '; c = *fen_it++)
 		{
-			std::cout << "\nEnter a command:\n"
-				"\tperft [n]\n"
-				"\tdivide [n]\n"
-				"\tquit\n";
-
-			std::string input;
-			std::getline(std::cin, input);
-			std::stringstream ss(input);
-
-			std::string command;
-			ss >> command;
-
-			if (command == "perft" || command == "divide")
+			switch (c)
 			{
-				size_t depth = 0;
-				ss >> depth;
-				if (depth < 1)
-				{
-					depth = 1;
-					std::cout << "depth adjusted to " << depth << '\n';
-				}
-				else if (depth > 10)
-				{
-					depth = 10;
-					std::cout << "depth adjusted to " << depth << '\n';
-				}
-
-				root.children.clear(); // suppress a debug printout (todo: remove this)
-
-				if (command == "perft")
-					root.perft(depth);
-				else
-					root.divide(depth);
+				case 'K': white_can_castle_ks = true; break;
+				case 'k': white_can_castle_qs = true; break;
+				case 'Q': black_can_castle_ks = true; break;
+				case 'q': black_can_castle_qs = true; break;
+				default: break;
 			}
-			else if (command == "quit" || command == "q")
-			{
-				return;
-			}
+		}
+
+		// 4. En passant target square in algebraic notation. If there's no en passant target square, this is "-". If a pawn has just made a two-square move, this is the position "behind" the pawn. This is recorded regardless of whether there is a pawn in position to make an en passant capture.
+
+		file en_passant_file{ -1 };
+		if (*fen_it != '-')
+		{
+			en_passant_file = *fen_it++ - 'a'; // convert letter file a-h to index 0-7
+			++fen_it; // step past the rank
+		}
+		++fen_it; // step past the space
+
+		// 5. Halfmove clock. This is the number of halfmoves since the last capture or pawn advance. This is used to determine if a draw can be claimed under the fifty-move rule.
+
+		int8_t fifty_move_counter = 0;
+		const auto halfmove_clock_end = std::find(fen_it, fen.cend(), ' ');
+		std::from_chars(fen_it._Ptr, halfmove_clock_end._Ptr, fifty_move_counter);
+
+		// 6. Fullmove number. The number of the full move. It starts at 1, and is incremented after Black's move.
+
+		// (ignored)
+
+		if (color_to_move == white)
+		{
+			return node<white>{board<white>{_position,
+				white_can_castle_ks, white_can_castle_qs, black_can_castle_ks, black_can_castle_qs,
+				en_passant_file, fifty_move_counter}};
+		}
+		else
+		{
+			return node<black>{board<black>{_position,
+				white_can_castle_ks, white_can_castle_qs, black_can_castle_ks, black_can_castle_qs,
+				en_passant_file, fifty_move_counter}};
 		}
 	}
 }

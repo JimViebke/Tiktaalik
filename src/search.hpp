@@ -6,14 +6,14 @@ namespace chess
 {
 	namespace detail
 	{
-		template<bool maximizing_player, bool count_evals = false>
-		eval_t alpha_beta(Node& node, size_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
+		template<bool count_evals, typename node_t>
+		eval_t alpha_beta(node_t& node, size_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
 		{
 			if (node.has_generated_children())
 			{
-				std::stable_sort(node.children.begin(), node.children.end(), [](const Node& a, const Node& b)
+				std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
 				{
-					if constexpr (maximizing_player)
+					if constexpr (node.white_to_move())
 						return a.get_eval() > b.get_eval();
 					else
 						return a.get_eval() < b.get_eval();
@@ -32,18 +32,18 @@ namespace chess
 				return node.evaluate_position();
 			}
 
-			eval_t eval = (maximizing_player ? eval::eval_min : eval::eval_max);
+			eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
 
-			for (Node& child : node.children)
+			for (auto& child : node.children)
 			{
 				child.set_eval(eval);
 			}
 
-			for (Node& child : node.children)
+			for (auto& child : node.children)
 			{
-				const eval_t ab = alpha_beta<!maximizing_player, count_evals>(child, depth - 1, alpha, beta, n_of_evals);
+				const eval_t ab = alpha_beta<count_evals>(child, depth - 1, alpha, beta, n_of_evals);
 
-				if constexpr (maximizing_player)
+				if constexpr (node.white_to_move())
 				{
 					eval = std::max(eval, ab);
 					if (eval >= beta) break;
@@ -63,36 +63,36 @@ namespace chess
 		}
 	}
 
-	template<bool maximizing_player>
-	Node* alpha_beta(Node& root, size_t depth, size_t& n_of_evals)
+	template<typename node_t>
+	best_move_v alpha_beta(node_t& node, size_t depth, size_t& n_of_evals)
 	{
-		if (root.has_generated_children())
+		if (node.has_generated_children())
 		{
-			std::stable_sort(root.children.begin(), root.children.end(), [](const Node& a, const Node& b)
+			std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
 			{
-				if constexpr (maximizing_player)
+				if constexpr (node.white_to_move())
 					return a.get_eval() > b.get_eval();
 				else
 					return a.get_eval() < b.get_eval();
 			});
 		}
 
-		// The root node will usually already have all of its immediate children,
+		// The passed node will usually already have all of its ply-1 children,
 		// but have this here for correctness.
-		if (!root.has_generated_children())
-			root.generate_child_boards();
+		if (!node.has_generated_children())
+			node.generate_child_boards();
 
 		eval_t alpha = eval::eval_min;
 		eval_t beta = eval::eval_max;
-		eval_t eval = (maximizing_player ? eval::eval_min : eval::eval_max);
+		eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
 		// default to first move if one exists
-		Node* best_move = (root.children.size() > 0) ? root.children.data() : nullptr;
+		typename node_t::other_node_t* best_move = (node.children.size() > 0) ? node.children.data() : nullptr;
 
-		for (Node& child : root.children)
+		for (auto& child : node.children)
 		{
-			const eval_t ab = detail::alpha_beta<!maximizing_player, true>(child, depth - 1, alpha, beta, n_of_evals);
+			const eval_t ab = detail::alpha_beta<true>(child, depth - 1, alpha, beta, n_of_evals);
 
-			if constexpr (maximizing_player)
+			if constexpr (node.white_to_move())
 			{
 				if (ab > eval)
 				{

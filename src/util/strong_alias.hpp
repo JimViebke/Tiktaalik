@@ -1,5 +1,7 @@
 #pragma once
 
+#include <numeric>
+
 namespace util
 {
 	template<typename T, typename tag>

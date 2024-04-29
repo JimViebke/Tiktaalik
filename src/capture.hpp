@@ -1,13 +1,11 @@
+#pragma once
 
 /*
 Jim Viebke
 2024-04-20
 */
 
-#include <functional>
-
 #include "position.hpp"
-#include "board.hpp"
 
 namespace chess
 {
