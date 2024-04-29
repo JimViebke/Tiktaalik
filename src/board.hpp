@@ -69,7 +69,7 @@ namespace chess
 			black_can_castle_qs = parent_board.black_can_castle_qs;
 
 			// update counter for 50 move rule - increment for a non-pawn move or non-capture move, reset otherwise
-			if (!piece_at(end_rank, end_file).is_pawn() || piece_at(end_rank, end_file).is_empty()) ++fifty_move_counter; else fifty_move_counter = 0;
+			if (!piece_at(start_rank, start_file).is_pawn() || piece_at(end_rank, end_file).is_empty()) ++fifty_move_counter; else fifty_move_counter = 0;
 
 			// check for en passant captures
 			if (piece_at(start_rank, start_file).is_pawn() &&
