@@ -473,8 +473,7 @@ namespace chess
 
 			ss << n_of_evals << " positions evaluated in " << engine_time << " ms\n";
 
-			using other_node_t = node_t::other_node_t;
-			if (other_node_t* child_node = *std::get_if<other_node_t*>(&best_move))
+			if (auto child_node = *std::get_if<typename node_t::other_node_t*>(&best_move))
 			{
 				ss << "Best move: ";
 				move_to_notation(ss, root_node, *child_node);
