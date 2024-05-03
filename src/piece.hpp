@@ -10,7 +10,7 @@ namespace chess
 		piece_t _piece;
 
 	public:
-		constexpr explicit piece() : _piece(empty) {}
+		constexpr piece() : _piece(empty) {}
 		constexpr piece(const piece_t piece) : _piece(piece) {}
 
 		constexpr piece_t get_piece() const { return _piece; }
