@@ -29,9 +29,6 @@
     <ClCompile Include="src\board.cpp" />
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\node.cpp" />
-    <ClCompile Include="src\notation.cpp" />
-    <ClCompile Include="src\piece.cpp" />
     <ClCompile Include="src\util\util.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
