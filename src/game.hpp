@@ -35,6 +35,10 @@ namespace chess
 		constexpr size_t tile_size_px = 90;
 		constexpr size_t board_size_px = tile_size_px * 8;
 
+		constexpr size_t default_font_size = 20;
+
+		constexpr size_t right_overlay_font_size = default_font_size;
+
 		constexpr size_t legal_marker_radius_px = tile_size_px / 5;
 
 		constexpr size_t piece_resolution_px = 150; // use 150x150, the native piece resolution
@@ -86,11 +90,11 @@ namespace chess
 			legal_marker.setFillColor({ 50, 50, 50, 255 / 2 });
 
 			overlay.setFont(arial);
-			overlay.setCharacterSize(20);
+			overlay.setCharacterSize(detail::default_font_size);
 			overlay.setFillColor(detail::text_color);
 
 			right_overlay.setFont(arial);
-			right_overlay.setCharacterSize(20);
+			right_overlay.setCharacterSize(detail::right_overlay_font_size);
 			right_overlay.setFillColor(detail::text_color);
 			right_overlay.setPosition({ detail::board_size_px + detail::board_x * 2, detail::board_y / 2 });
 
