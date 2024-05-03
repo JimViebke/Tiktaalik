@@ -52,14 +52,4 @@ namespace chess
 				ss << '+';
 		}
 	}
-
-	template<typename parent_node_t, typename result_node_t>
-		requires (!std::is_same<parent_node_t, result_node_t>::value)
-	std::string move_to_notation_str(const parent_node_t& parent_node,
-									 const result_node_t& result_node)
-	{
-		std::stringstream ss;
-		move_to_notation(ss, parent_node, result_node);
-		return ss.str();
-	}
 }
