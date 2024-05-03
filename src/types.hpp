@@ -24,8 +24,8 @@ namespace chess
 		struct rank_tag {};
 	}
 
-	using file = util::strong_alias<int8_t, detail::file_tag>;
-	using rank = util::strong_alias<int8_t, detail::rank_tag>;
+	using file = ::util::strong_alias<int8_t, detail::file_tag>;
+	using rank = ::util::strong_alias<int8_t, detail::rank_tag>;
 
 	static_assert(std::is_assignable<file, file>::value);
 	static_assert(std::is_assignable<rank, rank>::value);
