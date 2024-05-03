@@ -15,7 +15,7 @@ namespace chess
 		if constexpr (bounds_check(rank, file))
 		{
 			constexpr size_t index = to_index(rank, file);
-			return position[index].is(attacking_piece);
+			return position.piece_at(index).is(attacking_piece);
 		}
 		else
 		{
