@@ -98,32 +98,32 @@ namespace chess
 			}
 
 			// if a rook moves, it cannot be used to castle
-			if (start_rank == 0)
+			if (start_rank == 0) // black rooks
 			{
-				if (start_file == 0 && piece_at(start_rank, start_file).is_rook())
+				if (start_file == 0)
 					black_can_castle_qs = false;
-				else if (start_file == 7 && piece_at(start_rank, start_file).is_rook())
+				else if (start_file == 7)
 					black_can_castle_ks = false;
 			}
-			else if (start_rank == 7)
+			else if (start_rank == 7) // white rooks
 			{
-				if (start_file == 0 && piece_at(start_rank, start_file).is_rook())
+				if (start_file == 0)
 					white_can_castle_qs = false;
-				else if (start_file == 7 && piece_at(start_rank, start_file).is_rook())
+				else if (start_file == 7)
 					white_can_castle_ks = false;
 			}
 
 			// if a rook is captured, it cannot be used to castle
-			if (end_rank == 0) // detect captures of black's rooks
+			if (end_rank == 0) // black rooks
 			{
-				if (end_file == 0) // queen's rook
+				if (end_file == 0)
 					black_can_castle_qs = false;
 				else if (end_file == 7) 
 					black_can_castle_ks = false;
 			}
-			else if (end_rank == 7) // detect captures of white's rooks
+			else if (end_rank == 7) // white rooks
 			{
-				if (end_file == 0) // queen's rook
+				if (end_file == 0)
 					white_can_castle_qs = false;
 				else if (end_file == 7)
 					white_can_castle_ks = false;
