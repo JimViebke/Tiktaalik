@@ -63,8 +63,8 @@ namespace chess
 			switch (c)
 			{
 				case 'K': white_can_castle_ks = true; break;
-				case 'k': white_can_castle_qs = true; break;
-				case 'Q': black_can_castle_ks = true; break;
+				case 'Q': white_can_castle_qs = true; break;
+				case 'k': black_can_castle_ks = true; break;
 				case 'q': black_can_castle_qs = true; break;
 				default: break;
 			}
