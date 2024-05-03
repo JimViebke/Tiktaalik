@@ -118,14 +118,14 @@ namespace chess
 			{
 				if (end_file == 0) // queen's rook
 					black_can_castle_qs = false;
-				else if (end_rank == 7) // king's rook
+				else if (end_file == 7) 
 					black_can_castle_ks = false;
 			}
 			else if (end_rank == 7) // detect captures of white's rooks
 			{
 				if (end_file == 0) // queen's rook
-					black_can_castle_qs = false;
-				else if (end_rank == 7) // king's rook
+					white_can_castle_qs = false;
+				else if (end_file == 7)
 					white_can_castle_ks = false;
 			}
 
