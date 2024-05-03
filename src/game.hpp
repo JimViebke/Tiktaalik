@@ -37,6 +37,8 @@ namespace chess
 
 		constexpr size_t default_font_size = 20;
 
+		constexpr size_t right_overlay_x = board_size_px + board_x * 2;
+		constexpr size_t right_overlay_y = board_y / 2;
 		constexpr size_t right_overlay_font_size = default_font_size;
 
 		constexpr size_t legal_marker_radius_px = tile_size_px / 5;
@@ -316,6 +318,10 @@ namespace chess
 							on_release();
 						break;
 
+					case sf::Event::MouseWheelScrolled:
+						right_overlay_scroll += event.mouseWheelScroll.delta * detail::right_overlay_font_size;
+						break;
+
 					case sf::Event::KeyPressed:
 						if (event.key.code == sf::Keyboard::Key::X) {}
 						else if (event.key.code == sf::Keyboard::Key::Y) {}
@@ -493,6 +499,7 @@ namespace chess
 			}
 
 			right_overlay.setString(ss.str());
+			right_overlay.setPosition({ detail::right_overlay_x, detail::right_overlay_y + right_overlay_scroll });
 			window->draw(right_overlay);
 		}
 
@@ -658,6 +665,7 @@ namespace chess
 		sf::Font arial;
 		sf::Text overlay; // starts in the very top left
 		sf::Text right_overlay; // main text overlay
+		float right_overlay_scroll = 0.f;
 
 		color_t color_to_move = white; // the player to move, from root
 		root_v root; // move graph rooted on the current position
