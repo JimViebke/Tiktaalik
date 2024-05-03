@@ -6,9 +6,20 @@ namespace chess
 {
 	namespace detail
 	{
-		template<bool count_evals, typename node_t>
-		eval_t alpha_beta(node_t& node, size_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
+		constexpr size_t max_ply = 10;
+		static std::array<position, max_ply + 1> positions{};
+
+		template<typename node_t>
+		void make_move(const node_t& current_node, const size_t ply)
 		{
+			make_move(positions[ply], positions[ply - 1], current_node.board);
+		}
+
+		template<bool count_evals, typename node_t>
+		eval_t alpha_beta(node_t& node, size_t ply, size_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
+		{
+			make_move(node, ply);
+
 			if (node.has_generated_children())
 			{
 				std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
@@ -22,14 +33,14 @@ namespace chess
 			else if (depth > 0)
 			{
 				// Generate child boards if this is not a leaf node.
-				node.generate_child_boards();
+				node.generate_child_boards(positions[ply]);
 			}
 
 			if (depth == 0 || node.is_terminal())
 			{
 				if constexpr (count_evals) ++n_of_evals;
 
-				return node.evaluate_position();
+				return positions[ply].evaluate_position();
 			}
 
 			eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
@@ -41,7 +52,7 @@ namespace chess
 
 			for (auto& child : node.children)
 			{
-				const eval_t ab = alpha_beta<count_evals>(child, depth - 1, alpha, beta, n_of_evals);
+				const eval_t ab = alpha_beta<count_evals>(child, ply + 1, depth - 1, alpha, beta, n_of_evals);
 
 				if constexpr (node.white_to_move())
 				{
@@ -80,7 +91,7 @@ namespace chess
 		// The passed node will usually already have all of its ply-1 children,
 		// but have this here for correctness.
 		if (!node.has_generated_children())
-			node.generate_child_boards();
+			node.generate_child_boards(detail::positions[0]);
 
 		eval_t alpha = eval::eval_min;
 		eval_t beta = eval::eval_max;
@@ -90,7 +101,7 @@ namespace chess
 
 		for (auto& child : node.children)
 		{
-			const eval_t ab = detail::alpha_beta<true>(child, depth - 1, alpha, beta, n_of_evals);
+			const eval_t ab = detail::alpha_beta<true>(child, 1, depth - 1, alpha, beta, n_of_evals);
 
 			if constexpr (node.white_to_move())
 			{

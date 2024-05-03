@@ -1,11 +1,8 @@
 #pragma once
 
-#include <array>
+#include <immintrin.h>
 #include <stdint.h>
 
-#include <immintrin.h>
-
-#include "piece.hpp"
 #include "util/strong_alias.hpp"
 
 namespace chess
@@ -36,4 +33,19 @@ namespace chess
 	using uint256_t = __m256i;
 
 	using eval_t = int16_t;
+
+	template<typename T>
+	constexpr bool bounds_check(const T rank_or_file)
+	{
+		return rank_or_file.value() < 8 && rank_or_file.value() >= 0;
+	}
+	constexpr bool bounds_check(const rank rank, const file file)
+	{
+		return bounds_check(rank) && bounds_check(file);
+	}
+
+	constexpr size_t to_index(const rank rank, const file file)
+	{
+		return rank.value() * 8ull + file.value();
+	}
 }

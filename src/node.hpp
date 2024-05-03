@@ -3,8 +3,10 @@
 #include <iostream>
 #include <map>
 #include <variant>
+#include <vector>
 
 #include "board.hpp"
+#include "move.hpp"
 #include "types.hpp"
 #include "util/util.hpp"
 
@@ -28,7 +30,7 @@ namespace chess
 		void set_eval(const eval_t set_eval) { eval = set_eval; }
 		eval_t get_eval() const { return eval; }
 
-		void generate_child_boards()
+		void generate_child_boards(const position& position)
 		{
 			// Generate all ply-1 child nodes.
 			// If any child node exists, all exist.
@@ -36,7 +38,7 @@ namespace chess
 			// Skip generating child boards if they have already been generated
 			if (has_generated_children()) return;
 
-			const auto& child_boards = board.generate_child_boards();
+			const auto& child_boards = chess::generate_child_boards(board, position);
 			children.reserve(child_boards.size());
 			for (const auto& child_board : child_boards)
 				children.emplace_back(child_board);
@@ -72,7 +74,7 @@ namespace chess
 			return eval;
 		}
 
-		void perft(const size_t max_depth)
+		void perft(const position& position, const size_t max_depth)
 		{
 			if (max_depth == 0) return;
 
@@ -81,7 +83,7 @@ namespace chess
 			node_counter[0] = 1;
 
 			const auto start_time = util::time_in_ms();
-			perft(1, max_depth, node_counter);
+			perft(position, 1, max_depth, node_counter);
 
 			std::cout << "Ply:\tNodes:\n";
 			for (auto& counter : node_counter)
@@ -91,7 +93,7 @@ namespace chess
 
 			std::cout << "(" << util::time_in_ms() - start_time << " ms)\n";
 		}
-		void divide(const size_t max_depth)
+		void divide(const position& position, const size_t max_depth)
 		{
 			if (max_depth < 1)
 			{
@@ -100,14 +102,14 @@ namespace chess
 			}
 
 			// generate child boards if they don't exist already
-			generate_child_boards();
+			generate_child_boards(position);
 
 			size_t total_nodes = 0;
 
 			for (auto& node : children)
 			{
 				std::map<size_t, size_t> node_counter; // <depth, node count>
-				node.perft(1, max_depth - 1, node_counter);
+				node.perft(position, 1, max_depth - 1, node_counter);
 
 				const auto last = node_counter.crbegin();
 
@@ -125,17 +127,19 @@ namespace chess
 		static constexpr node_mask_t generated_children = 1 << 0;
 
 		void set_has_generated_children() { node_mask |= generated_children; }
+		void clear_has_generated_children() { node_mask &= ~generated_children; }
 
 		eval_t eval = 0;
 
 		node_mask_t node_mask = 0;
 
 		// inner perft
-		void perft(const size_t depth,
+		void perft(const position& current_position,
+				   const size_t depth,
 				   const size_t max_depth,
 				   std::map<size_t, size_t>& node_counter)
 		{
-			generate_child_boards();
+			generate_child_boards(current_position);
 
 			node_counter[depth] += children.size();
 
@@ -143,12 +147,11 @@ namespace chess
 			{
 				for (auto& child : children)
 				{
-					child.perft(depth + 1, max_depth, node_counter);
+					position child_position{};
+					make_move(child_position, current_position, child.board);
+					child.perft(child_position, depth + 1, max_depth, node_counter);
 				}
 			}
-
-			// We're not going to use these nodes again; clear them.
-			children.clear();
 		}
 
 		friend node<white>;

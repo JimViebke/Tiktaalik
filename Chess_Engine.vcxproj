@@ -15,6 +15,7 @@
     <ClInclude Include="src\capture.hpp" />
     <ClInclude Include="src\evaluation.hpp" />
     <ClInclude Include="src\game.hpp" />
+    <ClInclude Include="src\move.hpp" />
     <ClInclude Include="src\node.hpp" />
     <ClInclude Include="src\notation.hpp" />
     <ClInclude Include="src\piece.hpp" />

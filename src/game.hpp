@@ -12,6 +12,7 @@
 #include <thread>
 #include <variant>
 
+#include "move.hpp"
 #include "node.hpp"
 #include "notation.hpp"
 #include "search.hpp"
@@ -52,12 +53,12 @@ namespace chess
 	const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	const std::string sicilian_defense = "rnbqkbnr/pp2pppp/3p4/2p5/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq d3 0 3";
 
-	root_v load_fen(const std::string& fen);
+	root_v load_fen(const std::string& fen, position& _position);
 
 	class Game
 	{
 	public:
-		Game() : root{ load_fen(sicilian_defense) }
+		Game() : root{ load_fen(start_pos, detail::positions[0]) }
 		{
 			sf::ContextSettings settings;
 			settings.antialiasingLevel = 8;
@@ -81,11 +82,19 @@ namespace chess
 			}
 
 			if (auto white_root = std::get_if<node<white>>(&root))
-				white_root->generate_child_boards();
+			{
+				white_root->generate_child_boards(detail::positions[0]);
+				best_move = white_root->children.data(); // can be null
+			}
 			else if (auto black_root = std::get_if<node<black>>(&root))
-				black_root->generate_child_boards();
+			{
+				black_root->generate_child_boards(detail::positions[0]);
+				best_move = black_root->children.data(); // can be null
+			}
 			else
+			{
 				std::cout << "Failed to get root node in Game()\n";
+			}
 
 			legal_marker.setRadius(detail::legal_marker_radius_px);
 			legal_marker.setPointCount(15);
@@ -169,17 +178,19 @@ namespace chess
 		template<color_t color_to_move>
 		void on_click(const node<color_to_move>& root_node)
 		{
+			const position& root_position = detail::positions[0];
+
 			/*
 			Typically, x increases to the right, and y increases downward.
 			In chess, rank increases upward, and file increases to the right.
 			This requires some translation. */
-			if (root_node.board.is_empty(mouse_square_y, mouse_square_x))
+			if (root_position.is_empty(mouse_square_y, mouse_square_x))
 			{
 				std::cout << "No piece to drag\n";
 				return;
 			}
 
-			if (!root_node.board.piece_at(mouse_square_y, mouse_square_x).is_color(color_to_move))
+			if (!root_position.piece_at(mouse_square_y, mouse_square_x).is_color(color_to_move))
 			{
 				std::cout << "Not this color's turn\n";
 				return;
@@ -195,7 +206,7 @@ namespace chess
 				if (legal_move_x == mouse_square_x && legal_move_y == mouse_square_y)
 				{
 					dragging = true;
-					dragging_piece = root_node.board.piece_at(mouse_square_y, mouse_square_x);
+					dragging_piece = root_position.piece_at(mouse_square_y, mouse_square_x);
 					dragging_from_x = mouse_square_x;
 					dragging_from_y = mouse_square_y;
 					std::cout << "drag...\n";
@@ -237,6 +248,8 @@ namespace chess
 				{
 					// reset this, because we're about to invalidate it
 					best_move = decltype(&root_node){}; // change type and set to nullptr
+
+					make_move(detail::positions[0], detail::positions[0], child_node.board);
 
 					// Move a ply-1 child node to become the root node.
 					// This preserves the relevant subset of the move graph.
@@ -393,13 +406,15 @@ namespace chess
 		{
 			using namespace detail;
 
+			const position& root_position = detail::positions[0];
+
 			// As part of normalizing x/y vs rank/file, make this block unaware of rank/file, just x/y.
 
 			for (int rank = 7; rank >= 0; --rank)
 			{
 				for (int file = 0; file < 8; ++file)
 				{
-					const piece piece = root_node.board.piece_at(rank, file);
+					const piece piece = root_position.piece_at(rank, file);
 					if (piece.is_empty()) continue;
 
 					// If the current piece is being dragged, don't draw it in the original position
@@ -486,7 +501,7 @@ namespace chess
 			if (auto child_node = *std::get_if<typename node_t::other_node_t*>(&best_move))
 			{
 				ss << "Best move: ";
-				move_to_notation(ss, root_node, *child_node);
+				move_to_notation(ss, detail::positions[0], *child_node);
 				ss << ' ' << child_node->get_eval() << '\n';
 			}
 			ss << '\n';
@@ -494,7 +509,7 @@ namespace chess
 			ss << root_node.children.size() << " moves:\n";
 			for (const auto& child_node : root_node.children)
 			{
-				move_to_notation(ss, root_node, child_node);
+				move_to_notation(ss, detail::positions[0], child_node);
 				ss << '\n';
 			}
 
@@ -574,9 +589,9 @@ namespace chess
 		void menu(auto& root_node, const std::string& command, const size_t depth)
 		{
 			if (command == "perft")
-				root_node.perft(depth);
+				root_node.perft(detail::positions[0], depth);
 			else if (command == "divide")
-				root_node.divide(depth);
+				root_node.divide(detail::positions[0], depth);
 			else
 				std::cout << "Unknown command: " << command << '\n';
 		}
@@ -669,7 +684,7 @@ namespace chess
 
 		color_t color_to_move = white; // the player to move, from root
 		root_v root; // move graph rooted on the current position
-		best_move_v best_move; // pointer to a ply-1 child
+		best_move_v best_move{}; // pointer to a ply-1 child
 
 		size_t engine_depth = 0;
 		size_t n_of_evals = 0;

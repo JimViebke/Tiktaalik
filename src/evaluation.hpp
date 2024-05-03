@@ -4,8 +4,8 @@
 #include <iostream>
 #include <limits>
 
+#include "piece.hpp"
 #include "piece_defines.hpp"
-#include "position.hpp"
 #include "types.hpp"
 
 namespace chess
