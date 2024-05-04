@@ -13,10 +13,10 @@ namespace chess
 		// copy the parent position
 		child = parent;
 
-		const rank start_rank = parent_board._start_rank;
-		const file start_file = parent_board._start_file;
-		const rank end_rank = parent_board._end_rank;
-		const file end_file = parent_board._end_file;
+		const rank start_rank = parent_board.start_rank();
+		const file start_file = parent_board.start_file();
+		const rank end_rank = parent_board.end_rank();
+		const file end_file = parent_board.end_file();
 
 		const size_t start_idx = to_index(start_rank, start_file);
 		const size_t end_idx = to_index(end_rank, end_file);
@@ -49,10 +49,10 @@ namespace chess
 		}
 
 		// handle the move, using parent_board.moved_piece to handle promotion at the same time
-
-		if (!parent_board.moved_piece.is_empty())
+		const piece moved_piece = parent_board.moved_piece();
+		if (!moved_piece.is_empty())
 		{
-			child.piece_at(end_idx) = parent_board.moved_piece;
+			child.piece_at(end_idx) = moved_piece;
 		}
 		else
 		{
@@ -121,9 +121,9 @@ namespace chess
 				// check for en passant
 				if (rank == 3)
 				{
-					if (board.en_passant_file == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
+					if (board.en_passant_file() == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
 						child_boards.emplace_back(board, position, rank, file, rank - 1, file - 1);
-					else if (board.en_passant_file == file + 1 && bounds_check(file + 1) && position.piece_at(rank, file + 1).is_pawn())
+					else if (board.en_passant_file() == file + 1 && bounds_check(file + 1) && position.piece_at(rank, file + 1).is_pawn())
 						child_boards.emplace_back(board, position, rank, file, rank - 1, file + 1);
 				}
 			}
@@ -184,9 +184,9 @@ namespace chess
 				// check for en passant
 				if (rank == 4)
 				{
-					if (board.en_passant_file == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
+					if (board.en_passant_file() == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
 						child_boards.emplace_back(board, position, rank, file, rank + 1, file - 1);
-					else if (board.en_passant_file == file + 1 && bounds_check(file + 1) && position.piece_at(rank, file + 1).is_pawn())
+					else if (board.en_passant_file() == file + 1 && bounds_check(file + 1) && position.piece_at(rank, file + 1).is_pawn())
 						child_boards.emplace_back(board, position, rank, file, rank + 1, file + 1);
 				}
 			}
@@ -409,8 +409,8 @@ namespace chess
 
 		using other_board_t = board_t::other_board_t;
 
-		if ((king.is_white() && board.white_can_castle_ks) ||
-			(king.is_black() && board.black_can_castle_ks))
+		if ((king.is_white() && board.white_can_castle_ks()) ||
+			(king.is_black() && board.black_can_castle_ks()))
 		{
 			if (// If white can castle to kingside, then we already know the king and rook are in place.
 				// Check if the squares in between are empty. 
@@ -434,8 +434,8 @@ namespace chess
 			}
 		}
 
-		if ((king.is_white() && board.white_can_castle_qs) || // documentation same as above
-			(king.is_black() && board.black_can_castle_qs))
+		if ((king.is_white() && board.white_can_castle_qs()) || // documentation same as above
+			(king.is_black() && board.black_can_castle_qs()))
 		{
 			if (position.piece_at(rank, file - 1).is_empty() &&
 				position.piece_at(rank, file - 2).is_empty() &&

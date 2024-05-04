@@ -9,7 +9,7 @@ namespace chess
 {
 	enum class result : int8_t
 	{
-		unknown,
+		unknown = 0,
 		white_wins_by_checkmate,
 		black_wins_by_checkmate,
 		draw_by_stalemate
