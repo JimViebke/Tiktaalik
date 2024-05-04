@@ -217,7 +217,7 @@ namespace chess
 			else break; // the rook cannot move into a friendly piece; stop searching this way
 		}
 
-		// rank ascending (documentation same as above)
+		// rank ascending (same logic as above)
 		for (chess::rank end_rank = rank + 1; end_rank < 8; ++end_rank)
 		{
 			if (!bounds_check(end_rank)) break;
@@ -235,7 +235,7 @@ namespace chess
 			else break;
 		}
 
-		// file descending (documentation same as above)
+		// file descending (same logic as above)
 		for (chess::file end_file = file - 1; end_file >= 0; --end_file)
 		{
 			if (!bounds_check(end_file)) break;
@@ -253,7 +253,7 @@ namespace chess
 			else break;
 		}
 
-		// file ascending (documentation same as above)
+		// file ascending (same logic as above)
 		for (chess::file end_file = file + 1; end_file < 8; ++end_file)
 		{
 			if (!bounds_check(end_file)) break;
@@ -300,7 +300,7 @@ namespace chess
 			else break;
 		}
 
-		// working diagonally (rank descending and file ascending) (documentation same as above)
+		// working diagonally (rank descending and file ascending) (same logic as above)
 		for (int offset = 1; offset < 8; ++offset)
 		{
 			if (!bounds_check(rank - offset, file + offset)) break;
@@ -318,7 +318,7 @@ namespace chess
 			else break;
 		}
 
-		// working diagonally (rank ascending and file descending) (documentation same as above)
+		// working diagonally (rank ascending and file descending) (same logic as above)
 		for (int offset = 1; offset < 8; ++offset)
 		{
 			if (!bounds_check(rank + offset, file - offset)) break;
@@ -336,7 +336,7 @@ namespace chess
 			else break;
 		}
 
-		// working diagonally (rank and file ascending) (documentation same as above)
+		// working diagonally (rank and file ascending) (same logic as above)
 		for (int offset = 1; offset < 8; ++offset)
 		{
 			if (!bounds_check(rank + offset, file + offset)) break;
@@ -413,10 +413,10 @@ namespace chess
 			(king.is_black() && board.black_can_castle_ks()))
 		{
 			if (// If white can castle to kingside, then we already know the king and rook are in place.
-				// Check if the squares in between are empty. 
+				// Check if the squares in between are empty.
 				position.piece_at(rank, file + 1).is_empty() && // Check if the squares in between are empty.
 				position.piece_at(rank, file + 2).is_empty() &&
-				!is_king_in_check(board, position, king, rank, file)) // check if the king is in check now...	
+				!is_king_in_check(board, position, king, rank, file)) // check if the king is in check now...
 			{
 				chess::position temp{};
 
@@ -434,7 +434,7 @@ namespace chess
 			}
 		}
 
-		if ((king.is_white() && board.white_can_castle_qs()) || // documentation same as above
+		if ((king.is_white() && board.white_can_castle_qs()) || // (same logic as above)
 			(king.is_black() && board.black_can_castle_qs()))
 		{
 			if (position.piece_at(rank, file - 1).is_empty() &&
@@ -525,7 +525,7 @@ namespace chess
 				break; // a piece was found in this direction, stop checking in this direction
 			}
 		}
-		// rank ascending (documentation same as above)
+		// rank ascending (same logic as above)
 		for (auto other_rank = rank + 1; other_rank < 8; ++other_rank)
 		{
 			if (position.piece_at(other_rank, file).is_occupied())
@@ -535,7 +535,7 @@ namespace chess
 				break;
 			}
 		}
-		// file descending (documentation same as above)
+		// file descending (same logic as above)
 		for (auto other_file = file - 1; other_file >= 0; --other_file)
 		{
 			if (position.piece_at(rank, other_file).is_occupied())
@@ -545,7 +545,7 @@ namespace chess
 				break;
 			}
 		}
-		// file ascending (documentation same as above)
+		// file ascending (same logic as above)
 		for (auto other_file = file + 1; other_file < 8; ++other_file)
 		{
 			if (position.piece_at(rank, other_file).is_occupied())
@@ -574,7 +574,7 @@ namespace chess
 			}
 		}
 
-		// search rank descending and file ascending (documentation same as above)
+		// search rank descending and file ascending (same logic as above)
 		for (int offset = 1; offset < 8; ++offset)
 		{
 			if (!bounds_check(rank - offset, file + offset)) break;
@@ -587,7 +587,7 @@ namespace chess
 			}
 		}
 
-		// search rank ascending and file descending (documentation same as above)
+		// search rank ascending and file descending (same logic as above)
 		for (int offset = 1; offset < 8; ++offset)
 		{
 			if (!bounds_check(rank + offset, file - offset)) break;
@@ -600,7 +600,7 @@ namespace chess
 			}
 		}
 
-		// search rank and file ascending (documentation same as above)
+		// search rank and file ascending (same logic as above)
 		for (int offset = 1; offset < 8; ++offset)
 		{
 			if (!bounds_check(rank + offset, file + offset)) break;
@@ -619,9 +619,9 @@ namespace chess
 			if (knight_attacks[to_index(rank, file)](position, opposing_knight)) return true;
 		}
 
-		// check if the white king is under attack by a black pawn
 		if (do_pawn_checks)
 		{
+			// check if the white king is under attack by a black pawn
 			if (king.is_white())
 			{
 				if ((bounds_check(rank - 1, file + 1) && position.piece_at(rank - 1, file + 1).is(black_pawn)) ||
@@ -759,5 +759,4 @@ namespace chess
 		boards.swap(valid_boards);
 		valid_boards.clear();
 	}
-
 }
