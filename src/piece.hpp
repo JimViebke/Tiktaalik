@@ -13,7 +13,7 @@ namespace chess
 		constexpr piece() : _piece(empty) {}
 		constexpr piece(const piece_t piece) : _piece(piece) {}
 
-		constexpr piece_t get_piece() const { return _piece; }
+		constexpr piece_t value() const { return _piece; }
 		color_t get_color() const { return _piece & detail::color_mask; }
 
 		// check empty

@@ -101,7 +101,7 @@ namespace chess
 			return vals;
 		}();
 
-		inline constexpr eval_t eval(const piece piece) { return eval::material_values[piece.get_piece()]; }
+		inline constexpr eval_t eval(const piece piece) { return eval::material_values[piece.value()]; }
 
 		/*
 		Flip lookup indexes so we can map 0-63 to:
@@ -150,7 +150,7 @@ namespace chess
 
 		inline constexpr eval_t piece_square_eval(const piece piece, const size_t index)
 		{
-			return piece_square_evals[piece.get_piece()][index];
+			return piece_square_evals[piece.value()][index];
 		}
 
 		inline constexpr eval_t piece_square_eval(const auto position)
