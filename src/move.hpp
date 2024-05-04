@@ -23,7 +23,6 @@ namespace chess
 
 		// check for en passant captures
 		if (parent.piece_at(start_idx).is_pawn() &&
-			abs(rank{ start_rank - end_rank }.value()) == 1 && // this condition should be unnecessary
 			start_file != end_file && // if a pawn captures...
 			parent.piece_at(end_rank, end_file).is_empty()) // ...into an empty square, it must be an en passant capture
 		{

@@ -101,7 +101,6 @@ namespace chess
 
 			// check for en passant captures
 			if (moved_piece.is_pawn() &&
-				abs(rank{ start_rank - end_rank }.value()) == 1 && // todo: this condition should be unnecessary, remove it
 				start_file != end_file &&
 				parent_position.piece_at(end_rank, end_file).is_empty())
 			{
