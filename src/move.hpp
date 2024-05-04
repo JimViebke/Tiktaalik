@@ -679,7 +679,7 @@ namespace chess
 	}
 
 	template<typename board_t>
-	auto generate_child_boards(board_t& board, const position& position)
+	auto& generate_child_boards(board_t& board, const position& position)
 	{
 		static std::vector<typename board_t::other_board_t> child_boards;
 
