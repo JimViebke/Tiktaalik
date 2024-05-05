@@ -48,4 +48,10 @@ namespace chess
 	{
 		return rank.value() * 8ull + file.value();
 	}
+
+	template<typename T>
+	T diff(const T a, const T b)
+	{
+		return std::abs(a.value() - b.value());
+	}
 }
