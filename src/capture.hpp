@@ -5,12 +5,13 @@ Jim Viebke
 2024-04-20
 */
 
+#include "piece.hpp"
 #include "position.hpp"
 
 namespace chess
 {
 	template<rank::type rank, file::type file>
-	__forceinline bool can_be_captured_by(const position& position, const piece_t attacking_piece)
+	__forceinline bool can_be_captured_by(const position& position, const piece attacking_piece)
 	{
 		if constexpr (bounds_check(rank, file))
 		{
@@ -25,7 +26,7 @@ namespace chess
 
 	template<size_t index>
 		requires (index < 64)
-	bool knight_is_attacking(const position& position, const piece_t attacking_knight)
+	bool knight_is_attacking(const position& position, const piece attacking_knight)
 	{
 		constexpr rank::type rank = index / 8;
 		constexpr file::type file = index % 8;
@@ -62,7 +63,7 @@ namespace chess
 		detail::load_fn_ptrs<N - 1>(array);
 	}
 
-	using knight_attack_fn_ptr = bool(*)(const position&, const piece_t);
+	using knight_attack_fn_ptr = bool(*)(const position&, const piece);
 	constexpr std::array<knight_attack_fn_ptr, 64> knight_attacks = []() consteval
 	{
 		std::array<knight_attack_fn_ptr, 64> arr{};
