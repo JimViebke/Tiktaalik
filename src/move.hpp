@@ -665,8 +665,7 @@ namespace chess
 		return is_king_in_check<true, true, true>(position, king, rank, file);
 	}
 
-	template<typename board_t>
-	bool is_king_in_check(const board_t& board, const position& position, const color_t check_color)
+	inline size_t find_king_index(const position& position, const color_t check_color)
 	{
 		static_assert(sizeof(piece) == 1);
 
@@ -674,7 +673,7 @@ namespace chess
 		uint256_t ymm0 = _mm256_loadu_si256((uint256_t*)position._position.data() + 0);
 		uint256_t ymm1 = _mm256_loadu_si256((uint256_t*)(position._position.data() + 32));
 
-		// broadcast the target piece (king | color) to all positions of a vector
+		// broadcast the target piece (king | color) to all positions of a register
 		const uint256_t target_mask = _mm256_set1_epi8(detail::king | check_color);
 
 		// find the matching byte
@@ -687,15 +686,15 @@ namespace chess
 		const uint64_t mask = (mask_high << 32) | mask_low;
 
 		// Scan for the position of the first set bit in the mask.
-		// tzcnt returns the width of the type if a bit is not found.
-		size_t index = _tzcnt_u64(mask);
-
-		if (index < 64)
-		{
-			return is_king_in_check(board, position, position.piece_at(index), index / 8, index % 8);
-		}
-
-		return false;
+		// tzcnt returns the width of the type (64) if a bit is not found.
+		// Assume that the board will always have a king of each color.
+		return _tzcnt_u64(mask);
+	}
+	template<typename board_t>
+	bool is_king_in_check(const board_t& board, const position& position, const color_t king_color)
+	{
+		const size_t index = find_king_index(position, king_color);
+		return is_king_in_check(board, position, position.piece_at(index), index / 8, index % 8);
 	}
 
 	template<typename board_t>
