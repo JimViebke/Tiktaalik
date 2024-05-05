@@ -21,10 +21,10 @@ namespace chess
 		bool is_occupied() const { return _piece != empty; }
 
 		// check color
-		bool is_white() const { return (_piece & detail::color_mask) == white; }
+		bool is_white() const { return is_color(white); }
 		bool is_black() const { return !is_white(); }
 		bool is_color(color_t compare_color) const { return (_piece & detail::color_mask) == compare_color; }
-		bool is_color(piece piece) const { return (_piece & detail::color_mask) == (piece._piece & detail::color_mask); }
+		bool is_color(piece piece) const { return is_color(piece._piece & detail::color_mask); }
 		bool is_opposing_color(color_t compare_color) const { return !is_color(compare_color); }
 		bool is_opposing_color(piece piece) const { return !is_color(piece); }
 
