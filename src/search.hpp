@@ -15,33 +15,35 @@ namespace chess
 			make_move(positions[ply], positions[ply - 1], current_node.board);
 		}
 
-		template<bool count_evals, typename node_t>
+		template<typename node_t>
 		eval_t alpha_beta(node_t& node, size_t ply, size_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
 		{
 			make_move(node, ply);
 
-			if (node.has_generated_children())
+			if (depth == 0)
 			{
-				std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
-				{
-					if constexpr (node.white_to_move())
-						return a.get_eval() > b.get_eval();
-					else
-						return a.get_eval() < b.get_eval();
-				});
+				++n_of_evals;
+				return positions[ply].evaluate_position();
 			}
-			else if (depth > 0)
+
+			if (!node.has_generated_children())
 			{
-				// Generate child boards if this is not a leaf node.
 				node.generate_child_boards(positions[ply]);
 			}
 
-			if (depth == 0 || node.is_terminal())
+			if (node.is_terminal())
 			{
-				if constexpr (count_evals) ++n_of_evals;
-
+				++n_of_evals;
 				return positions[ply].evaluate_position();
 			}
+
+			std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
+			{
+				if constexpr (node.white_to_move())
+					return a.get_eval() > b.get_eval();
+				else
+					return a.get_eval() < b.get_eval();
+			});
 
 			eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
 
@@ -52,7 +54,7 @@ namespace chess
 
 			for (auto& child : node.children)
 			{
-				const eval_t ab = alpha_beta<count_evals>(child, ply + 1, depth - 1, alpha, beta, n_of_evals);
+				const eval_t ab = alpha_beta(child, ply + 1, depth - 1, alpha, beta, n_of_evals);
 
 				if constexpr (node.white_to_move())
 				{
@@ -101,7 +103,7 @@ namespace chess
 
 		for (auto& child : node.children)
 		{
-			const eval_t ab = detail::alpha_beta<true>(child, 1, depth - 1, alpha, beta, n_of_evals);
+			const eval_t ab = detail::alpha_beta(child, 1, depth - 1, alpha, beta, n_of_evals);
 
 			if constexpr (node.white_to_move())
 			{
