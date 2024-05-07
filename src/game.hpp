@@ -47,7 +47,6 @@ namespace chess
 		constexpr size_t piece_resolution_px = 150; // use 150x150, the native piece resolution
 
 		constexpr size_t engine_target_depth = 7;
-		constexpr size_t step = 1;
 	}
 
 	const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -575,7 +574,7 @@ namespace chess
 
 				if (engine_depth < detail::engine_target_depth)
 				{
-					engine_depth += detail::step;
+					++engine_depth;
 
 					if (auto white_root = std::get_if<node<white>>(&root))
 						worker_thread(*white_root);
