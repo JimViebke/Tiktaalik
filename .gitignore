@@ -400,3 +400,5 @@ FodyWeavers.xsd
 #custom
 lib/
 doc/scratch.txt
+doc/benchmarks.txt
+doc/benchmark notes.txt
