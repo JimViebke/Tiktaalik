@@ -76,7 +76,7 @@ namespace chess
 			set_black_can_castle_ks(b_castle_ks);
 			set_black_can_castle_qs(b_castle_qs);
 
-			set_en_passant_file(en_passant_file);
+			set_en_passant_file(en_passant_file.value() & en_passant_mask);
 			set_fifty_move_counter(fifty_move_counter);
 		}
 
