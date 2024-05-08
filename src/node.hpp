@@ -55,9 +55,8 @@ namespace chess
 		eval_t terminal_eval()
 		{
 			const result result = board.get_result();
-			if (result == result::white_wins_by_checkmate)
-				eval = eval::eval_max;
-			else if (result == result::black_wins_by_checkmate)
+			if (result == result::white_wins_by_checkmate ||
+				result == result::black_wins_by_checkmate)
 				eval = eval::eval_min;
 			else if (result == result::draw_by_stalemate)
 				eval = 0;

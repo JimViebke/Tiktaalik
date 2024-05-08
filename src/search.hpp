@@ -23,7 +23,8 @@ namespace chess
 			if (depth == 0)
 			{
 				++n_of_evals;
-				return positions[ply].evaluate_position();
+				return positions[ply].evaluate_position() *
+					(node.white_to_move() ? 1 : -1);
 			}
 
 			if (!node.has_generated_children())
@@ -38,13 +39,10 @@ namespace chess
 
 			std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
 			{
-				if constexpr (node.white_to_move())
-					return a.get_eval() > b.get_eval();
-				else
-					return a.get_eval() < b.get_eval();
+				return a.get_eval() < b.get_eval();
 			});
 
-			eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
+			eval_t eval = eval::eval_min;
 
 			for (auto& child : node.children)
 			{
@@ -53,25 +51,15 @@ namespace chess
 
 			for (auto& child : node.children)
 			{
-				eval_t ab = alpha_beta(child, ply + 1, depth - 1, alpha, beta, n_of_evals);
+				eval_t ab = -alpha_beta(child, ply + 1, depth - 1, -beta, -alpha, n_of_evals);
 
-				if constexpr (node.white_to_move())
-				{
-					// Adjust the eval by 1 so that each player can differentiate M5 from M1.
-					if (ab > eval::eval_max - 100) --ab;
+				// Adjust the eval by 1 so that M5 looks different than M1.
+				// if (ab > eval::eval_max - 100) --ab;
+				// else if (ab < eval::eval_min + 100) ++ab;
 
-					eval = std::max(eval, ab);
-					if (eval >= beta) break;
-					alpha = std::max(alpha, eval);
-				}
-				else
-				{
-					if (ab < eval::eval_min + 100) ++ab;
-
-					eval = std::min(eval, ab);
-					if (eval <= alpha) break;
-					beta = std::min(beta, eval);
-				}
+				eval = std::max(eval, ab);
+				if (eval >= beta) break;
+				alpha = std::max(alpha, eval);
 			}
 
 			node.set_eval(eval);
@@ -87,10 +75,7 @@ namespace chess
 		{
 			std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
 			{
-				if constexpr (node.white_to_move())
-					return a.get_eval() > b.get_eval();
-				else
-					return a.get_eval() < b.get_eval();
+				return a.get_eval() < b.get_eval();
 			});
 		}
 
@@ -101,32 +86,20 @@ namespace chess
 
 		eval_t alpha = eval::eval_min;
 		eval_t beta = eval::eval_max;
-		eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
+		eval_t eval = eval::eval_min;
 		// default to first move if one exists
 		typename node_t::other_node_t* best_move = (node.children.size() > 0) ? node.children.data() : nullptr;
 
 		for (auto& child : node.children)
 		{
-			const eval_t ab = detail::alpha_beta(child, 1, depth - 1, alpha, beta, n_of_evals);
+			const eval_t ab = -detail::alpha_beta(child, 1, depth - 1, -beta, -alpha, n_of_evals);
 
-			if constexpr (node.white_to_move())
+			if (ab > eval)
 			{
-				if (ab > eval)
-				{
-					eval = ab;
-					best_move = &child;
-				}
-				alpha = std::max(alpha, eval);
+				eval = ab;
+				best_move = &child;
 			}
-			else
-			{
-				if (ab < eval)
-				{
-					eval = ab;
-					best_move = &child;
-				}
-				beta = std::min(beta, eval);
-			}
+			alpha = std::max(alpha, eval);
 		}
 
 		if (best_move == nullptr)
