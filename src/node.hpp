@@ -25,10 +25,16 @@ namespace chess
 
 		explicit node(const chess::board<color_to_move> set_board) : board(set_board) {}
 
-		bool has_generated_children() const { return node_mask & generated_children; }
+		eval_t evaluate(const position& position)
+		{
+			eval = position.evaluate_position();
+			return eval;
+		}
 
 		void set_eval(const eval_t set_eval) { eval = set_eval; }
 		eval_t get_eval() const { return eval; }
+
+		bool has_generated_children() const { return node_mask & generated_children; }
 
 		void generate_child_boards(const position& position)
 		{

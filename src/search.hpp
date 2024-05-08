@@ -23,7 +23,7 @@ namespace chess
 			if (depth == 0)
 			{
 				++n_of_evals;
-				return positions[ply].evaluate_position();
+				return node.evaluate(positions[ply]);
 			}
 
 			if (!node.has_generated_children())
