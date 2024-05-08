@@ -16,7 +16,7 @@ namespace chess
 		}
 
 		template<typename node_t>
-		eval_t alpha_beta(node_t& node, size_t ply, size_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
+		eval_t alpha_beta(node_t& node, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
 		{
 			make_move(node, ply);
 
@@ -76,7 +76,7 @@ namespace chess
 	}
 
 	template<typename node_t>
-	best_move_v search(node_t& node, size_t depth, size_t& n_of_evals)
+	best_move_v search(node_t& node, depth_t depth, size_t& n_of_evals)
 	{
 		if (node.has_generated_children())
 		{

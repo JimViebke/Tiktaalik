@@ -27,6 +27,7 @@ namespace chess
 	using uint256_t = __m256i;
 
 	using eval_t = ::util::strong_alias<int16_t, struct eval_tag>;
+	using depth_t = ::util::strong_alias<int16_t, struct depth_tag>;
 
 	template<typename T>
 	constexpr bool bounds_check(const T rank_or_file)

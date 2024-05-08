@@ -46,7 +46,7 @@ namespace chess
 
 		constexpr size_t piece_resolution_px = 150; // use 150x150, the native piece resolution
 
-		constexpr size_t engine_target_depth = 7;
+		constexpr depth_t engine_target_depth = 7;
 	}
 
 	const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -604,7 +604,7 @@ namespace chess
 			}
 		}
 
-		void menu(auto& root_node, const std::string& command, const size_t depth)
+		void menu(auto& root_node, const std::string& command, const depth_t depth)
 		{
 			if (command == "perft")
 				root_node.perft(detail::positions[0], depth);
@@ -636,7 +636,7 @@ namespace chess
 
 				if (command == "perft" || command == "divide")
 				{
-					size_t depth = 0;
+					depth_t depth = 0;
 					ss >> depth;
 					if (depth < 1)
 					{
@@ -704,7 +704,7 @@ namespace chess
 		root_v root; // move graph rooted on the current position
 		best_move_v best_move{}; // pointer to a ply-1 child
 
-		size_t engine_depth = 0;
+		depth_t engine_depth = 0;
 		size_t n_of_evals = 0;
 		util::timepoint engine_time = 0;
 

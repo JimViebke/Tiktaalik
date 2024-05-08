@@ -72,11 +72,11 @@ namespace chess
 			return eval;
 		}
 
-		void perft(const position& position, const size_t max_depth)
+		void perft(const position& position, const depth_t max_depth)
 		{
 			if (max_depth == 0) return;
 
-			std::map<size_t, size_t> node_counter; // <depth, node count>
+			std::map<depth_t, size_t> node_counter; // <depth, node count>
 			// hardcode start position
 			node_counter[0] = 1;
 
@@ -91,7 +91,7 @@ namespace chess
 
 			std::cout << "(" << util::time_in_ms() - start_time << " ms)\n";
 		}
-		void divide(const position& position, const size_t max_depth)
+		void divide(const position& position, const depth_t max_depth)
 		{
 			if (max_depth < 1)
 			{
@@ -106,7 +106,7 @@ namespace chess
 
 			for (auto& node : children)
 			{
-				std::map<size_t, size_t> node_counter; // <depth, node count>
+				std::map<depth_t, size_t> node_counter; // <depth, node count>
 				node.perft(position, 1, max_depth - 1, node_counter);
 
 				const auto last = node_counter.crbegin();
@@ -133,9 +133,9 @@ namespace chess
 
 		// inner perft
 		void perft(const position& current_position,
-				   const size_t depth,
-				   const size_t max_depth,
-				   std::map<size_t, size_t>& node_counter)
+				   const depth_t depth,
+				   const depth_t max_depth,
+				   std::map<depth_t, size_t>& node_counter)
 		{
 			generate_child_boards(current_position);
 
