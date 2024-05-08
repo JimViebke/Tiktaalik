@@ -15,19 +15,13 @@ namespace chess
 		draw_by_stalemate
 	};
 
-	namespace detail
-	{
-		struct file_tag {};
-		struct rank_tag {};
-	}
+	using file = ::util::strong_alias<int8_t, struct file_tag>;
+	using rank = ::util::strong_alias<int8_t, struct rank_tag>;
 
-	using file = ::util::strong_alias<int8_t, detail::file_tag>;
-	using rank = ::util::strong_alias<int8_t, detail::rank_tag>;
-
-	static_assert(std::is_assignable<file, file>::value);
-	static_assert(std::is_assignable<rank, rank>::value);
-	static_assert(not std::is_assignable<file, rank>::value);
-	static_assert(not std::is_assignable<rank, file>::value);
+	static_assert(std::is_assignable<file, file>());
+	static_assert(std::is_assignable<rank, rank>());
+	static_assert(not std::is_assignable<file, rank>());
+	static_assert(not std::is_assignable<rank, file>());
 
 	using uint128_t = __m128i;
 	using uint256_t = __m256i;
