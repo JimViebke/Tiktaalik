@@ -52,25 +52,17 @@ namespace chess
 			return board.get_result() != result::unknown;
 		}
 
-		eval_t evaluate_position()
+		eval_t terminal_eval()
 		{
-			if (is_terminal())
-			{
-				const result result = board.get_result();
-				if (result == result::white_wins_by_checkmate)
-					eval = eval::eval_max;
-				else if (result == result::black_wins_by_checkmate)
-					eval = eval::eval_min;
-				else if (result == result::draw_by_stalemate)
-					eval = 0;
-				else
-					std::cout << "Unknown terminal state: [" << size_t(result) << "]\n";
-			}
+			const result result = board.get_result();
+			if (result == result::white_wins_by_checkmate)
+				eval = eval::eval_max;
+			else if (result == result::black_wins_by_checkmate)
+				eval = eval::eval_min;
+			else if (result == result::draw_by_stalemate)
+				eval = 0;
 			else
-			{
-				eval = board.evaluate_position();
-			}
-
+				std::cout << "Unknown terminal state: [" << size_t(result) << "]\n";
 			return eval;
 		}
 

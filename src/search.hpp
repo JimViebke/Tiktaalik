@@ -33,8 +33,7 @@ namespace chess
 
 			if (node.is_terminal())
 			{
-				++n_of_evals;
-				return positions[ply].evaluate_position();
+				return node.terminal_eval();
 			}
 
 			std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
@@ -54,16 +53,21 @@ namespace chess
 
 			for (auto& child : node.children)
 			{
-				const eval_t ab = alpha_beta(child, ply + 1, depth - 1, alpha, beta, n_of_evals);
+				eval_t ab = alpha_beta(child, ply + 1, depth - 1, alpha, beta, n_of_evals);
 
 				if constexpr (node.white_to_move())
 				{
+					// Adjust the eval by 1 so that each player can differentiate M5 from M1.
+					if (ab > eval::eval_max - 100) --ab;
+
 					eval = std::max(eval, ab);
 					if (eval >= beta) break;
 					alpha = std::max(alpha, eval);
 				}
 				else
 				{
+					if (ab < eval::eval_min + 100) ++ab;
+
 					eval = std::min(eval, ab);
 					if (eval <= alpha) break;
 					beta = std::min(beta, eval);
