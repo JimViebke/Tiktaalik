@@ -57,17 +57,12 @@ namespace chess
 
 				if constexpr (node.white_to_move())
 				{
-					// Adjust the eval by 1 so that each player can differentiate M5 from M1.
-					if (ab > eval::eval_max - 100) --ab;
-
 					eval = std::max(eval, ab);
 					if (eval >= beta) break;
 					alpha = std::max(alpha, eval);
 				}
 				else
 				{
-					if (ab < eval::eval_min + 100) ++ab;
-
 					eval = std::min(eval, ab);
 					if (eval <= alpha) break;
 					beta = std::min(beta, eval);
