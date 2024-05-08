@@ -229,6 +229,28 @@ namespace chess
 				std::cout << "Failed to get root node in on_click()\n";
 		}
 
+		template<color_t c1, color_t c2>
+			requires (c1 != c2)
+		void play_move(node<c1>& root_node, node<c2>& child_node)
+		{
+			// update the root position
+			make_move(detail::positions[0], detail::positions[0], child_node.board);
+
+			// Move a ply-1 child node to become the root node.
+			// This preserves the relevant subset of the move graph.
+			// This must be done in two steps, because any form of `root = move(child)`
+			// will clobber the move graph before the move takes place.
+			auto new_root = std::move(child_node);
+			root = std::move(new_root);
+
+			// reset best_move
+			best_move = decltype(&root_node){}; // change type and set to nullptr
+
+			// Decrement whatever the current depth is because we're advancing down the tree by one node.
+			if (engine_depth > 0)
+				--engine_depth;
+		}
+
 		template<typename node_t>
 		void on_release(node_t& root_node)
 		{
@@ -246,22 +268,7 @@ namespace chess
 					mouse_square_x == legal_end_x &&
 					mouse_square_y == legal_end_y)
 				{
-					// reset this, because we're about to invalidate it
-					best_move = decltype(&root_node){}; // change type and set to nullptr
-
-					make_move(detail::positions[0], detail::positions[0], child_node.board);
-
-					// Move a ply-1 child node to become the root node.
-					// This preserves the relevant subset of the move graph.
-					// This must be done in two steps, because any form of `root = move(child)`
-					// will clobber the move graph before the move takes place.
-					auto new_root = std::move(child_node);
-					root = std::move(new_root);
-
-					// Decrement whatever the current depth is because we're advancing down the tree by one node.
-					if (engine_depth > 0)
-						--engine_depth;
-
+					play_move(root_node, child_node);
 					return;
 				}
 			}
@@ -336,9 +343,20 @@ namespace chess
 						break;
 
 					case sf::Event::KeyPressed:
-						if (event.key.code == sf::Keyboard::Key::X) {}
-						else if (event.key.code == sf::Keyboard::Key::Y) {}
-						else if (event.key.code == sf::Keyboard::Key::Z) {}
+						if (event.key.code == sf::Keyboard::Key::Space &&
+							engine_depth == engine_target_depth)
+						{
+							if (auto white_root = std::get_if<node<white>>(&root))
+							{
+								if (auto move = *std::get_if<node<black>*>(&best_move))
+									play_move(*white_root, *move);
+							}
+							else if (auto black_root = std::get_if<node<black>>(&root))
+							{
+								if (auto move = *std::get_if<node<white>*>(&best_move))
+									play_move(*black_root, *move);
+							}
+						}
 						break;
 
 					case sf::Event::Closed:
