@@ -579,7 +579,7 @@ namespace chess
 			const auto start_time = util::time_in_ms();
 
 			n_of_evals = 0;
-			best_move = alpha_beta(root_node, engine_depth, n_of_evals);
+			best_move = search(root_node, engine_depth, n_of_evals);
 
 			engine_time = util::time_in_ms() - start_time;
 

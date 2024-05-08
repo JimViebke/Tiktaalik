@@ -76,7 +76,7 @@ namespace chess
 	}
 
 	template<typename node_t>
-	best_move_v alpha_beta(node_t& node, size_t depth, size_t& n_of_evals)
+	best_move_v search(node_t& node, size_t depth, size_t& n_of_evals)
 	{
 		if (node.has_generated_children())
 		{
