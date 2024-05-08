@@ -520,13 +520,7 @@ namespace chess
 			{
 				ss << "Best move: ";
 				move_to_notation(ss, detail::positions[0], *child_node);
-
-				if (child_node->get_eval() > eval::eval_max - 100)
-					ss << "\nWhite mates in " << eval::eval_max - child_node->get_eval() + 1 << '\n';
-				else if (child_node->get_eval() < eval::eval_min + 100)
-					ss << "\nBlack mates in " << child_node->get_eval() - eval::eval_min + 1<< '\n';
-				else
-					ss << '\n' << std::fixed << std::setprecision(1) << float(child_node->get_eval()) / 100 << '\n';
+				ss << '\n' << std::fixed << std::setprecision(1) << float(child_node->get_eval()) / 100 << '\n';
 			}
 			ss << '\n';
 
