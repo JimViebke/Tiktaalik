@@ -73,7 +73,7 @@ namespace chess
 
 		// 4. En passant target square in algebraic notation. If there's no en passant target square, this is "-". If a pawn has just made a two-square move, this is the position "behind" the pawn. This is recorded regardless of whether there is a pawn in position to make an en passant capture.
 
-		file en_passant_file{ -1 };
+		file en_passant_file{ empty };
 		if (*fen_it != '-')
 		{
 			en_passant_file = *fen_it++ - 'a'; // convert letter file a-h to index 0-7
