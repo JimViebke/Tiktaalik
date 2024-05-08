@@ -514,7 +514,7 @@ namespace chess
 			else
 				ss << "Black to move\n\n";
 
-			ss << n_of_evals << " positions evaluated in " << engine_time << " ms\n";
+			ss << n_of_evals << " positions evaluated in " << engine_time << " ms, depth " << engine_depth << '\n';
 
 			if (auto child_node = *std::get_if<typename node_t::other_node_t*>(&best_move))
 			{
