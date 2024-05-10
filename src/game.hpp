@@ -45,8 +45,6 @@ namespace chess
 		constexpr size_t legal_marker_radius_px = tile_size_px / 5;
 
 		constexpr size_t piece_resolution_px = 150; // use 150x150, the native piece resolution
-
-		constexpr depth_t engine_target_depth = 7;
 	}
 
 	const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -344,7 +342,7 @@ namespace chess
 
 					case sf::Event::KeyPressed:
 						if (event.key.code == sf::Keyboard::Key::Space &&
-							engine_depth == engine_target_depth)
+							engine_depth == config::engine_target_depth)
 						{
 							if (auto white_root = std::get_if<node<white>>(&root))
 							{
@@ -590,7 +588,7 @@ namespace chess
 
 				const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
 
-				if (engine_depth < detail::engine_target_depth)
+				if (engine_depth < config::engine_target_depth)
 				{
 					++engine_depth;
 

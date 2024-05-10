@@ -7,15 +7,14 @@
 #include <iostream>
 
 #include "board.hpp"
+#include "config.hpp"
 #include "evaluation.hpp"
 #include "position.hpp"
 #include "util/strong_alias.hpp"
 
 namespace chess
 {
-	constexpr size_t tt_size_in_mb = 1024;
-
-	static_assert(tt_size_in_mb / 1024 <= 16); // sanity check, size <= 16 GB
+	static_assert(config::tt_size_in_mb / 1024 <= 16); // sanity check, size <= 16 GB
 
 	using tt_key = ::util::strong_alias<uint64_t, struct tt_key_tag>;
 
@@ -75,7 +74,7 @@ namespace chess
 			return keys;
 		}();
 
-		constexpr size_t tt_size_in_bytes = (tt_size_in_mb * 1024 * 1024);
+		constexpr size_t tt_size_in_bytes = (config::tt_size_in_mb * 1024 * 1024);
 		constexpr size_t tt_size_in_entries = tt_size_in_bytes / sizeof(entry);
 
 		static_assert(std::popcount(tt_size_in_entries) == 1);

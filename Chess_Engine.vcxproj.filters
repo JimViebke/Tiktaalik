@@ -59,6 +59,9 @@
     <ClInclude Include="src\transposition_table.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\config.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\util\util.cpp">

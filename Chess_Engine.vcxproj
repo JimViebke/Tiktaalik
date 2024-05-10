@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="src\board.hpp" />
     <ClInclude Include="src\capture.hpp" />
+    <ClInclude Include="src\config.hpp" />
     <ClInclude Include="src\evaluation.hpp" />
     <ClInclude Include="src\game.hpp" />
     <ClInclude Include="src\move.hpp" />
