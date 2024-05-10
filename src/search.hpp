@@ -1,6 +1,7 @@
 #pragma once
 
 #include "node.hpp"
+#include "transposition_table.hpp"
 
 namespace chess
 {
@@ -8,6 +9,8 @@ namespace chess
 	{
 		constexpr size_t max_ply = 10;
 		static std::array<position, max_ply + 1> positions{};
+
+		static chess::transposition_table tt;
 
 		template<typename node_t>
 		void make_move(const node_t& current_node, const size_t ply)
@@ -20,10 +23,23 @@ namespace chess
 		{
 			make_move(node, ply);
 
+			const tt_key key = make_key(positions[ply], node.board);
+
+			{
+				eval_t eval = 0;
+				if (tt.probe(eval, key, depth, alpha, beta))
+				{
+					node.set_eval(eval);
+					return eval;
+				}
+			}
+
 			if (depth == 0)
 			{
 				++n_of_evals;
-				return node.evaluate(positions[ply]);
+				const eval_t eval = node.evaluate(positions[ply]);
+				tt.store(key, depth, eval_type::exact, eval);
+				return eval;
 			}
 
 			if (!node.has_generated_children())
@@ -33,7 +49,9 @@ namespace chess
 
 			if (node.is_terminal())
 			{
-				return node.terminal_eval();
+				const eval_t eval = node.terminal_eval();
+				tt.store(key, depth, eval_type::exact, eval);
+				return eval;
 			}
 
 			std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
@@ -45,6 +63,7 @@ namespace chess
 			});
 
 			eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
+			eval_type eval_type = (node.white_to_move() ? eval_type::alpha : eval_type::beta);
 
 			for (auto& child : node.children)
 			{
@@ -60,21 +79,41 @@ namespace chess
 					if (ab > eval::eval_max - 100) --ab;
 
 					eval = std::max(eval, ab);
-					if (eval >= beta) break;
-					alpha = std::max(alpha, eval);
+					if (eval >= beta)
+					{
+						tt.store(key, depth, eval_type::beta, beta);
+						node.set_eval(beta);
+						return beta;
+						// break;
+					}
+					if (eval > alpha)
+					{
+						alpha = eval;
+						eval_type = eval_type::exact;
+					}
 				}
 				else
 				{
 					if (ab < eval::eval_min + 100) ++ab;
 
 					eval = std::min(eval, ab);
-					if (eval <= alpha) break;
-					beta = std::min(beta, eval);
+					if (eval <= alpha)
+					{
+						tt.store(key, depth, eval_type::alpha, alpha);
+						node.set_eval(alpha);
+						return alpha;
+						// break;
+					}
+					if (eval < beta)
+					{
+						beta = eval;
+						eval_type = eval_type::exact;
+					}
 				}
 			}
 
+			tt.store(key, depth, eval_type, eval);
 			node.set_eval(eval);
-
 			return eval;
 		}
 	}
