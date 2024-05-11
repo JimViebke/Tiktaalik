@@ -56,6 +56,24 @@ namespace chess
 				return eval;
 			}
 
+			eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
+
+			if constexpr (tt::config::use_tt_move_ordering)
+			{
+				for (auto& child : node.children)
+				{
+					// generate the child position
+					make_move(child, ply + 1);
+					// generate the child's zobrish hash
+					const tt::key child_key = tt::make_key(positions[ply + 1], child.board);
+					// set the node's eval to the cached eval, regardless of depth, or min/max if unknown
+					eval_t cached_eval = 0;
+					const bool hit = tt.probe(cached_eval, child_key, 0, alpha, beta); // call with 0 (no depth requirement)
+					//if (hit) std::cout << "tt hit for sorting hint\n";
+					node.set_eval(hit ? cached_eval : eval);
+				}
+			}
+
 			std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
 			{
 				if constexpr (node.white_to_move())
@@ -64,7 +82,6 @@ namespace chess
 					return a.get_eval() < b.get_eval();
 			});
 
-			eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
 			eval_type node_eval_type = (node.white_to_move() ? eval_type::alpha : eval_type::beta);
 
 			for (auto& child : node.children)
@@ -123,6 +140,26 @@ namespace chess
 	template<typename node_t>
 	best_move_v search(node_t& node, depth_t depth, size_t& n_of_evals)
 	{
+		eval_t alpha = eval::eval_min;
+		eval_t beta = eval::eval_max;
+		eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
+
+		if constexpr (tt::config::use_tt_move_ordering)
+		{
+			for (auto& child : node.children)
+			{
+				// generate the child position
+				detail::make_move(child, 1);
+				// generate the child's zobrish hash
+				const tt::key child_key = tt::make_key(detail::positions[1], child.board);
+				// set the node's eval to the cached eval, regardless of depth, or min/max if unknown
+				eval_t cached_eval = 0;
+				const bool hit = detail::tt.probe(cached_eval, child_key, 0, alpha, beta); // call with 0 (no depth requirement)
+				// if (hit) std::cout << "tt hit for sorting hint\n";
+				node.set_eval(hit ? cached_eval : eval);
+			}
+		}
+
 		if (node.has_generated_children())
 		{
 			std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
@@ -139,9 +176,6 @@ namespace chess
 		if (!node.has_generated_children())
 			node.generate_child_boards(detail::positions[0]);
 
-		eval_t alpha = eval::eval_min;
-		eval_t beta = eval::eval_max;
-		eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
 		// default to first move if one exists
 		typename node_t::other_node_t* best_move = (node.children.size() > 0) ? node.children.data() : nullptr;
 
