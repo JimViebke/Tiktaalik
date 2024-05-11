@@ -53,7 +53,7 @@ namespace chess
 
 			for (size_t i = 0; i < _position.size(); ++i)
 			{
-				eval += eval::eval(_position[i]); // evaluate material
+				eval += eval::piece_eval(_position[i]); // evaluate material
 				eval += eval::piece_square_eval(_position[i], i); // evaluate position
 			}
 

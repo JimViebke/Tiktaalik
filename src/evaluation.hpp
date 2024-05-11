@@ -98,10 +98,12 @@ namespace chess
 			vals[black_knight] = -knight;
 			vals[black_pawn] = -pawn;
 
+			vals[empty] = 0;
+
 			return vals;
 		}();
 
-		inline constexpr eval_t eval(const piece piece) { return eval::material_values[piece.value()]; }
+		inline constexpr eval_t piece_eval(const piece piece) { return eval::material_values[piece.value()]; }
 
 		/*
 		Flip lookup indexes so we can map 0-63 to:
