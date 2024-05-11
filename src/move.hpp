@@ -22,15 +22,15 @@ namespace chess
 	}
 
 	template<typename board_t>
-	void make_move(position& child, const position& parent, const board_t& parent_board)
+	void make_move(position& child, const position& parent, const board_t& child_board)
 	{
 		// copy the parent position
 		child = parent;
 
-		const rank start_rank = parent_board.start_rank();
-		const file start_file = parent_board.start_file();
-		const rank end_rank = parent_board.end_rank();
-		const file end_file = parent_board.end_file();
+		const rank start_rank = child_board.start_rank();
+		const file start_file = child_board.start_file();
+		const rank end_rank = child_board.end_rank();
+		const file end_file = child_board.end_file();
 
 		const size_t start_idx = to_index(start_rank, start_file);
 		const size_t end_idx = to_index(end_rank, end_file);
@@ -61,8 +61,8 @@ namespace chess
 			}
 		}
 
-		// handle the move, using parent_board.moved_piece to handle promotion at the same time
-		const piece moved_piece = parent_board.moved_piece();
+		// handle the move, using child_board.moved_piece to handle promotion at the same time
+		const piece moved_piece = child_board.moved_piece();
 		if (!moved_piece.is_empty())
 		{
 			child.piece_at(end_idx) = moved_piece;
