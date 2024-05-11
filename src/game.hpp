@@ -81,11 +81,13 @@ namespace chess
 
 			if (auto white_root = std::get_if<node<white>>(&root))
 			{
+				white_root->generate_static_eval(detail::positions[0]);
 				white_root->generate_child_boards(detail::positions[0]);
 				best_move = white_root->children.data(); // can be null
 			}
 			else if (auto black_root = std::get_if<node<black>>(&root))
 			{
+				black_root->generate_static_eval(detail::positions[0]);
 				black_root->generate_child_boards(detail::positions[0]);
 				best_move = black_root->children.data(); // can be null
 			}

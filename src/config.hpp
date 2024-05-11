@@ -7,6 +7,8 @@ namespace chess
 	namespace config
 	{
 		static constexpr size_t engine_target_depth = 8;
+
+		static constexpr bool verify_incremental_static_eval = false;
 	}
 
 	namespace tt::config

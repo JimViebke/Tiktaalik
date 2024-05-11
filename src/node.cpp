@@ -4,6 +4,23 @@
 namespace chess
 {
 	template<color_t color_to_move>
+	void node<color_to_move>::generate_child_boards(const position& position)
+	{
+		// Generate all ply-1 child nodes.
+		// If any child node exists, all exist.
+
+		// Skip generating child boards if they have already been generated
+		if (has_generated_children()) return;
+
+		const auto& child_boards = chess::generate_child_boards(*this, position);
+		children.reserve(child_boards.size());
+		for (const auto& child_board : child_boards)
+			children.emplace_back(child_board);
+
+		set_has_generated_children();
+	}
+
+	template<color_t color_to_move>
 	void node<color_to_move>::perft(const position& position, const depth_t max_depth)
 	{
 		if (max_depth == 0) return;
@@ -76,6 +93,9 @@ namespace chess
 			}
 		}
 	}
+
+	template void node<white>::generate_child_boards(const position&);
+	template void node<black>::generate_child_boards(const position&);
 
 	template void node<white>::perft(const position&, const depth_t);
 	template void node<black>::perft(const position&, const depth_t);

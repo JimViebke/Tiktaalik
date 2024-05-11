@@ -39,8 +39,14 @@ namespace chess
 			if (depth == 0)
 			{
 				++n_of_evals;
-				const eval_t eval = node.evaluate(positions[ply]);
+				const eval_t eval = node.get_static_eval();
+
+				if constexpr (config::verify_incremental_static_eval)
+					if (eval != positions[ply].evaluate_position())
+						std::cout << "Incremental and generated static evals mismatch\n";
+
 				tt.store(key, depth, eval_type::exact, eval);
+				node.set_eval(eval);
 				return eval;
 			}
 

@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "board.hpp"
+#include "node.hpp"
 #include "position.hpp"
 #include "capture.hpp"
 
@@ -277,8 +278,8 @@ namespace chess
 	}
 	using is_king_in_check_fn = bool(*)(const position&, const piece, const rank, const file);
 
-	template<typename boards_t, typename board_t>
-	void find_pawn_moves(boards_t& child_boards, const board_t& board, const position& position, const rank rank, const file file,
+	template<typename nodes_t, typename parent_node_t>
+	void find_pawn_moves(nodes_t& child_nodes, const parent_node_t& parent_node, const position& position, const rank rank, const file file,
 						 const size_t king_index, is_king_in_check_fn check_fn)
 	{
 		if (position.piece_at(rank, file).is_white())
@@ -290,57 +291,57 @@ namespace chess
 				{
 					if (rank == 1) // if the pawn is on the second last rank
 					{
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file, white_queen);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file, white_rook);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file, white_bishop);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file, white_knight);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file, white_queen);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file, white_rook);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file, white_bishop);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file, white_knight);
 					}
 					else // the pawn is moving without promotion
 					{
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file);
 					}
 				}
 				// check for moving forward two squares
 				if (rank == 6 && position.piece_at(5, file).is_empty() && position.piece_at(4, file).is_empty())
 				{
-					append_if_legal<move_type::pawn_two_squares>(child_boards, position, king_index, check_fn, board, position, rank, file, 4, file);
+					append_if_legal<move_type::pawn_two_squares>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, 4, file);
 				}
 				// check for captures
 				if (bounds_check(file + 1) && position.piece_at(rank - 1, file + 1).is_occupied() && position.piece_at(rank - 1, file + 1).is_black())
 				{
 					if (rank == 1) // if the pawn is on the second last rank
 					{
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file + 1, white_queen);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file + 1, white_rook);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file + 1, white_bishop);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file + 1, white_knight);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file + 1, white_queen);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file + 1, white_rook);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file + 1, white_bishop);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file + 1, white_knight);
 					}
 					else // the pawn is capturing without promotion
 					{
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file + 1);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file + 1);
 					}
 				}
 				if (bounds_check(file - 1) && position.piece_at(rank - 1, file - 1).is_occupied() && position.piece_at(rank - 1, file - 1).is_black())
 				{
 					if (rank == 1) // if the pawn is on the second last rank
 					{
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file - 1, white_queen);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file - 1, white_rook);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file - 1, white_bishop);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file - 1, white_knight);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file - 1, white_queen);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file - 1, white_rook);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file - 1, white_bishop);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file - 1, white_knight);
 					}
 					else // the pawn is capturing without promotion
 					{
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file - 1);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file - 1);
 					}
 				}
 				// check for en passant
 				if (rank == 3)
 				{
-					if (board.en_passant_file() == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file - 1);
-					else if (board.en_passant_file() == file + 1 && bounds_check(file + 1) && position.piece_at(rank, file + 1).is_pawn())
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file + 1);
+					if (parent_node.board.en_passant_file() == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file - 1);
+					else if (parent_node.board.en_passant_file() == file + 1 && bounds_check(file + 1) && position.piece_at(rank, file + 1).is_pawn())
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file + 1);
 				}
 			}
 		}
@@ -353,66 +354,66 @@ namespace chess
 				{
 					if (rank == 6) // if the pawn is on the second last rank
 					{
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file, black_queen);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file, black_rook);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file, black_bishop);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file, black_knight);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file, black_queen);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file, black_rook);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file, black_bishop);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file, black_knight);
 					}
 					else // the pawn is moving without promotion
 					{
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file);
 					}
 				}
 				// check for moving forward two squares
 				if (rank == 1 && position.piece_at(2, file).is_empty() && position.piece_at(3, file).is_empty())
 				{
-					append_if_legal<move_type::pawn_two_squares>(child_boards, position, king_index, check_fn, board, position, rank, file, 3, file);
+					append_if_legal<move_type::pawn_two_squares>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, 3, file);
 				}
 				// check for captures
 				if (bounds_check(file + 1) && position.piece_at(rank + 1, file + 1).is_occupied() && position.piece_at(rank + 1, file + 1).is_white())
 				{
 					if (rank == 6) // if the pawn is on the second last rank
 					{
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file + 1, black_queen);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file + 1, black_rook);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file + 1, black_bishop);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file + 1, black_knight);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file + 1, black_queen);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file + 1, black_rook);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file + 1, black_bishop);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file + 1, black_knight);
 					}
 					else // the pawn is capturing without promotion
 					{
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file + 1);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file + 1);
 					}
 				}
 				if (bounds_check(file - 1) && position.piece_at(rank + 1, file - 1).is_occupied() && position.piece_at(rank + 1, file - 1).is_white())
 				{
 					if (rank == 6) // if the pawn is on the second last rank
 					{
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file - 1, black_queen);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file - 1, black_rook);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file - 1, black_bishop);
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file - 1, black_knight);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file - 1, black_queen);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file - 1, black_rook);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file - 1, black_bishop);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file - 1, black_knight);
 					}
 					else // the pawn is capturing without promotion
 					{
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file - 1);
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file - 1);
 					}
 				}
 				// check for en passant
 				if (rank == 4)
 				{
-					if (board.en_passant_file() == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file - 1);
-					else if (board.en_passant_file() == file + 1 && bounds_check(file + 1) && position.piece_at(rank, file + 1).is_pawn())
-						append_if_legal<move_type::pawn_other>(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file + 1);
+					if (parent_node.board.en_passant_file() == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file - 1);
+					else if (parent_node.board.en_passant_file() == file + 1 && bounds_check(file + 1) && position.piece_at(rank, file + 1).is_pawn())
+						append_if_legal<move_type::pawn_other>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file + 1);
 				}
 			}
 		}
 	}
-	template<typename boards_t, typename board_t>
-	void find_rook_moves(boards_t& child_boards, const board_t& board, const position& position, const rank rank, const file file,
+	template<typename nodes_t, typename parent_node_t>
+	void find_rook_moves(nodes_t& child_nodes, const parent_node_t& parent_node, const position& position, const rank rank, const file file,
 						 const size_t king_index, is_king_in_check_fn check_fn)
 	{
-		constexpr color_t color_to_move = board_t::color_to_move();
+		constexpr color_t color_to_move = parent_node_t::color_to_move();
 
 		// rank descending
 		for (chess::rank end_rank = rank - 1; end_rank >= 0; --end_rank)
@@ -421,14 +422,14 @@ namespace chess
 
 			if (position.piece_at(end_rank, file).is_empty()) // if the square is empty, the rook can move here
 			{
-				append_if_legal<move_type::rook>(child_boards, position, king_index, check_fn, board, position, rank, file, end_rank, file);
+				append_if_legal<move_type::rook>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, end_rank, file);
 				continue; // keep searching in the current direction
 			}
 			// if the rook has encountered an enemy piece
 			else if (position.piece_at(end_rank, file).is_opposing_color(color_to_move))
 			{
 				// the rook can capture...
-				append_if_legal<move_type::rook>(child_boards, position, king_index, check_fn, board, position, rank, file, end_rank, file);
+				append_if_legal<move_type::rook>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, end_rank, file);
 				break; // ...but the rook cannot keep moving
 			}
 			else break; // the rook cannot move into a friendly piece; stop searching this way
@@ -441,12 +442,12 @@ namespace chess
 
 			if (position.piece_at(end_rank, file).is_empty())
 			{
-				append_if_legal<move_type::rook>(child_boards, position, king_index, check_fn, board, position, rank, file, end_rank, file);
+				append_if_legal<move_type::rook>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, end_rank, file);
 				continue;
 			}
 			else if (position.piece_at(end_rank, file).is_opposing_color(color_to_move))
 			{
-				append_if_legal<move_type::rook>(child_boards, position, king_index, check_fn, board, position, rank, file, end_rank, file);
+				append_if_legal<move_type::rook>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, end_rank, file);
 				break;
 			}
 			else break;
@@ -459,12 +460,12 @@ namespace chess
 
 			if (position.piece_at(rank, end_file).is_empty())
 			{
-				append_if_legal<move_type::rook>(child_boards, position, king_index, check_fn, board, position, rank, file, rank, end_file);
+				append_if_legal<move_type::rook>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank, end_file);
 				continue;
 			}
 			else if (position.piece_at(rank, end_file).is_opposing_color(color_to_move))
 			{
-				append_if_legal<move_type::rook>(child_boards, position, king_index, check_fn, board, position, rank, file, rank, end_file);
+				append_if_legal<move_type::rook>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank, end_file);
 				break;
 			}
 			else break;
@@ -477,22 +478,22 @@ namespace chess
 
 			if (position.piece_at(rank, end_file).is_empty())
 			{
-				append_if_legal<move_type::rook>(child_boards, position, king_index, check_fn, board, position, rank, file, rank, end_file);
+				append_if_legal<move_type::rook>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank, end_file);
 				continue;
 			}
 			else if (position.piece_at(rank, end_file).is_opposing_color(color_to_move))
 			{
-				append_if_legal<move_type::rook>(child_boards, position, king_index, check_fn, board, position, rank, file, rank, end_file);
+				append_if_legal<move_type::rook>(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank, end_file);
 				break;
 			}
 			else break;
 		}
 	}
-	template<typename boards_t, typename board_t>
-	void find_bishop_moves(boards_t& child_boards, const board_t& board, const position& position, const rank rank, const file file,
+	template<typename nodes_t, typename parent_node_t>
+	void find_bishop_moves(nodes_t& child_nodes, const parent_node_t& parent_node, const position& position, const rank rank, const file file,
 						   const size_t king_index, is_king_in_check_fn check_fn)
 	{
-		constexpr color_t color_to_move = board_t::color_to_move();
+		constexpr color_t color_to_move = parent_node_t::color_to_move();
 
 		// working diagonally (rank and file descending)
 		for (int offset = 1; offset < 8; ++offset)
@@ -504,13 +505,13 @@ namespace chess
 			if (position.piece_at(rank - offset, file - offset).is_empty())
 			{
 				// the bishop can move here
-				append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank - offset, file - offset);
+				append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - offset, file - offset);
 				continue; // keep searching in this direction
 			}
 			// if the square is occupied by an enemy piece, the bishop can capture it
 			else if (position.piece_at(rank - offset, file - offset).is_opposing_color(color_to_move))
 			{
-				append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank - offset, file - offset);
+				append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - offset, file - offset);
 				// the bishop made a capture, stop searching in this direction
 				break;
 			}
@@ -525,12 +526,12 @@ namespace chess
 
 			if (position.piece_at(rank - offset, file + offset).is_empty())
 			{
-				append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank - offset, file + offset);
+				append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - offset, file + offset);
 				continue;
 			}
 			else if (position.piece_at(rank - offset, file + offset).is_opposing_color(color_to_move))
 			{
-				append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank - offset, file + offset);
+				append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - offset, file + offset);
 				break;
 			}
 			else break;
@@ -543,12 +544,12 @@ namespace chess
 
 			if (position.piece_at(rank + offset, file - offset).is_empty())
 			{
-				append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank + offset, file - offset);
+				append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + offset, file - offset);
 				continue;
 			}
 			else if (position.piece_at(rank + offset, file - offset).is_opposing_color(color_to_move))
 			{
-				append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank + offset, file - offset);
+				append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + offset, file - offset);
 				break;
 			}
 			else break;
@@ -561,62 +562,62 @@ namespace chess
 
 			if (position.piece_at(rank + offset, file + offset).is_empty())
 			{
-				append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank + offset, file + offset);
+				append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + offset, file + offset);
 				continue;
 			}
 			else if (position.piece_at(rank + offset, file + offset).is_opposing_color(color_to_move))
 			{
-				append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank + offset, file + offset);
+				append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + offset, file + offset);
 				break;
 			}
 			else break;
 		}
 	}
-	template<typename boards_t, typename board_t>
-	void find_knight_moves(boards_t& child_boards, const board_t& board, const position& position, const rank rank, const file file,
+	template<typename nodes_t, typename parent_node_t>
+	void find_knight_moves(nodes_t& child_nodes, const parent_node_t& parent_node, const position& position, const rank rank, const file file,
 						   const size_t king_index, is_king_in_check_fn check_fn)
 	{
-		constexpr color_t color_to_move = board_t::color_to_move();
+		constexpr color_t color_to_move = parent_node_t::color_to_move();
 
 		if (bounds_check(rank - 2, file + 1) &&
 			!(position.piece_at(rank - 2, file + 1).is_occupied() && position.piece_at(rank - 2, file + 1).is_color(color_to_move)))
-			append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 2, file + 1);
+			append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 2, file + 1);
 		if (bounds_check(rank - 1, file + 2) &&
 			!(position.piece_at(rank - 1, file + 2).is_occupied() && position.piece_at(rank - 1, file + 2).is_color(color_to_move)))
-			append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file + 2);
+			append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file + 2);
 
 		if (bounds_check(rank + 1, file + 2) &&
 			!(position.piece_at(rank + 1, file + 2).is_occupied() && position.piece_at(rank + 1, file + 2).is_color(color_to_move)))
-			append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file + 2);
+			append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file + 2);
 		if (bounds_check(rank + 2, file + 1) &&
 			!(position.piece_at(rank + 2, file + 1).is_occupied() && position.piece_at(rank + 2, file + 1).is_color(color_to_move)))
-			append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 2, file + 1);
+			append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 2, file + 1);
 
 		if (bounds_check(rank + 2, file - 1) &&
 			!(position.piece_at(rank + 2, file - 1).is_occupied() && position.piece_at(rank + 2, file - 1).is_color(color_to_move)))
-			append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 2, file - 1);
+			append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 2, file - 1);
 		if (bounds_check(rank + 1, file - 2) &&
 			!(position.piece_at(rank + 1, file - 2).is_occupied() && position.piece_at(rank + 1, file - 2).is_color(color_to_move)))
-			append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank + 1, file - 2);
+			append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank + 1, file - 2);
 
 		if (bounds_check(rank - 1, file - 2) &&
 			!(position.piece_at(rank - 1, file - 2).is_occupied() && position.piece_at(rank - 1, file - 2).is_color(color_to_move)))
-			append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 1, file - 2);
+			append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 1, file - 2);
 		if (bounds_check(rank - 2, file - 1) &&
 			!(position.piece_at(rank - 2, file - 1).is_occupied() && position.piece_at(rank - 2, file - 1).is_color(color_to_move)))
-			append_if_legal(child_boards, position, king_index, check_fn, board, position, rank, file, rank - 2, file - 1);
+			append_if_legal(child_nodes, parent_node, position, king_index, check_fn, parent_node.board, position, rank, file, rank - 2, file - 1);
 	}
-	template<typename boards_t, typename board_t>
-	void find_queen_moves(boards_t& child_boards, const board_t& board, const position& position, const rank rank, const file file,
+	template<typename nodes_t, typename parent_node_t>
+	void find_queen_moves(nodes_t& child_nodes, const parent_node_t& parent_node, const position& position, const rank rank, const file file,
 						  const size_t king_index, is_king_in_check_fn check_fn)
 	{
-		find_rook_moves(child_boards, board, position, rank, file, king_index, check_fn);
-		find_bishop_moves(child_boards, board, position, rank, file, king_index, check_fn);
+		find_rook_moves(child_nodes, parent_node, position, rank, file, king_index, check_fn);
+		find_bishop_moves(child_nodes, parent_node, position, rank, file, king_index, check_fn);
 	}
-	template<typename boards_t, typename board_t>
-	void find_king_moves(boards_t& child_boards, const board_t& board, const position& position, const rank rank, const file file)
+	template<typename nodes_t, typename parent_node_t>
+	void find_king_moves(nodes_t& child_nodes, const parent_node_t& parent_node, const position& position, const rank rank, const file file)
 	{
-		constexpr color_t color_to_move = board_t::color_to_move();
+		constexpr color_t color_to_move = parent_node_t::color_to_move();
 
 		// iterate over all adjacent squares
 		for (int rank_d = -1; rank_d <= 1; ++rank_d)
@@ -628,23 +629,21 @@ namespace chess
 					!(position.piece_at(rank + rank_d, file + file_d).is_occupied() &&
 					  position.piece_at(rank + rank_d, file + file_d).is_color(color_to_move)))
 				{
-					append_if_legal<move_type::king>(child_boards, position, to_index(rank + rank_d, file + file_d), &is_king_in_check<check_type::do_all>,
-													 board, position, rank, file, rank + rank_d, file + file_d);
+					append_if_legal<move_type::king>(child_nodes, parent_node, position, to_index(rank + rank_d, file + file_d), &is_king_in_check<check_type::do_all>,
+													 parent_node.board, position, rank, file, rank + rank_d, file + file_d);
 				}
 			}
 		}
 
 		const piece& king = position.piece_at(rank, file);
 
-		using other_board_t = board_t::other_board_t;
-
-		if ((king.is_white() && board.white_can_castle_ks()) ||
-			(king.is_black() && board.black_can_castle_ks()))
+		if ((king.is_white() && parent_node.board.white_can_castle_ks()) ||
+			(king.is_black() && parent_node.board.black_can_castle_ks()))
 		{
 			// If white can castle kingside, we already know the king and rook are in place.
 			if (position.piece_at(rank, file + 1).is_empty() && // Check if the squares in between are empty.
 				position.piece_at(rank, file + 2).is_empty() &&
-				!is_king_in_check(board, position, king, rank, file)) // Check if the king is in check now...
+				!is_king_in_check(parent_node.board, position, king, rank, file)) // Check if the king is in check now...
 			{
 				chess::position temp{};
 				make_move(temp, position, rank, file, rank, file + 1); // ...on his way...
@@ -654,20 +653,20 @@ namespace chess
 					if (!is_king_in_check<check_type::do_all>(temp, king, rank, file + 2))
 					{
 						append_if_legal<move_type::king>(
-							child_boards, position, to_index(rank, file + 2), &is_king_in_check<check_type::do_all>,
-							board, position, rank, file, rank, file + 2); // the board constructor detects a castle and moves both pieces
+							child_nodes, parent_node, position, to_index(rank, file + 2), &is_king_in_check<check_type::do_all>,
+							parent_node.board, position, rank, file, rank, file + 2); // the board constructor detects a castle and moves both pieces
 					}
 				}
 			}
 		}
 
-		if ((king.is_white() && board.white_can_castle_qs()) || // (same logic as above)
-			(king.is_black() && board.black_can_castle_qs()))
+		if ((king.is_white() && parent_node.board.white_can_castle_qs()) || // (same logic as above)
+			(king.is_black() && parent_node.board.black_can_castle_qs()))
 		{
 			if (position.piece_at(rank, file - 1).is_empty() &&
 				position.piece_at(rank, file - 2).is_empty() &&
 				position.piece_at(rank, file - 3).is_empty() && // we need to check that this square is empty for the rook to move through, but no check test is needed
-				!is_king_in_check(board, position, king, rank, file))
+				!is_king_in_check(parent_node.board, position, king, rank, file))
 			{
 				chess::position temp{};
 				make_move(temp, position, rank, file, rank, file - 1);
@@ -677,8 +676,8 @@ namespace chess
 					if (!is_king_in_check<check_type::do_all>(temp, king, rank, file - 2))
 					{
 						append_if_legal<move_type::king>(
-							child_boards, position, to_index(rank, file - 2), &is_king_in_check<check_type::do_all>,
-							board, position, rank, file, rank, file - 2);
+							child_nodes, parent_node, position, to_index(rank, file - 2), &is_king_in_check<check_type::do_all>,
+							parent_node.board, position, rank, file, rank, file - 2);
 					}
 				}
 			}
@@ -740,31 +739,37 @@ namespace chess
 		return is_king_in_check(board, position, position.piece_at(index), index / 8, index % 8);
 	}
 
-	template <move_type move_type, typename boards_t, typename... board_args>
-	void append_if_legal(boards_t& child_boards, const position& position, const size_t king_index,
+	template <move_type move_type, typename nodes_t, typename parent_node_t, typename... board_args>
+	void append_if_legal(nodes_t& child_nodes, const parent_node_t& parent_node, const position& parent_position, const size_t king_index,
 						 is_king_in_check_fn check_fn,
 						 board_args... args)
 	{
-		using board_t = boards_t::value_type;
-		constexpr piece king = detail::king | board_t::other_color();
+		using child_node_t = nodes_t::value_type;
+		using child_board_t = child_node_t::board_t;
+		constexpr piece king = detail::king | parent_node_t::color_to_move();
 
-		const board_t new_board = board_t::template make_board<move_type>(std::forward<board_args>(args)...);
+		const child_board_t child_board = child_board_t::template make_board<move_type>(std::forward<board_args>(args)...);
 
 		chess::position child_position{};
-		make_move(child_position, position, new_board);
+		make_move(child_position, parent_position, child_board);
 
-		if (!check_fn(child_position, king, king_index / 8, king_index % 8))
-		{
-			child_boards.push_back(new_board);
-		}
+		// if the king is in check, bail now
+		if (check_fn(child_position, king, king_index / 8, king_index % 8)) return;
+
+		child_node_t child_node(child_board);
+
+		// generate incremental static eval
+		child_node.generate_incremental_static_eval(parent_position, parent_node.get_static_eval(), child_board);
+
+		child_nodes.push_back(child_node);
 	}
 
-	template <typename boards_t, typename... board_args>
-	void append_if_legal(boards_t& child_boards, const position& position, const size_t king_index,
+	template <typename nodes_t, typename parent_node_t, typename... board_args>
+	void append_if_legal(nodes_t& child_nodes, const parent_node_t& parent_node, const position& parent_position, const size_t king_index,
 						 is_king_in_check_fn check_fn,
 						 board_args... args)
 	{
-		append_if_legal<move_type::other>(child_boards, position, king_index, check_fn,
+		append_if_legal<move_type::other>(child_nodes, parent_node, parent_position, king_index, check_fn,
 										  std::forward<board_args>(args)...);
 	}
 
@@ -801,17 +806,19 @@ namespace chess
 		return false;
 	}
 
-	template<typename board_t>
-	auto& generate_child_boards(board_t& board, const position& position)
+	template<typename node_t>
+	auto& generate_child_boards(node_t& node, const position& position)
 	{
-		static std::vector<typename board_t::other_board_t> child_boards;
-		child_boards.clear();
+		using board_t = typename node_t::board_t;
+
+		static std::vector<typename node_t::other_node_t> child_nodes;
+		child_nodes.clear();
 
 		constexpr color_t color_to_move = board_t::color_to_move();
 
 		rank last_moved_end_rank{};
 		file last_moved_end_file{};
-		const piece last_moved_piece = get_last_moved_info(board, last_moved_end_rank, last_moved_end_file);
+		const piece last_moved_piece = get_last_moved_info(node.board, last_moved_end_rank, last_moved_end_file);
 		const size_t king_index = find_king_index(position, color_to_move);
 
 		// Filter which types of checks we need to look for during move generation,
@@ -853,41 +860,41 @@ namespace chess
 				{
 					if (position.piece_at(rank, file).is_pawn())
 					{
-						find_pawn_moves(child_boards, board, position, rank, file, king_index, check_fn);
+						find_pawn_moves(child_nodes, node, position, rank, file, king_index, check_fn);
 					}
 					else if (position.piece_at(rank, file).is_rook())
 					{
-						find_rook_moves(child_boards, board, position, rank, file, king_index, check_fn);
+						find_rook_moves(child_nodes, node, position, rank, file, king_index, check_fn);
 					}
 					else if (position.piece_at(rank, file).is_bishop())
 					{
-						find_bishop_moves(child_boards, board, position, rank, file, king_index, check_fn);
+						find_bishop_moves(child_nodes, node, position, rank, file, king_index, check_fn);
 					}
 					else if (position.piece_at(rank, file).is_knight())
 					{
-						find_knight_moves(child_boards, board, position, rank, file, king_index, check_fn);
+						find_knight_moves(child_nodes, node, position, rank, file, king_index, check_fn);
 					}
 					else if (position.piece_at(rank, file).is_queen())
 					{
-						find_queen_moves(child_boards, board, position, rank, file, king_index, check_fn);
+						find_queen_moves(child_nodes, node, position, rank, file, king_index, check_fn);
 					}
 					else if (position.piece_at(rank, file).is_king())
 					{
-						find_king_moves(child_boards, board, position, rank, file);
+						find_king_moves(child_nodes, node, position, rank, file);
 					}
 				} // end if piece can move
 			}
 		}
 
 		// If there are no legal moves, record the result
-		if (child_boards.size() == 0)
+		if (child_nodes.size() == 0)
 		{
-			if (is_king_in_check(board, position, color_to_move))
-				board.set_result((color_to_move == white) ? result::black_wins_by_checkmate : result::white_wins_by_checkmate);
+			if (is_king_in_check(node.board, position, color_to_move))
+				node.board.set_result((color_to_move == white) ? result::black_wins_by_checkmate : result::white_wins_by_checkmate);
 			else
-				board.set_result(result::draw_by_stalemate);
+				node.board.set_result(result::draw_by_stalemate);
 		}
 
-		return child_boards;
+		return child_nodes;
 	}
 }
