@@ -80,13 +80,27 @@ namespace chess
 				}
 			}
 
-			std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
+			if (depth == 1)
 			{
-				if constexpr (node.white_to_move())
-					return a.get_eval() > b.get_eval();
-				else
-					return a.get_eval() < b.get_eval();
-			});
+				// assume all of our children are new, and only sort by static eval
+				std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
+				{
+					if constexpr (node.white_to_move())
+						return a.get_static_eval() > b.get_static_eval();
+					else
+						return a.get_static_eval() < b.get_static_eval();
+				});
+			}
+			else
+			{
+				std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
+				{
+					if constexpr (node.white_to_move())
+						return a.get_eval() > b.get_eval();
+					else
+						return a.get_eval() < b.get_eval();
+				});
+			}
 
 			eval_type node_eval_type = (node.white_to_move() ? eval_type::alpha : eval_type::beta);
 
