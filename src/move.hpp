@@ -45,7 +45,7 @@ namespace chess
 		else if (parent.piece_at(start_idx).is_king())
 		{
 			// ...and it is castling
-			if (abs(file{ start_file - end_file }.value()) > 1)
+			if (diff(start_file, end_file) > 1)
 			{
 				if (start_file < end_file) // kingside castle
 				{
