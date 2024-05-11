@@ -10,7 +10,7 @@ namespace chess
 		constexpr size_t max_ply = 10;
 		static std::array<position, max_ply + 1> positions{};
 
-		static chess::transposition_table tt;
+		static chess::tt::transposition_table tt;
 
 		template<typename node_t>
 		void make_move(const node_t& current_node, const size_t ply)
@@ -21,9 +21,11 @@ namespace chess
 		template<typename node_t>
 		eval_t alpha_beta(node_t& node, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
 		{
+			using eval_type = tt::eval_type;
+
 			make_move(node, ply);
 
-			const tt_key key = make_key(positions[ply], node.board);
+			const tt::key key = tt::make_key(positions[ply], node.board);
 
 			{
 				eval_t eval = 0;
@@ -63,7 +65,7 @@ namespace chess
 			});
 
 			eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
-			eval_type eval_type = (node.white_to_move() ? eval_type::alpha : eval_type::beta);
+			eval_type node_eval_type = (node.white_to_move() ? eval_type::alpha : eval_type::beta);
 
 			for (auto& child : node.children)
 			{
@@ -89,7 +91,7 @@ namespace chess
 					if (eval > alpha)
 					{
 						alpha = eval;
-						eval_type = eval_type::exact;
+						node_eval_type = eval_type::exact;
 					}
 				}
 				else
@@ -107,12 +109,12 @@ namespace chess
 					if (eval < beta)
 					{
 						beta = eval;
-						eval_type = eval_type::exact;
+						node_eval_type = eval_type::exact;
 					}
 				}
 			}
 
-			tt.store(key, depth, eval_type, eval);
+			tt.store(key, depth, node_eval_type, eval);
 			node.set_eval(eval);
 			return eval;
 		}

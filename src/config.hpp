@@ -2,9 +2,16 @@
 
 #include <stdint.h>
 
-namespace chess::config
+namespace chess
 {
-	static constexpr size_t engine_target_depth = 8;
+	namespace config
+	{
+		static constexpr size_t engine_target_depth = 8;
+	}
 
-	static constexpr size_t tt_size_in_mb = 1024;
+	namespace tt::config
+	{
+		static constexpr size_t size_in_mb = 1024;
+		static constexpr bool require_exact_depth_match = false;
+	}
 }
