@@ -117,11 +117,10 @@ namespace chess::tt
 	class transposition_table
 	{
 	private:
-		using table_t = std::array<entry, detail::tt_size_in_entries>;
-		std::unique_ptr<table_t> table;
+		std::vector<entry> table;
 
 	public:
-		transposition_table() : table{ std::make_unique<table_t>() } {}
+		transposition_table() : table{ detail::tt_size_in_entries, entry{} } {}
 
 		void store(const key key, const depth_t eval_depth, const eval_type eval_type, const eval_t eval)
 		{
@@ -173,11 +172,11 @@ namespace chess::tt
 	private:
 		const entry& get_entry(const key key) const
 		{
-			return (*table)[key & detail::key_mask];
+			return table[key & detail::key_mask];
 		}
 		entry& get_entry(const key key)
 		{
-			return (*table)[key & detail::key_mask];
+			return table[key & detail::key_mask];
 		}
 	};
 }
