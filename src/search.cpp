@@ -40,6 +40,20 @@ namespace chess
 	{
 		using eval_type = tt::eval_type;
 
+		if (depth == 0)
+		{
+			++n_of_evals;
+			const eval_t eval = node.get_static_eval();
+
+			//if constexpr (config::verify_incremental_static_eval)
+			//	if (eval != positions[ply].evaluate_position()) // requires make_move(...) above this point
+			//		std::cout << "Incremental and generated static evals mismatch\n";
+
+			//tt.store(key, depth, eval_type::exact, eval);
+			node.set_eval(eval);
+			return eval;
+		}
+
 		make_move(node, ply);
 
 		const tt::key key = tt::make_key(positions[ply], node.board);
@@ -51,20 +65,6 @@ namespace chess
 				node.set_eval(eval);
 				return eval;
 			}
-		}
-
-		if (depth == 0)
-		{
-			++n_of_evals;
-			const eval_t eval = node.get_static_eval();
-
-			if constexpr (config::verify_incremental_static_eval)
-				if (eval != positions[ply].evaluate_position())
-					std::cout << "Incremental and generated static evals mismatch\n";
-
-			tt.store(key, depth, eval_type::exact, eval);
-			node.set_eval(eval);
-			return eval;
 		}
 
 		if (!node.has_generated_children())
