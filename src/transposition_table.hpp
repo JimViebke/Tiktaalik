@@ -169,6 +169,13 @@ namespace chess::tt
 			return false;
 		}
 
+		bool simple_exact_probe(eval_t& eval, const key key) const
+		{
+			const entry& entry = get_entry(key);
+			eval = entry.eval;
+			return entry.key == key && entry.eval_type == eval_type::exact;
+		}
+
 	private:
 		const entry& get_entry(const key key) const
 		{
