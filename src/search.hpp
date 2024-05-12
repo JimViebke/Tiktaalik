@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include "node.hpp"
 #include "transposition_table.hpp"
 
@@ -16,6 +18,32 @@ namespace chess
 		void make_move(const node_t& current_node, const size_t ply)
 		{
 			make_move(positions[ply], positions[ply - 1], current_node.board);
+		}
+
+		template<bool white_to_move, typename child_nodes_t>
+		__forceinline void stable_sort_children(child_nodes_t& children, const depth_t depth)
+		{
+			if (depth == 1)
+			{
+				// assume all of our children are new, and only sort by static eval
+				std::stable_sort(children.begin(), children.end(), [](const auto& a, const auto& b)
+				{
+					if constexpr (white_to_move)
+						return a.get_static_eval() > b.get_static_eval();
+					else
+						return a.get_static_eval() < b.get_static_eval();
+				});
+			}
+			else
+			{
+				std::stable_sort(children.begin(), children.end(), [](const auto& a, const auto& b)
+				{
+					if constexpr (white_to_move)
+						return a.get_eval() > b.get_eval();
+					else
+						return a.get_eval() < b.get_eval();
+				});
+			}
 		}
 
 		template<typename node_t>
@@ -80,27 +108,7 @@ namespace chess
 				}
 			}
 
-			if (depth == 1)
-			{
-				// assume all of our children are new, and only sort by static eval
-				std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
-				{
-					if constexpr (node.white_to_move())
-						return a.get_static_eval() > b.get_static_eval();
-					else
-						return a.get_static_eval() < b.get_static_eval();
-				});
-			}
-			else
-			{
-				std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
-				{
-					if constexpr (node.white_to_move())
-						return a.get_eval() > b.get_eval();
-					else
-						return a.get_eval() < b.get_eval();
-				});
-			}
+			stable_sort_children<node.white_to_move()>(node.children, depth);
 
 			eval_type node_eval_type = (node.white_to_move() ? eval_type::alpha : eval_type::beta);
 
@@ -123,7 +131,6 @@ namespace chess
 						tt.store(key, depth, eval_type::beta, beta);
 						node.set_eval(beta);
 						return beta;
-						// break;
 					}
 					if (eval > alpha)
 					{
@@ -141,7 +148,6 @@ namespace chess
 						tt.store(key, depth, eval_type::alpha, alpha);
 						node.set_eval(alpha);
 						return alpha;
-						// break;
 					}
 					if (eval < beta)
 					{
