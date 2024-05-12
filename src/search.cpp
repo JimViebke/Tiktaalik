@@ -8,6 +8,9 @@ namespace chess
 
 		chess::tt::transposition_table tt;
 
+		size_t tt_hit = 0;
+		size_t tt_miss = 0;
+
 		template<bool white_to_move, typename child_nodes_t>
 		__forceinline void stable_sort_children(child_nodes_t& children, const depth_t depth)
 		{
@@ -94,6 +97,10 @@ namespace chess
 				const bool hit = tt.probe(cached_eval, child_key, 0, alpha, beta); // call with 0 (no depth requirement)
 				//if (hit) std::cout << "tt hit for sorting hint\n";
 				node.set_eval(hit ? cached_eval : eval);
+				if (hit)
+					++tt_hit;
+				else
+					++tt_miss;
 			}
 		}
 

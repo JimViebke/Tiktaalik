@@ -120,11 +120,17 @@ namespace chess::tt
 		std::vector<entry> table;
 
 	public:
+		size_t occupied_entries = 0;
+		size_t all_stores = 0;
+
 		transposition_table() : table{ detail::tt_size_in_entries, entry{} } {}
 
 		void store(const key key, const depth_t eval_depth, const eval_type eval_type, const eval_t eval)
 		{
 			entry& entry = get_entry(key);
+
+			++all_stores;
+			if (!entry.is_valid()) ++occupied_entries;
 
 			entry.key = key;
 			entry.eval_depth = eval_depth;

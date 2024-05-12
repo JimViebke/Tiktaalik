@@ -14,6 +14,8 @@ namespace chess
 		extern std::array<position, max_ply + 1> positions;
 
 		extern chess::tt::transposition_table tt;
+		extern size_t tt_hit;
+		extern size_t tt_miss;
 
 		template<typename node_t>
 		void make_move(const node_t& current_node, const size_t ply)
