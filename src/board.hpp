@@ -34,14 +34,6 @@ namespace chess
 		static constexpr size_t fifty_move_counter_bits = std::bit_width(50u * 2);
 		static constexpr size_t result_bits = 2;
 
-		// bitfield masks
-		static constexpr uint64_t moved_piece_mask = (1ull << moved_piece_bits) - 1;
-		static constexpr uint64_t square_mask = (1ull << square_bits) - 1;
-		static constexpr uint64_t en_passant_mask = (1ull << en_passant_bits) - 1;
-		static constexpr uint64_t castling_right_mask = (1ull << castling_right_bits) - 1;
-		static constexpr uint64_t fifty_move_counter_mask = (1ull << fifty_move_counter_bits) - 1;
-		static constexpr uint64_t result_mask = (1ull << result_bits) - 1;
-
 		// bitfield positions
 		static constexpr size_t moved_piece_offset = 0;
 		static constexpr size_t start_rank_offset = moved_piece_offset + moved_piece_bits; // the move that resulted in this position
@@ -55,6 +47,14 @@ namespace chess
 		static constexpr size_t black_can_castle_qs_offset = black_can_castle_ks_offset + castling_right_bits;
 		static constexpr size_t fifty_move_counter_offset = black_can_castle_qs_offset + castling_right_bits; // counts to 100 ply
 		static constexpr size_t result_offset = fifty_move_counter_offset + fifty_move_counter_bits;
+
+		// bitfield masks
+		static constexpr uint64_t moved_piece_mask = (1ull << moved_piece_bits) - 1;
+		static constexpr uint64_t square_mask = (1ull << square_bits) - 1;
+		static constexpr uint64_t en_passant_mask = (1ull << en_passant_bits) - 1;
+		static constexpr uint64_t castling_right_mask = (1ull << castling_right_bits) - 1;
+		static constexpr uint64_t fifty_move_counter_mask = (1ull << fifty_move_counter_bits) - 1;
+		static constexpr uint64_t result_mask = (1ull << result_bits) - 1;
 
 		// make sure the required bitfield size is what we expect
 		static_assert(result_bits + result_offset == 32);
