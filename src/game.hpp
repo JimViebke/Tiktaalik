@@ -579,7 +579,7 @@ namespace chess
 
 			std::cout << "depth " << engine_depth << ", " << n_of_evals << " evals, " << engine_time << " ms\n";
 			std::cout << "\ttt hit: " << detail::tt_hit << " tt miss: " << detail::tt_miss << '\n';
-			std::cout << "\toccupied_entries: " << detail::tt.occupied_entries << " all stores: " << detail::tt.all_stores << '\n';
+			std::cout << "\toccupied: " << detail::tt.occupied_entries << " insertions: " << detail::tt.insertions << " updates: " << detail::tt.updates << '\n';
 
 			detail::tt_hit = 0;
 			detail::tt_miss = 0;

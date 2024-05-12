@@ -121,7 +121,8 @@ namespace chess::tt
 
 	public:
 		size_t occupied_entries = 0;
-		size_t all_stores = 0;
+		size_t insertions = 0;
+		size_t updates = 0;
 
 		transposition_table() : table{ detail::tt_size_in_entries, entry{} } {}
 
@@ -129,8 +130,13 @@ namespace chess::tt
 		{
 			entry& entry = get_entry(key);
 
-			++all_stores;
-			if (!entry.is_valid()) ++occupied_entries;
+			if (!entry.is_valid())
+				++occupied_entries;
+
+			if (key != entry.key)
+				++insertions;
+			else
+				++updates;
 
 			entry.key = key;
 			entry.eval_depth = eval_depth;
