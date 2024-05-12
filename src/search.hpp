@@ -40,7 +40,7 @@ namespace chess
 			{
 				// generate the child position
 				detail::make_move(child, 1);
-				// generate the child's zobrish hash
+				// generate the child's zobrist hash
 				const tt::key child_key = tt::make_key(detail::positions[1], child.board);
 				// set the node's eval to the cached eval, regardless of depth, or min/max if unknown
 				eval_t cached_eval = 0;
