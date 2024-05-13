@@ -107,6 +107,11 @@ namespace chess
 		bool has_static_eval() const { return node_mask & generated_static_eval; }
 
 		void generate_child_boards(const position& position);
+		void clear_node()
+		{
+			children.clear();
+			clear_has_generated_children();
+		}
 
 		bool is_terminal() const
 		{

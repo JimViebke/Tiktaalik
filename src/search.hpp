@@ -23,6 +23,51 @@ namespace chess
 			make_move(positions[ply], positions[ply - 1], current_node.board);
 		}
 
+		template<bool white_to_move, typename child_nodes_t>
+		__forceinline void stable_sort_children(child_nodes_t& children)
+		{
+			std::stable_sort(children.begin(), children.end(), [](const auto& a, const auto& b)
+			{
+				if constexpr (white_to_move)
+					return a.get_eval() > b.get_eval();
+				else
+					return a.get_eval() < b.get_eval();
+			});
+		}
+
+		template<typename node_t>
+		void order_moves(node_t& node, const size_t ply, const depth_t depth)
+		{
+			if constexpr (tt::config::use_tt_move_ordering)
+			{
+				if (depth > 1)
+				{
+					for (auto& child : node.children)
+					{
+						detail::make_move(child, ply);
+						const tt::key child_key = tt::make_key(positions[ply], child.board);
+
+						eval_t cached_eval = 0;
+						const bool hit = detail::tt.simple_exact_probe(cached_eval, child_key);
+						if (hit)
+							++detail::tt_hit;
+						else
+							++detail::tt_miss;
+						child.set_eval(hit ? cached_eval : child.get_static_eval());
+					}
+				}
+				else // don't probe the TT for leaf nodes
+				{
+					for (auto& child : node.children)
+					{
+						child.set_eval(child.get_static_eval());
+					}
+				}
+			}
+
+			stable_sort_children<node.white_to_move()>(node.children);
+		}
+
 		template<typename node_t>
 		eval_t alpha_beta(node_t& node, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals);
 	}
@@ -34,37 +79,10 @@ namespace chess
 		eval_t beta = eval::eval_max;
 		eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
 
-		if constexpr (tt::config::use_tt_move_ordering)
-		{
-			for (auto& child : node.children)
-			{
-				// generate the child position
-				detail::make_move(child, 1);
-				// generate the child's zobrist hash
-				const tt::key child_key = tt::make_key(detail::positions[1], child.board);
-				// set the node's eval to the cached eval, regardless of depth, or min/max if unknown
-				eval_t cached_eval = 0;
-				const bool hit = detail::tt.probe(cached_eval, child_key, 0, alpha, beta); // call with 0 (no depth requirement)
-				// if (hit) std::cout << "tt hit for sorting hint\n";
-				node.set_eval(hit ? cached_eval : eval);
-			}
-		}
+		node.clear_node();
+		node.generate_child_boards(detail::positions[0]);
 
-		if (node.has_generated_children())
-		{
-			std::stable_sort(node.children.begin(), node.children.end(), [](const auto& a, const auto& b)
-			{
-				if constexpr (node.white_to_move())
-					return a.get_eval() > b.get_eval();
-				else
-					return a.get_eval() < b.get_eval();
-			});
-		}
-
-		// The passed node will usually already have all of its ply-1 children,
-		// but have this here for correctness.
-		if (!node.has_generated_children())
-			node.generate_child_boards(detail::positions[0]);
+		detail::order_moves(node, 1, depth);
 
 		// default to first move if one exists
 		typename node_t::other_node_t* best_move = (node.children.size() > 0) ? node.children.data() : nullptr;
