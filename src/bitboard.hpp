@@ -26,8 +26,8 @@ namespace chess
 		ymm1 = _mm256_cmpeq_epi8(ymm1, piece_mask); // high half first
 		ymm0 = _mm256_cmpeq_epi8(ymm0, piece_mask);
 		// extract 2x 32-bit bitmasks
-		const uint64_t mask_high = _mm256_movemask_epi8(ymm1); // high half first
-		const uint64_t mask_low = _mm256_movemask_epi8(ymm0);
+		const uint64_t mask_high = uint32_t(_mm256_movemask_epi8(ymm1)); // high half first
+		const uint64_t mask_low = uint32_t(_mm256_movemask_epi8(ymm0));
 		// merge 2x 32-bit bitmasks to 1x 64-bit bitmask
 		const uint64_t mask = (mask_high << 32) | mask_low;
 
