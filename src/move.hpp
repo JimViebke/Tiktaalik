@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "bitboard.hpp"
 #include "board.hpp"
 #include "node.hpp"
 #include "position.hpp"
@@ -705,37 +706,23 @@ namespace chess
 		return is_king_in_check<check_type::do_all>(position, king, rank, file);
 	}
 
-	inline size_t find_king_index(const position& position, const color_t check_color)
+	template<color_t check_color>
+	inline size_t find_king_index(const position& position)
 	{
-		static_assert(sizeof(piece) == 1);
-
-		// load the 64 bytes of the board into two ymm registers
-		uint256_t ymm0 = _mm256_loadu_si256((uint256_t*)position._position.data() + 0);
-		uint256_t ymm1 = _mm256_loadu_si256((uint256_t*)(position._position.data() + 32));
-
-		// broadcast the target piece (king | color) to all positions of a register
-		const uint256_t target_mask = _mm256_set1_epi8(detail::king | check_color);
-
-		// find the matching byte
-		ymm0 = _mm256_cmpeq_epi8(ymm0, target_mask);
-		ymm1 = _mm256_cmpeq_epi8(ymm1, target_mask);
-		// extract 2x 32-bit bitmasks
-		const uint64_t mask_low = _mm256_movemask_epi8(ymm0);
-		const uint64_t mask_high = _mm256_movemask_epi8(ymm1);
-		// merge 2x 32-bit bitmasks to 1x 64-bit bitmask
-		const uint64_t mask = (mask_high << 32) | mask_low;
-
 		// Scan for the position of the first set bit in the mask.
-		// tzcnt returns the width of the type (64) if a bit is not found.
-		// Assume that the board will always have a king of each color.
-		return _tzcnt_u64(mask);
+		// Assume that the board will always have a king of a given color.
+		return _tzcnt_u64(get_bitboard_for<check_color | detail::king>(position));
 	}
 
 	// This is only used by the GUI.
 	template<typename board_t>
 	bool is_king_in_check(const board_t& board, const position& position, const color_t king_color)
 	{
-		const size_t index = find_king_index(position, king_color);
+		size_t index = 0;
+		if (king_color == white)
+			index = find_king_index<white>(position);
+		else
+			index = find_king_index<black>(position);
 		return is_king_in_check(board, position, position.piece_at(index), index / 8, index % 8);
 	}
 
@@ -819,7 +806,7 @@ namespace chess
 		rank last_moved_end_rank{};
 		file last_moved_end_file{};
 		const piece last_moved_piece = get_last_moved_info(node.board, last_moved_end_rank, last_moved_end_file);
-		const size_t king_index = find_king_index(position, color_to_move);
+		const size_t king_index = find_king_index<color_to_move>(position);
 
 		// Filter which types of checks we need to look for during move generation,
 		// based on which piece (if any) is known to be attacking the king.
