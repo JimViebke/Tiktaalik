@@ -726,7 +726,7 @@ namespace chess
 		return is_king_in_check(board, position, position.piece_at(index), index / 8, index % 8);
 	}
 
-	template <move_type move_type, typename nodes_t, typename parent_node_t, typename... board_args>
+	template <move_type move_type = move_type::other, typename nodes_t, typename parent_node_t, typename... board_args>
 	void append_if_legal(nodes_t& child_nodes, const parent_node_t& parent_node, const position& parent_position, const size_t king_index,
 						 is_king_in_check_fn check_fn,
 						 board_args... args)
@@ -749,15 +749,6 @@ namespace chess
 		child_node.generate_incremental_static_eval(parent_position, parent_node.get_static_eval(), child_board);
 
 		child_nodes.push_back(child_node);
-	}
-
-	template <typename nodes_t, typename parent_node_t, typename... board_args>
-	void append_if_legal(nodes_t& child_nodes, const parent_node_t& parent_node, const position& parent_position, const size_t king_index,
-						 is_king_in_check_fn check_fn,
-						 board_args... args)
-	{
-		append_if_legal<move_type::other>(child_nodes, parent_node, parent_position, king_index, check_fn,
-										  std::forward<board_args>(args)...);
 	}
 
 	template<typename board_t>
