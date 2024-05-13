@@ -30,6 +30,7 @@
     <ClInclude Include="src\util\util.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\bitboard.cpp" />
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\node.cpp" />

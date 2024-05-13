@@ -9,6 +9,8 @@ namespace chess
 {
 	using bitboard = ::util::strong_alias<uint64_t, struct bitboard_tag>;
 
+	void print_bitboard(const bitboard bitboard);
+
 	template<piece_t piece>
 	__forceinline bitboard get_bitboard_for(const position& position)
 	{
