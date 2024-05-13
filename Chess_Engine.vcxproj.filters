@@ -79,5 +79,8 @@
     <ClCompile Include="src\search.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\position.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
