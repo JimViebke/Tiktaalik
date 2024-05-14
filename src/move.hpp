@@ -828,41 +828,12 @@ namespace chess
 			check_fn = &is_king_in_check<check_type::opponent_move_unknown>;
 		}
 
-		for (rank rank = 0; rank < 8; ++rank)
-		{
-			for (file file = 0; file < 8; ++file)
-			{
-				// if this piece can move
-				if (position.piece_at(rank, file).is_occupied() &&
-					position.piece_at(rank, file).is_color(color_to_move))
-				{
-					if (position.piece_at(rank, file).is_pawn())
-					{
-						find_pawn_moves(child_nodes, node, position, rank, file, king_index, check_fn);
-					}
-					else if (position.piece_at(rank, file).is_rook())
-					{
-						find_rook_moves(child_nodes, node, position, rank, file, king_index, check_fn);
-					}
-					else if (position.piece_at(rank, file).is_bishop())
-					{
-						find_bishop_moves(child_nodes, node, position, rank, file, king_index, check_fn);
-					}
-					else if (position.piece_at(rank, file).is_knight())
-					{
-						find_knight_moves(child_nodes, node, position, rank, file, king_index, check_fn);
-					}
-					else if (position.piece_at(rank, file).is_queen())
-					{
-						find_queen_moves(child_nodes, node, position, rank, file, king_index, check_fn);
-					}
-					else if (position.piece_at(rank, file).is_king())
-					{
-						find_king_moves(child_nodes, node, position, rank, file);
-					}
-				} // end if piece can move
-			}
-		}
+		find_moves_for<color_to_move | detail::pawn>(child_nodes, node, position, king_index, &find_pawn_moves<decltype(child_nodes), node_t>, check_fn);
+		find_moves_for<color_to_move | detail::knight>(child_nodes, node, position, king_index, &find_knight_moves<decltype(child_nodes), node_t>, check_fn);
+		find_moves_for<color_to_move | detail::bishop>(child_nodes, node, position, king_index, &find_bishop_moves<decltype(child_nodes), node_t>, check_fn);
+		find_moves_for<color_to_move | detail::rook>(child_nodes, node, position, king_index, &find_rook_moves<decltype(child_nodes), node_t>, check_fn);
+		find_moves_for<color_to_move | detail::queen>(child_nodes, node, position, king_index, &find_queen_moves<decltype(child_nodes), node_t>, check_fn);
+		find_king_moves(child_nodes, node, position, king_index / 8, king_index % 8);
 
 		// If there are no legal moves, record the result
 		if (child_nodes.size() == 0)

@@ -35,4 +35,19 @@ namespace chess
 
 		return mask;
 	}
+
+	template<piece_t piece, typename nodes_t, typename parent_node_t, typename generate_moves_fn_t, typename king_check_fn_t>
+	__forceinline void find_moves_for(nodes_t& child_nodes, const parent_node_t& parent_node, const position& position,
+									  const size_t king_index, generate_moves_fn_t generate_moves_fn, king_check_fn_t king_check_fn)
+	{
+		bitboard pieces = get_bitboard_for<piece>(position);
+
+		while (pieces)
+		{
+			const size_t piece_idx = _tzcnt_u64(pieces);
+			pieces = _blsr_u64(pieces);
+
+			generate_moves_fn(child_nodes, parent_node, position, piece_idx / 8, piece_idx % 8, king_index, king_check_fn);
+		}
+	}
 }
