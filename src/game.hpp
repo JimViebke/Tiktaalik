@@ -709,15 +709,12 @@ namespace chess
 		sf::Text right_overlay; // main text overlay
 		float right_overlay_scroll = 0.f;
 
-		color_t color_to_move = white; // the player to move, from root
 		root_v root; // move graph rooted on the current position
 		best_move_v best_move{}; // pointer to a ply-1 child
 
 		depth_t engine_depth = 0;
 		size_t n_of_evals = 0;
 		util::timepoint engine_time = 0;
-
-		// const color_t human_color = white;
 
 		sf::Texture wk_texture;
 		sf::Texture wq_texture;
