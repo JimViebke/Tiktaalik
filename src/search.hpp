@@ -10,8 +10,9 @@ namespace chess
 {
 	namespace detail
 	{
-		constexpr size_t max_ply = 10;
-		extern std::array<position, max_ply + 1> positions;
+		constexpr size_t max_ply = 256;
+		// [ply from root][n-th child]
+		extern std::array<std::array<position, 256>, max_ply> positions;
 
 		extern chess::tt::transposition_table tt;
 		extern size_t tt_hit;
@@ -80,7 +81,7 @@ namespace chess
 		eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
 
 		node.clear_node();
-		node.generate_child_boards(detail::positions[0]);
+		node.generate_child_boards(detail::positions[0][0]);
 
 		detail::order_moves(node, 1, depth);
 

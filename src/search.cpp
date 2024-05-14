@@ -4,7 +4,7 @@ namespace chess
 {
 	namespace detail
 	{
-		std::array<position, max_ply + 1> positions{};
+		std::array<std::array<position, 256>, max_ply> positions{};
 
 		chess::tt::transposition_table tt;
 
@@ -21,9 +21,9 @@ namespace chess
 		{
 			++n_of_evals;
 			const eval_t eval = node.get_static_eval();
-			//if constexpr (config::verify_incremental_static_eval)
-			//	if (eval != positions[ply].evaluate_position()) // requires make_move(...) above this point
-			//		std::cout << "Incremental and generated static evals mismatch\n";
+			if constexpr (config::verify_incremental_static_eval)
+				if (eval != positions[ply][0].evaluate_position()) // requires make_move(...) above this point
+					std::cout << "Incremental and generated static evals mismatch\n";
 
 			return eval;
 		}
@@ -40,7 +40,7 @@ namespace chess
 			}
 		}
 
-		node.generate_child_boards(positions[ply]);
+		node.generate_child_boards(positions[ply][0]);
 
 		if (node.is_terminal())
 		{
