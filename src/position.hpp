@@ -66,6 +66,7 @@ namespace chess
 	static_assert(sizeof(position) == 64 && alignof(position) == 64);
 
 	constexpr size_t max_ply = 256;
+	constexpr size_t max_n_of_moves = 256;
 	// [ply from root][n-th child]
-	extern std::array<std::array<position, 256>, max_ply> positions;
+	extern std::array<position, max_ply * max_n_of_moves> positions;
 }

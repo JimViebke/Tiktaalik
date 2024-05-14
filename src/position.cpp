@@ -36,5 +36,5 @@ namespace chess
 		}	
 	}
 
-	std::array<std::array<position, 256>, max_ply> positions{};
+	std::array<position, max_ply * max_n_of_moves> positions{};
 }
