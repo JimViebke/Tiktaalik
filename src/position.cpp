@@ -35,4 +35,6 @@ namespace chess
 			if (i % 8 == 7) std::cout << '\n';
 		}	
 	}
+
+	std::array<std::array<position, 256>, max_ply> positions{};
 }

@@ -4,8 +4,6 @@ namespace chess
 {
 	namespace detail
 	{
-		std::array<std::array<position, 256>, max_ply> positions{};
-
 		chess::tt::transposition_table tt;
 
 		size_t tt_hit = 0;

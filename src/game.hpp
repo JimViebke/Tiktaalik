@@ -72,7 +72,7 @@ namespace chess
 	class Game
 	{
 	public:
-		Game() : root{ load_fen(start_pos, detail::positions[0][0]) }
+		Game() : root{ load_fen(start_pos, positions[0][0]) }
 		{
 			sf::ContextSettings settings;
 			settings.antialiasingLevel = 8;
@@ -97,14 +97,14 @@ namespace chess
 
 			if (auto white_root = std::get_if<node<white>>(&root))
 			{
-				white_root->generate_static_eval(detail::positions[0][0]);
-				white_root->generate_child_boards(detail::positions[0][0]);
+				white_root->generate_static_eval(positions[0][0]);
+				white_root->generate_child_boards(positions[0][0]);
 				best_move = white_root->children.data(); // can be null
 			}
 			else if (auto black_root = std::get_if<node<black>>(&root))
 			{
-				black_root->generate_static_eval(detail::positions[0][0]);
-				black_root->generate_child_boards(detail::positions[0][0]);
+				black_root->generate_static_eval(positions[0][0]);
+				black_root->generate_child_boards(positions[0][0]);
 				best_move = black_root->children.data(); // can be null
 			}
 			else
@@ -194,7 +194,7 @@ namespace chess
 		template<color_t color_to_move>
 		void on_click(const node<color_to_move>& root_node)
 		{
-			const position& root_position = detail::positions[0][0];
+			const position& root_position = positions[0][0];
 
 			/*
 			Typically, x increases to the right, and y increases downward.
@@ -250,7 +250,7 @@ namespace chess
 		void play_move(node<c1>& root_node, node<c2>& child_node)
 		{
 			// update the root position
-			make_move<c2>(detail::positions[0][0], detail::positions[0][0], child_node._board);
+			make_move<c2>(positions[0][0], positions[0][0], child_node._board);
 
 			// Move a ply-1 child node to become the root node.
 			// This preserves the relevant subset of the move graph.
@@ -444,7 +444,7 @@ namespace chess
 		{
 			using namespace detail;
 
-			const position& root_position = detail::positions[0][0];
+			const position& root_position = positions[0][0];
 
 			// As part of normalizing x/y vs rank/file, make this block unaware of rank/file, just x/y.
 
@@ -539,7 +539,7 @@ namespace chess
 			if (auto child_node = *std::get_if<typename node_t::other_node_t*>(&best_move))
 			{
 				ss << "Best move: ";
-				move_to_notation(ss, detail::positions[0][0], *child_node);
+				move_to_notation(ss, positions[0][0], *child_node);
 				ss << '\n' << std::fixed << std::setprecision(1) << float(child_node->get_eval()) / 100 << '\n';
 			}
 			ss << '\n';
@@ -547,7 +547,7 @@ namespace chess
 			ss << root_node.children.size() << " moves:\n";
 			for (const auto& child_node : root_node.children)
 			{
-				move_to_notation(ss, detail::positions[0][0], child_node);
+				move_to_notation(ss, positions[0][0], child_node);
 				ss << '\n';
 			}
 
@@ -632,9 +632,9 @@ namespace chess
 		void menu(auto& root_node, const std::string& command, const depth_t depth)
 		{
 			if (command == "perft")
-				root_node.perft(detail::positions[0][0], depth);
+				root_node.perft(positions[0][0], depth);
 			else if (command == "divide")
-				root_node.divide(detail::positions[0][0], depth);
+				root_node.divide(positions[0][0], depth);
 			else
 				std::cout << "Unknown command: " << command << '\n';
 		}
