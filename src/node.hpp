@@ -28,7 +28,6 @@ namespace chess
 		void generate_static_eval(const position& position)
 		{
 			static_eval = position.evaluate_position();
-			set_has_static_eval();
 		}
 
 		template<typename child_board_t>
@@ -94,17 +93,12 @@ namespace chess
 				static_eval -= eval::piece_eval(captured_piece);
 				static_eval -= eval::piece_square_eval(captured_piece, end_idx);
 			}
-
-			set_has_static_eval();
 		}
 
 		void set_eval(const eval_t set_eval) { eval = set_eval; }
 		eval_t get_eval() const { return eval; }
 
 		eval_t get_static_eval() const { return static_eval; }
-
-		bool has_generated_children() const { return node_mask & generated_children; }
-		bool has_static_eval() const { return node_mask & generated_static_eval; }
 
 		void generate_child_boards(const position& position);
 		void clear_node()
@@ -140,10 +134,10 @@ namespace chess
 		static constexpr node_mask_t generated_children = 1 << 0;
 		static constexpr node_mask_t generated_static_eval = 1 << 1;
 
+		bool has_generated_children() const { return node_mask & generated_children; }
+
 		void set_has_generated_children() { node_mask |= generated_children; }
 		void clear_has_generated_children() { node_mask &= ~generated_children; }
-
-		void set_has_static_eval() { node_mask |= generated_static_eval; }
 
 		eval_t eval = 0;
 		eval_t static_eval = 0;
