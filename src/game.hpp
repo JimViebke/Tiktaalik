@@ -51,6 +51,22 @@ namespace chess
 	const std::string kiwipete = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 0";
 	const std::string sicilian_defense = "rnbqkbnr/pp2pppp/3p4/2p5/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq d3 0 3";
 
+	const std::string colle_v_grau_M3 = "1k5r/pP3ppp/3p2b1/1BN1n3/1Q2P3/P1B5/KP3P1P/7q w - - 1 0";
+
+	const std::string yates_v_nimzowitsch_M4 = "8/k2r4/p7/2b1Bp2/P3p3/qp4R1/4QP2/1K6 b - - 0 1";
+	const std::string journoud_v_riviere_M4 = "r1bk3r/pppq1ppp/5n2/4N1N1/2Bp4/Bn6/P4PPP/4R1K1 w - - 1 0";
+	const std::string keres_v_salamanca_M4 = "7R/r1p1q1pp/3k4/1p1n1Q2/3N4/8/1PP2PPP/2B3K1 w - - 1 0";
+	const std::string meek_v_morphy_M4 = "Q7/p1p1q1pk/3p2rp/4n3/3bP3/7b/PP3PPK/R1B2R2 b - - 0 1";
+	const std::string topalow_v_kasparov_M4 = "4k2r/1R3R2/p3p1pp/4b3/1BnNr3/8/P1P5/5K2 w - - 1 0";
+	const std::string korchnoi_v_peterson_M4 = "r2r1n2/pp2bk2/2p1p2p/3q4/3PN1QP/2P3R1/P4PP1/5RK1 w - - 0 1";
+	const std::string agdestein_v_al_qudaimi_M4 = "3r1r2/1pp2p1k/p5pp/4P3/2nP3R/2P3QP/P1B1q1P1/5RK1 w - - 1 0";
+	const std::string giese_v_alekhine_M4 = "2k4r/ppp2p2/2b2B2/7p/6pP/2P1q1bP/PP3N2/R4QK1 b - - 0 1";
+
+	const std::string short_mate_test = "6k1/P6R/8/8/8/8/8/4K3 w - - 0 0";
+	const std::string two_rooks_endgame_w = "4k3/8/8/8/8/8/8/R3K2R w - - 0 0";
+	const std::string one_rook_endgame_w = "4k3/8/8/8/8/8/8/R3K3 w - - 0 0";
+	const std::string two_rooks_endgame_b = "r3k2r/8/8/8/8/8/8/4K3 b - - 0 0";
+
 	root_v load_fen(const std::string& fen, position& _position);
 
 	class Game
