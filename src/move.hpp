@@ -230,6 +230,14 @@ namespace chess
 		return false;
 	}
 
+	template<color_t check_color>
+	inline size_t find_king_index(const position& position)
+	{
+		// Scan for the position of the first set bit in the mask.
+		// Assume that the board will always have a king of a given color.
+		return _tzcnt_u64(get_bitboard_for<check_color | detail::king>(position));
+	}
+
 	// If the opponent isn't checking with a pawn, skip pawn checks.
 	// If the opponent isn't checking with a knight, skip knight checks.
 	enum class check_type
@@ -278,6 +286,38 @@ namespace chess
 		return false;
 	}
 	using is_king_in_check_fn = bool(*)(const position&, const piece, const rank, const file);
+
+	template<color_t color_to_move>
+	bool is_king_in_check(const board& board, const position& position, const piece king, const rank rank, const file file)
+	{
+		// If the last move is known, and a player is starting their turn, some piece checks can be skipped.
+		if (board.has_move<color_to_move>() && king.is_color(color_to_move))
+		{
+			const piece last_moved = board.last_moved_piece(position);
+
+			// Only look for pawn/knight/king checks if the last moved piece is a pawn/knight/king.
+			if (last_moved.is_pawn())
+				return is_king_in_check<check_type::do_pawn_checks>(position, king, rank, file);
+			else if (last_moved.is_knight())
+				return is_king_in_check<check_type::do_knight_checks>(position, king, rank, file);
+			else
+				return is_king_in_check<check_type::skip_pawn_and_knight_checks>(position, king, rank, file);
+		}
+
+		// We don't know what move created this position, or it is not the king's color's turn to move; do all checks.
+		return is_king_in_check<check_type::do_all>(position, king, rank, file);
+	}
+
+	// This is only used by the GUI.
+	inline bool is_king_in_check(const position& position, const color_t king_color)
+	{
+		size_t index = 0;
+		if (king_color == white)
+			index = find_king_index<white>(position);
+		else
+			index = find_king_index<black>(position);
+		return is_king_in_check<check_type::do_all>(position, position.piece_at(index), index / 8, index % 8);
+	}
 
 	template<typename nodes_t, typename parent_node_t>
 	void find_pawn_moves(nodes_t& child_nodes, const parent_node_t& parent_node, const position& position, const rank rank, const file file,
@@ -683,46 +723,6 @@ namespace chess
 				}
 			}
 		}
-	}
-
-	template<color_t color_to_move>
-	bool is_king_in_check(const board& board, const position& position, const piece king, const rank rank, const file file)
-	{
-		// If the last move is known, and a player is starting their turn, some piece checks can be skipped.
-		if (board.has_move<color_to_move>() && king.is_color(color_to_move))
-		{
-			const piece last_moved = board.last_moved_piece(position);
-
-			// Only look for pawn/knight/king checks if the last moved piece is a pawn/knight/king.
-			if (last_moved.is_pawn())
-				return is_king_in_check<check_type::do_pawn_checks>(position, king, rank, file);
-			else if (last_moved.is_knight())
-				return is_king_in_check<check_type::do_knight_checks>(position, king, rank, file);
-			else
-				return is_king_in_check<check_type::skip_pawn_and_knight_checks>(position, king, rank, file);
-		}
-
-		// We don't know what move created this position, or it is not the king's color's turn to move; do all checks.
-		return is_king_in_check<check_type::do_all>(position, king, rank, file);
-	}
-
-	template<color_t check_color>
-	inline size_t find_king_index(const position& position)
-	{
-		// Scan for the position of the first set bit in the mask.
-		// Assume that the board will always have a king of a given color.
-		return _tzcnt_u64(get_bitboard_for<check_color | detail::king>(position));
-	}
-
-	// This is only used by the GUI.
-	inline bool is_king_in_check(const position& position, const color_t king_color)
-	{
-		size_t index = 0;
-		if (king_color == white)
-			index = find_king_index<white>(position);
-		else
-			index = find_king_index<black>(position);
-		return is_king_in_check<check_type::do_all>(position, position.piece_at(index), index / 8, index % 8);
 	}
 
 	template <move_type move_type = move_type::other, typename nodes_t, typename parent_node_t, typename... board_args>
