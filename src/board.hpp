@@ -64,6 +64,7 @@ namespace chess
 		const uint32_t& bitfield() const { return *(uint32_t*)&board_state[0]; }
 
 	public:
+		board() { bitfield() = 0; }
 		explicit board(const bool w_castle_ks, const bool w_castle_qs, const bool b_castle_ks, const bool b_castle_qs,
 					   const file en_passant_file, const int8_t fifty_move_counter)
 		{
@@ -278,4 +279,6 @@ namespace chess
 			return position.piece_at(end_rank(), end_file());
 		}
 	};
+
+	extern std::array<board, positions_size> boards;
 }

@@ -14,12 +14,6 @@ namespace chess
 		extern size_t tt_hit;
 		extern size_t tt_miss;
 
-		template<typename node_t>
-		void make_move(const node_t& child_node, const size_t ply)
-		{
-			make_move<child_node.color_to_move()>(positions[ply][0], positions[ply - 1][0], child_node._board);
-		}
-
 		template<bool white_to_move, typename child_nodes_t>
 		__forceinline void stable_sort_children(child_nodes_t& children)
 		{
@@ -41,8 +35,7 @@ namespace chess
 				{
 					for (auto& child : node.children)
 					{
-						detail::make_move(child, ply);
-						const tt::key child_key = tt::make_key<child.color_to_move()>(positions[ply][0], child._board);
+						const tt::key child_key = tt::make_key<child.color_to_move()>(positions[child.index], child.get_board());
 
 						eval_t cached_eval = 0;
 						const bool hit = detail::tt.simple_exact_probe(cached_eval, child_key);
@@ -77,7 +70,7 @@ namespace chess
 		eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
 
 		node.clear_node();
-		node.generate_child_boards(positions[0][0]);
+		node.generate_child_boards(positions[0]);
 
 		detail::order_moves(node, 1, depth);
 

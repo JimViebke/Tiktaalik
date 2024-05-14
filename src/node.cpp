@@ -6,18 +6,13 @@ namespace chess
 	template<color_t color_to_move>
 	void node<color_to_move>::generate_child_boards(const position& position)
 	{
-		// Generate all ply-1 child nodes.
+		// Generate all immediate child nodes.
 		// If any child node exists, all exist.
 
-		// Skip generating child boards if they have already been generated
-		if (has_generated_children()) return;
+		clear_node(); // todo: remove me
+		children.reserve(40); // todo: remove me
 
-		const auto& child_boards = chess::generate_child_boards(*this, position);
-		children.reserve(child_boards.size());
-		for (const auto& child_board : child_boards)
-			children.emplace_back(child_board);
-
-		set_has_generated_children();
+		const size_t end_idx = chess::generate_child_boards(*this, position);
 	}
 
 	template<color_t color_to_move>
@@ -50,7 +45,6 @@ namespace chess
 			return;
 		}
 
-		// generate child boards if they don't exist already
 		generate_child_boards(position);
 
 		size_t total_nodes = 0;
@@ -64,7 +58,7 @@ namespace chess
 
 			if (last != node_counter.crend())
 			{
-				std::cout << node._board.move_to_string() << ": " << last->second << '\n';
+				std::cout << node.get_board().move_to_string() << ": " << last->second << '\n';
 				total_nodes += last->second;
 			}
 		}
@@ -88,7 +82,7 @@ namespace chess
 			for (auto& child : children)
 			{
 				position child_position{};
-				make_move<child.color_to_move()>(child_position, current_position, child._board);
+				make_move<child.color_to_move()>(child_position, current_position, boards[child.index]);
 				child.perft(child_position, depth + 1, max_depth, node_counter);
 			}
 		}

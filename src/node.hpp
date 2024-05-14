@@ -18,19 +18,24 @@ namespace chess
 		using other_node_t = node<other(color_to_move)>;
 
 		std::vector<other_node_t> children;
-		board _board;
+		size_t index = 0;
 
 		using node_mask_t = uint8_t;
 
-		explicit node(const board set_board) : _board(set_board) {}
+		explicit node(const size_t set_index) : index(set_index) {}
+
+		const board& get_board() const { return boards[index]; }
+		board& get_board() { return boards[index]; }
 
 		void generate_static_eval(const position& position)
 		{
 			static_eval = position.evaluate_position();
 		}
 
-		void generate_incremental_static_eval(const position& parent_position, const eval_t parent_static_eval, const board& child_board)
+		void generate_incremental_static_eval(const position& parent_position, const eval_t parent_static_eval)
 		{
+			const board& child_board = get_board();
+
 			const rank start_rank = child_board.start_rank();
 			const file start_file = child_board.start_file();
 			const rank end_rank = child_board.end_rank();
@@ -102,18 +107,17 @@ namespace chess
 		void clear_node()
 		{
 			children.clear();
-			clear_has_generated_children();
 		}
 
 		bool is_terminal() const
 		{
 			// Anything other than "unknown" is a terminal (end) state.
-			return _board.get_result() != result::unknown;
+			return get_board().get_result() != result::unknown;
 		}
 
 		eval_t terminal_eval()
 		{
-			const result result = _board.get_result();
+			const result result = get_board().get_result();
 			if (result == result::white_wins_by_checkmate)
 				eval = eval::eval_max;
 			else if (result == result::black_wins_by_checkmate)
@@ -129,18 +133,8 @@ namespace chess
 		void divide(const position& position, const depth_t max_depth);
 
 	private:
-		static constexpr node_mask_t generated_children = 1 << 0;
-		static constexpr node_mask_t generated_static_eval = 1 << 1;
-
-		bool has_generated_children() const { return node_mask & generated_children; }
-
-		void set_has_generated_children() { node_mask |= generated_children; }
-		void clear_has_generated_children() { node_mask &= ~generated_children; }
-
 		eval_t eval = 0;
 		eval_t static_eval = 0;
-
-		node_mask_t node_mask = 0;
 
 		// inner perft
 		void perft(const position& current_position,

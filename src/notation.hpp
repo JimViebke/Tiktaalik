@@ -17,7 +17,7 @@ namespace chess
 						  const position& parent_position,
 						  const child_node_t& child_node)
 	{
-		const std::string move = child_node._board.move_to_string();
+		const std::string move = child_node.get_board().move_to_string();
 		const auto start_file = char_to_file(move[0]);
 		const auto start_rank = char_to_rank(move[1]);
 
@@ -45,7 +45,7 @@ namespace chess
 		ss << move[2] << move[3];
 
 		position child_position{};
-		make_move<child_node.color_to_move()>(child_position, parent_position, child_node._board);
+		make_move<child_node.color_to_move()>(child_position, parent_position, child_node.get_board());
 
 		if (is_king_in_check(child_position, child_node_t::color_to_move()))
 		{
