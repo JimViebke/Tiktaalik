@@ -171,8 +171,8 @@ namespace chess
 		bool mouse_on_board() const
 		{
 			return
-				mouse_x > detail::board_x && mouse_x < detail::board_x + detail::board_size_px &&
-				mouse_y > detail::board_y && mouse_y < detail::board_y + detail::board_size_px;
+				mouse_x > int(detail::board_x) && mouse_x < int(detail::board_x + detail::board_size_px) &&
+				mouse_y > int(detail::board_y) && mouse_y < int(detail::board_y + detail::board_size_px);
 		}
 
 		template<color_t color_to_move>
@@ -321,6 +321,9 @@ namespace chess
 			sf::Event event;
 			while (window->pollEvent(event))
 			{
+				// supress warning "18 enumeration values not handled in switch"
+			#pragma clang diagnostic push
+			#pragma clang diagnostic ignored "-Wswitch"
 				switch (event.type)
 				{
 					case sf::Event::MouseMoved:
@@ -363,6 +366,7 @@ namespace chess
 						window->close();
 						break;
 				}
+			#pragma clang diagnostic pop
 			}
 		}
 
@@ -436,7 +440,7 @@ namespace chess
 					if (piece.is_empty()) continue;
 
 					// If the current piece is being dragged, don't draw it in the original position
-					if (dragging && file == dragging_from_x && rank == dragging_from_y)
+					if (dragging && file == int(dragging_from_x) && rank == int(dragging_from_y))
 						continue;
 
 					const float x_pos = board_x + float(file * tile_size_px);

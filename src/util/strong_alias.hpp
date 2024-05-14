@@ -22,16 +22,18 @@ namespace util
 
 		template <typename other>
 			requires std::is_arithmetic<other>::value
-		operator explicit other() const { return other(value()); }
+		operator other() const { return other(value()); }
 
 		constexpr bool operator==(const strong_alias& rhs) const { return value() == rhs.value(); }
 		constexpr bool operator<(const auto& rhs) const { return value() < rhs.value(); }
 		template<typename other>
 			requires (std::is_arithmetic<other>::value)
-		constexpr bool operator<(const other& rhs) const { return value() < rhs; }
+		constexpr bool operator<(const other& rhs) const { return value() < T(rhs); }
 		constexpr bool operator>(const auto& rhs) const { return rhs < value(); }
 		constexpr bool operator<=(const auto& rhs) const { return !(*this > rhs); }
 		constexpr bool operator>=(const auto& rhs) const { return !(*this < rhs); }
+
+		constexpr bool operator==(const auto& rhs) const { return value() == T(rhs); }
 
 		constexpr auto& operator++() { ++value(); return *this; }
 		constexpr auto operator++(int) { auto t = *this; operator++(); return t; }
@@ -45,6 +47,11 @@ namespace util
 		constexpr strong_alias operator*(const strong_alias& rhs) const { return value() * rhs.value(); }
 		constexpr strong_alias operator/(const strong_alias& rhs) const { return value() / rhs.value(); }
 		constexpr strong_alias operator%(const strong_alias& rhs) const { return value() % rhs.value(); }
+		constexpr strong_alias operator+(const auto& rhs) const { return value() + rhs; }
+		constexpr strong_alias operator-(const auto& rhs) const { return value() - rhs; }
+		constexpr strong_alias operator*(const auto& rhs) const { return value() * rhs; }
+		constexpr strong_alias operator/(const auto& rhs) const { return value() / rhs; }
+		constexpr strong_alias operator%(const auto& rhs) const { return value() % rhs; }
 
 		constexpr strong_alias& operator+=(const auto& rhs) { value() += rhs.value(); return *this; }
 		constexpr strong_alias& operator-=(const auto& rhs) { value() -= rhs.value(); return *this; }
@@ -55,6 +62,9 @@ namespace util
 		constexpr strong_alias operator&(const strong_alias& rhs) const { return value() & rhs.value(); }
 		constexpr strong_alias operator|(const strong_alias& rhs) const { return value() | rhs.value(); }
 		constexpr strong_alias operator^(const strong_alias& rhs) const { return value() ^ rhs.value(); }
+		constexpr strong_alias operator&(const auto& rhs) const { return value() & rhs; }
+		constexpr strong_alias operator|(const auto& rhs) const { return value() | rhs; }
+		constexpr strong_alias operator^(const auto& rhs) const { return value() ^ rhs; }
 
 		constexpr strong_alias& operator&=(const auto& rhs) { value() &= rhs.value(); return *this; }
 		constexpr strong_alias& operator|=(const auto& rhs) { value() |= rhs.value(); return *this; }
