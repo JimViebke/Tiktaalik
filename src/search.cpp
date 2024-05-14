@@ -30,7 +30,7 @@ namespace chess
 
 		make_move(node, ply);
 
-		const tt::key key = tt::make_key(positions[ply], node.board);
+		const tt::key key = tt::make_key<node.color_to_move()>(positions[ply][0], node._board);
 
 		{
 			eval_t eval = 0;

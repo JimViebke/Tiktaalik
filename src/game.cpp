@@ -93,13 +93,13 @@ namespace chess
 
 		if (color_to_move == white)
 		{
-			return node<white>{board<white>{white_can_castle_ks, white_can_castle_qs, black_can_castle_ks, black_can_castle_qs,
-				en_passant_file, fifty_move_counter}};
+			return node<white>{board{ white_can_castle_ks, white_can_castle_qs, black_can_castle_ks, black_can_castle_qs,
+				en_passant_file, fifty_move_counter }};
 		}
 		else
 		{
-			return node<black>{board<black>{white_can_castle_ks, white_can_castle_qs, black_can_castle_ks, black_can_castle_qs,
-				en_passant_file, fifty_move_counter}};
+			return node<black>{board{ white_can_castle_ks, white_can_castle_qs, black_can_castle_ks, black_can_castle_qs,
+				en_passant_file, fifty_move_counter }};
 		}
 	}
 }

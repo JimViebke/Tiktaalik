@@ -199,7 +199,7 @@ namespace chess
 			// Only allow dragging if we can find a legal move starting from the clicked square
 			for (const auto& child_node : root_node.children)
 			{
-				const std::string legal_move = child_node.board.move_to_string();
+				const std::string legal_move = child_node._board.move_to_string();
 				const file legal_move_x = char_to_file(legal_move[0]);
 				const rank legal_move_y = char_to_rank(legal_move[1]);
 
@@ -257,7 +257,7 @@ namespace chess
 			// Check that [from_x, from_y, to_x, to_y] is a legal move
 			for (auto& child_node : root_node.children)
 			{
-				const std::string legal_move = child_node.board.move_to_string();
+				const std::string legal_move = child_node._board.move_to_string();
 				const auto legal_start_x = char_to_file(legal_move[0]);
 				const auto legal_start_y = char_to_rank(legal_move[1]);
 				const auto legal_end_x = char_to_file(legal_move[2]);
@@ -454,7 +454,7 @@ namespace chess
 			{
 				for (const auto& child_node : root_node.children)
 				{
-					const std::string move = child_node.board.move_to_string();
+					const std::string move = child_node._board.move_to_string();
 					const auto move_x = char_to_file(move[0]);
 					const auto move_y = char_to_rank(move[1]);
 

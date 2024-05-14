@@ -64,7 +64,7 @@ namespace chess
 
 			if (last != node_counter.crend())
 			{
-				std::cout << node.board.move_to_string() << ": " << last->second << '\n';
+				std::cout << node._board.move_to_string() << ": " << last->second << '\n';
 				total_nodes += last->second;
 			}
 		}
@@ -88,7 +88,7 @@ namespace chess
 			for (auto& child : children)
 			{
 				position child_position{};
-				make_move(child_position, current_position, child.board);
+				make_move<child.color_to_move()>(child_position, current_position, child._board);
 				child.perft(child_position, depth + 1, max_depth, node_counter);
 			}
 		}

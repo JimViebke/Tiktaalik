@@ -16,22 +16,20 @@ namespace chess
 	{
 	public:
 		using other_node_t = node<other(color_to_move)>;
-		using board_t = board<color_to_move>;
 
 		std::vector<other_node_t> children;
-		board_t board;
+		board _board;
 
 		using node_mask_t = uint8_t;
 
-		explicit node(const board_t set_board) : board(set_board) {}
+		explicit node(const board set_board) : _board(set_board) {}
 
 		void generate_static_eval(const position& position)
 		{
 			static_eval = position.evaluate_position();
 		}
 
-		template<typename child_board_t>
-		void generate_incremental_static_eval(const position& parent_position, const eval_t parent_static_eval, const child_board_t& child_board)
+		void generate_incremental_static_eval(const position& parent_position, const eval_t parent_static_eval, const board& child_board)
 		{
 			const rank start_rank = child_board.start_rank();
 			const file start_file = child_board.start_file();
@@ -47,7 +45,7 @@ namespace chess
 			static_eval -= eval::piece_eval(piece_before);
 			static_eval -= eval::piece_square_eval(piece_before, start_idx);
 
-			const piece piece_after = child_board.moved_piece(); // will be a different type if promoting
+			const piece piece_after = child_board.moved_piece<this->color_to_move()>(); // will be a different type if promoting
 			static_eval += eval::piece_eval(piece_after);
 			static_eval += eval::piece_square_eval(piece_after, end_idx);
 
@@ -110,12 +108,12 @@ namespace chess
 		bool is_terminal() const
 		{
 			// Anything other than "unknown" is a terminal (end) state.
-			return board.get_result() != result::unknown;
+			return _board.get_result() != result::unknown;
 		}
 
 		eval_t terminal_eval()
 		{
-			const result result = board.get_result();
+			const result result = _board.get_result();
 			if (result == result::white_wins_by_checkmate)
 				eval = eval::eval_max;
 			else if (result == result::black_wins_by_checkmate)

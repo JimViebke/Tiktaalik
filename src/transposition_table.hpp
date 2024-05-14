@@ -79,8 +79,8 @@ namespace chess::tt
 		constexpr uint64_t key_mask = tt_size_in_entries - 1;
 	}
 
-	template<typename board_t>
-	key make_key(const position& position, const board_t& board)
+	template<color_t color_to_move>
+	key make_key(const position& position, const board& board)
 	{
 		using namespace detail;
 
@@ -95,7 +95,7 @@ namespace chess::tt
 			}
 		}
 
-		if constexpr (board_t::black_to_move())
+		if constexpr (color_to_move == black)
 		{
 			key ^= z_keys.black_to_move;
 		}

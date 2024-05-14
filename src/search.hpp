@@ -18,9 +18,9 @@ namespace chess
 		extern size_t tt_miss;
 
 		template<typename node_t>
-		void make_move(const node_t& current_node, const size_t ply)
+		void make_move(const node_t& child_node, const size_t ply)
 		{
-			make_move(positions[ply], positions[ply - 1], current_node.board);
+			make_move<child_node.color_to_move()>(positions[ply][0], positions[ply - 1][0], child_node._board);
 		}
 
 		template<bool white_to_move, typename child_nodes_t>
@@ -45,7 +45,7 @@ namespace chess
 					for (auto& child : node.children)
 					{
 						detail::make_move(child, ply);
-						const tt::key child_key = tt::make_key(positions[ply], child.board);
+						const tt::key child_key = tt::make_key<child.color_to_move()>(positions[ply][0], child._board);
 
 						eval_t cached_eval = 0;
 						const bool hit = detail::tt.simple_exact_probe(cached_eval, child_key);
