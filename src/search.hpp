@@ -14,6 +14,40 @@ namespace chess
 		extern size_t tt_hit;
 		extern size_t tt_miss;
 
+		template<typename node_t>
+		void get_evals_for_children(node_t& parent_node, const depth_t depth)
+		{
+			const size_t begin_idx = first_child_index(parent_node.index);
+			const size_t end_idx = begin_idx + parent_node.children.size();
+
+			if (tt::config::use_tt_move_ordering && depth > 1)
+			{
+				for (size_t idx = begin_idx; idx != end_idx; ++idx)
+				{
+					board& board = boards[idx];
+
+					const tt::key child_key = tt::make_key<node_t::other_color()>(positions[idx], board);
+
+					eval_t cached_eval = 0;
+					const bool hit = detail::tt.simple_exact_probe(cached_eval, child_key);
+					if (hit)
+						++detail::tt_hit;
+					else
+						++detail::tt_miss;
+
+					board.set_eval(hit ? cached_eval : board.get_static_eval());
+				}
+			}
+			else // don't probe the TT for leaf nodes
+			{
+				for (size_t idx = begin_idx; idx != end_idx; ++idx)
+				{
+					board& board = boards[idx];
+					board.set_eval(board.get_static_eval());
+				}
+			}
+		}
+
 		template<bool white_to_move, typename child_nodes_t>
 		__forceinline void stable_sort_children(child_nodes_t& children)
 		{
@@ -26,41 +60,6 @@ namespace chess
 				else
 					return board_a.get_eval() < board_b.get_eval();
 			});
-		}
-
-		template<typename node_t>
-		void order_moves(node_t& node, const size_t ply, const depth_t depth)
-		{
-			if constexpr (tt::config::use_tt_move_ordering)
-			{
-				if (depth > 1)
-				{
-					for (auto& child : node.children)
-					{
-						const tt::key child_key = tt::make_key<child.color_to_move()>(positions[child.index], child.get_board());
-
-						eval_t cached_eval = 0;
-						const bool hit = detail::tt.simple_exact_probe(cached_eval, child_key);
-						if (hit)
-							++detail::tt_hit;
-						else
-							++detail::tt_miss;
-
-						board& board = boards[child.index];
-						board.set_eval(hit ? cached_eval : board.get_static_eval());
-					}
-				}
-				else // don't probe the TT for leaf nodes
-				{
-					for (auto& child : node.children)
-					{
-						board& board = boards[child.index];
-						board.set_eval(board.get_static_eval());
-					}
-				}
-			}
-
-			stable_sort_children<node.white_to_move()>(node.children);
 		}
 
 		template<typename node_t>
@@ -77,7 +76,8 @@ namespace chess
 		node.clear_node();
 		node.generate_child_boards(positions[0]);
 
-		detail::order_moves(node, 1, depth);
+		detail::get_evals_for_children(node, depth);
+		detail::stable_sort_children<node.white_to_move()>(node.children);
 
 		// default to first move if one exists
 		typename node_t::other_node_t* best_move = (node.children.size() > 0) ? node.children.data() : nullptr;

@@ -48,7 +48,8 @@ namespace chess
 			return eval;
 		}
 
-		order_moves(node, ply + 1, depth);
+		get_evals_for_children(node, depth);
+		stable_sort_children<node.white_to_move()>(node.children);
 
 		eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
 		eval_type node_eval_type = (node.white_to_move() ? eval_type::alpha : eval_type::beta);
