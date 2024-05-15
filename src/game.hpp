@@ -67,12 +67,14 @@ namespace chess
 	const std::string one_rook_endgame_w = "4k3/8/8/8/8/8/8/R3K3 w - - 0 0";
 	const std::string two_rooks_endgame_b = "r3k2r/8/8/8/8/8/8/4K3 b - - 0 0";
 
+	const std::string start_fen = start_pos;
+
 	root_v load_fen(const std::string& fen, position& _position);
 
 	class Game
 	{
 	public:
-		Game() : root{ load_fen(start_pos, positions[0]) }
+		Game() : root{ load_fen(start_fen, positions[0]) }
 		{
 			sf::ContextSettings settings;
 			settings.antialiasingLevel = 8;
