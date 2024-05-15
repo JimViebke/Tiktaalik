@@ -324,7 +324,7 @@ namespace chess
 	void find_pawn_moves(size_t& out_index, parent_node_t& parent_node, const position& position, const rank rank, const file file,
 						 const size_t king_index, is_king_in_check_fn check_fn)
 	{
-		if (position.piece_at(rank, file).is_white())
+		if constexpr (parent_node_t::white_to_move())
 		{
 			if (bounds_check(rank - 1)) // only validate moving forwards once
 			{
@@ -377,7 +377,7 @@ namespace chess
 						append_if_legal<move_type::pawn_other>(out_index, parent_node, position, king_index, check_fn, parent_node.get_board(), position, rank, file, rank - 1, file - 1);
 					}
 				}
-				// check for en passant
+				// check for en passant captures
 				if (rank == 3)
 				{
 					if (parent_node.get_board().en_passant_file() == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
@@ -387,7 +387,7 @@ namespace chess
 				}
 			}
 		}
-		else if (position.piece_at(rank, file).is_black())
+		else
 		{
 			if (bounds_check(rank + 1)) // only validate moving forwards once
 			{
@@ -440,7 +440,7 @@ namespace chess
 						append_if_legal<move_type::pawn_other>(out_index, parent_node, position, king_index, check_fn, parent_node.get_board(), position, rank, file, rank + 1, file - 1);
 					}
 				}
-				// check for en passant
+				// check for en passant captures
 				if (rank == 4)
 				{
 					if (parent_node.get_board().en_passant_file() == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
