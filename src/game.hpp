@@ -77,9 +77,6 @@ namespace chess
 			sf::ContextSettings settings;
 			settings.antialiasingLevel = 8;
 
-			const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
-			std::thread([this] { worker_thread(); }).detach();
-
 			window = std::make_unique<sf::RenderWindow>(
 				sf::VideoMode((uint32_t)detail::window_width, (uint32_t)detail::window_height),
 				"Chess engine",
@@ -642,7 +639,6 @@ namespace chess
 	public:
 		void menu()
 		{
-			const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
 			window->setVisible(false);
 
 			while (true)
@@ -690,6 +686,8 @@ namespace chess
 
 		void run()
 		{
+			std::thread([this] { worker_thread(); }).detach();
+
 			while (window->isOpen())
 			{
 				// handle all updates...
