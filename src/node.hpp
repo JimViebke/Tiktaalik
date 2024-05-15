@@ -27,130 +27,16 @@ namespace chess
 		const board& get_board() const { return boards[index]; }
 		board& get_board() { return boards[index]; }
 
-		void generate_static_eval(const position& position)
-		{
-			static_eval = position.evaluate_position();
-		}
-
-		template <color_t moving_color, piece_t moving_piece_type, move_type move_type>
-		void generate_incremental_static_eval(const position& parent_position, const eval_t parent_static_eval)
-		{
-			const board& child_board = get_board();
-
-			const rank start_rank = child_board.start_rank();
-			const file start_file = child_board.start_file();
-			const rank end_rank = child_board.end_rank();
-			const file end_file = child_board.end_file();
-
-			const size_t start_idx = to_index(start_rank, start_file);
-			const size_t end_idx = to_index(end_rank, end_file);
-
-			static_eval = parent_static_eval;
-
-			piece piece_before{};
-			if constexpr (moving_piece_type == pawn || moving_piece_type == king)
-			{
-				piece_before = moving_piece_type + moving_color; // known at compile time
-			}
-			else
-			{
-				piece_before = parent_position.piece_at(start_idx);
-			}
-
-			piece piece_after{};
-			if constexpr (moving_piece_type == pawn)
-			{
-				// will be a different type if promoting
-				piece_after = child_board.moved_piece<this->other_color()>();
-				static_eval -= eval::piece_eval(piece_before);
-				static_eval += eval::piece_eval(piece_after);
-			}
-			else
-			{
-				piece_after = piece_before;
-			}
-
-			static_eval -= eval::piece_square_eval(piece_before, start_idx);
-			static_eval += eval::piece_square_eval(piece_after, end_idx);
-
-			if constexpr (move_type == move_type::en_passant_capture)
-			{
-				const size_t captured_piece_idx = to_index(start_rank, end_file); // the captured pawn will have the moving pawn's start rank and end file
-				const piece captured_piece = parent_position.piece_at(captured_piece_idx); // todo: determine at compile time
-
-				static_eval -= eval::piece_eval(captured_piece);
-				static_eval -= eval::piece_square_eval(captured_piece, captured_piece_idx);
-			}
-			else if (move_type == move_type::castle_kingside ||
-					 move_type == move_type::castle_queenside)
-			{
-				// update evaluation for the moving rook
-				size_t rook_start_idx = 0;
-				size_t rook_end_idx = 0;
-
-				if constexpr (move_type == move_type::castle_kingside)
-				{
-					rook_start_idx = to_index(start_rank, 7); // todo: determine at compile time
-					rook_end_idx = to_index(start_rank, 5); // todo: determine at compile time
-				}
-				else
-				{
-					rook_start_idx = to_index(start_rank, 0); // todo: determine at compile time
-					rook_end_idx = to_index(start_rank, 3); // todo: determine at compile time
-				}
-
-				const piece moving_rook = parent_position.piece_at(rook_start_idx); // todo: determine at compile time
-				static_eval -= eval::piece_square_eval(moving_rook, rook_start_idx); // todo: determine at compile time
-				static_eval += eval::piece_square_eval(moving_rook, rook_end_idx); // todo: determine at compile time
-			}
-
-			if constexpr (move_type == move_type::capture &&
-						  move_type != move_type::en_passant_capture)
-			{
-				const piece captured_piece = parent_position.piece_at(end_idx);
-				static_eval -= eval::piece_eval(captured_piece);
-				static_eval -= eval::piece_square_eval(captured_piece, end_idx);
-			}
-		}
-
-		void set_eval(const eval_t set_eval) { eval = set_eval; }
-		eval_t get_eval() const { return eval; }
-
-		eval_t get_static_eval() const { return static_eval; }
-
 		void generate_child_boards(const position& position);
 		void clear_node()
 		{
 			children.clear();
 		}
 
-		bool is_terminal() const
-		{
-			// Anything other than "unknown" is a terminal (end) state.
-			return get_board().get_result() != result::unknown;
-		}
-
-		eval_t terminal_eval()
-		{
-			const result result = get_board().get_result();
-			if (result == result::white_wins_by_checkmate)
-				eval = eval::eval_max;
-			else if (result == result::black_wins_by_checkmate)
-				eval = eval::eval_min;
-			else if (result == result::draw_by_stalemate)
-				eval = 0;
-			else
-				std::cout << "Unknown terminal state: [" << size_t(result) << "]\n";
-			return eval;
-		}
-
 		void perft(const position& position, const depth_t max_depth);
 		void divide(const position& position, const depth_t max_depth);
 
 	private:
-		eval_t eval = 0;
-		eval_t static_eval = 0;
-
 		// inner perft
 		void perft(const position& current_position,
 				   const depth_t depth,

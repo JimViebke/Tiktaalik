@@ -49,7 +49,7 @@ namespace chess
 
 		if (is_king_in_check(child_position, child_node_t::color_to_move()))
 		{
-			if (child_node.is_terminal())
+			if (boards[child_node.index].is_terminal())
 				ss << '#';
 			else
 				ss << '+';

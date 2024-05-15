@@ -19,10 +19,12 @@ namespace chess
 		{
 			std::stable_sort(children.begin(), children.end(), [](const auto& a, const auto& b)
 			{
+				const board& board_a = boards[a.index];
+				const board& board_b = boards[b.index];
 				if constexpr (white_to_move)
-					return a.get_eval() > b.get_eval();
+					return board_a.get_eval() > board_b.get_eval();
 				else
-					return a.get_eval() < b.get_eval();
+					return board_a.get_eval() < board_b.get_eval();
 			});
 		}
 
@@ -43,14 +45,17 @@ namespace chess
 							++detail::tt_hit;
 						else
 							++detail::tt_miss;
-						child.set_eval(hit ? cached_eval : child.get_static_eval());
+
+						board& board = boards[child.index];
+						board.set_eval(hit ? cached_eval : board.get_static_eval());
 					}
 				}
 				else // don't probe the TT for leaf nodes
 				{
 					for (auto& child : node.children)
 					{
-						child.set_eval(child.get_static_eval());
+						board& board = boards[child.index];
+						board.set_eval(board.get_static_eval());
 					}
 				}
 			}

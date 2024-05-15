@@ -100,7 +100,7 @@ namespace chess::tt
 			key ^= z_keys.black_to_move;
 		}
 
-		const file en_passant_file = board.en_passant_file();
+		const file en_passant_file = board.get_en_passant_file();
 		if (en_passant_file != empty)
 		{
 			key ^= z_keys.en_passant_keys[en_passant_file];

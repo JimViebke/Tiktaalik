@@ -29,10 +29,10 @@ namespace chess
 		// copy the parent position
 		child = parent;
 
-		const rank start_rank = child_board.start_rank();
-		const file start_file = child_board.start_file();
-		const rank end_rank = child_board.end_rank();
-		const file end_file = child_board.end_file();
+		const rank start_rank = child_board.get_start_rank();
+		const file start_file = child_board.get_start_file();
+		const rank end_rank = child_board.get_end_rank();
+		const file end_file = child_board.get_end_file();
 
 		const size_t start_idx = to_index(start_rank, start_file);
 		const size_t end_idx = to_index(end_rank, end_file);
@@ -62,10 +62,10 @@ namespace chess
 		// copy the parent position
 		child = parent;
 
-		const rank start_rank = child_board.start_rank();
-		const file start_file = child_board.start_file();
-		const rank end_rank = child_board.end_rank();
-		const file end_file = child_board.end_file();
+		const rank start_rank = child_board.get_start_rank();
+		const file start_file = child_board.get_start_file();
+		const rank end_rank = child_board.get_end_rank();
+		const file end_file = child_board.get_end_file();
 
 		const size_t start_idx = to_index(start_rank, start_file);
 		const size_t end_idx = to_index(end_rank, end_file);
@@ -413,9 +413,9 @@ namespace chess
 				// check for en passant captures
 				if (rank == 3)
 				{
-					if (parent_node.get_board().en_passant_file() == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
+					if (parent_node.get_board().get_en_passant_file() == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
 						append_if_legal<pawn, move_type::en_passant_capture>(out_index, parent_node, position, king_index, check_fn, parent_node.get_board(), position, rank, file, rank - 1, file - 1);
-					else if (parent_node.get_board().en_passant_file() == file + 1 && bounds_check(file + 1) && position.piece_at(rank, file + 1).is_pawn())
+					else if (parent_node.get_board().get_en_passant_file() == file + 1 && bounds_check(file + 1) && position.piece_at(rank, file + 1).is_pawn())
 						append_if_legal<pawn, move_type::en_passant_capture>(out_index, parent_node, position, king_index, check_fn, parent_node.get_board(), position, rank, file, rank - 1, file + 1);
 				}
 			}
@@ -476,9 +476,9 @@ namespace chess
 				// check for en passant captures
 				if (rank == 4)
 				{
-					if (parent_node.get_board().en_passant_file() == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
+					if (parent_node.get_board().get_en_passant_file() == file - 1 && bounds_check(file - 1) && position.piece_at(rank, file - 1).is_pawn())
 						append_if_legal<pawn, move_type::en_passant_capture>(out_index, parent_node, position, king_index, check_fn, parent_node.get_board(), position, rank, file, rank + 1, file - 1);
-					else if (parent_node.get_board().en_passant_file() == file + 1 && bounds_check(file + 1) && position.piece_at(rank, file + 1).is_pawn())
+					else if (parent_node.get_board().get_en_passant_file() == file + 1 && bounds_check(file + 1) && position.piece_at(rank, file + 1).is_pawn())
 						append_if_legal<pawn, move_type::en_passant_capture>(out_index, parent_node, position, king_index, check_fn, parent_node.get_board(), position, rank, file, rank + 1, file + 1);
 				}
 			}
@@ -784,14 +784,16 @@ namespace chess
 		if (check_fn(child_position, king_piece, king_index / 8, king_index % 8)) return;
 
 		auto& child_node = parent_node.children.emplace_back(out_index);
-		++out_index;
 
 		// generate incremental static eval
-		child_node.template generate_incremental_static_eval<moving_color, moving_piece_type, move_type>(parent_position, parent_node.get_static_eval());
+		boards[out_index].generate_incremental_static_eval<moving_color, moving_piece_type, move_type>(
+			parent_position, boards[parent_node.index].get_static_eval());
 
 		if constexpr (config::verify_incremental_static_eval)
-			if (child_node.get_static_eval() != positions[child_node.index].evaluate_position())
+			if (boards[out_index].get_static_eval() != positions[out_index].evaluate_position())
 				std::cout << "Incremental and generated static evals mismatch in append_if_legal\n";
+
+		++out_index;
 	}
 
 	template<color_t color_to_move>
@@ -799,8 +801,8 @@ namespace chess
 	{
 		if (!board.has_move<color_to_move>()) return empty; // todo: remove me
 
-		last_moved_end_rank = board.end_rank();
-		last_moved_end_file = board.end_file();
+		last_moved_end_rank = board.get_end_rank();
+		last_moved_end_file = board.get_end_file();
 		return board.moved_piece<other_color(color_to_move)>();
 	}
 

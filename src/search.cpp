@@ -15,14 +15,16 @@ namespace chess
 	{
 		using eval_type = tt::eval_type;
 
+		board& board = boards[node.index];
+
 		if constexpr (config::verify_incremental_static_eval)
-			if (node.get_static_eval() != positions[node.index].evaluate_position())
+			if (board.get_static_eval() != positions[node.index].evaluate_position())
 				std::cout << "Incremental and generated static evals mismatch\n";
 
 		if (depth == 0)
 		{
 			++n_of_evals;
-			return node.get_static_eval();
+			return board.get_static_eval();
 		}
 
 		const position& position = positions[node.index];
@@ -39,9 +41,9 @@ namespace chess
 
 		node.generate_child_boards(position);
 
-		if (node.is_terminal())
+		if (board.is_terminal())
 		{
-			const eval_t eval = node.terminal_eval();
+			const eval_t eval = board.terminal_eval();
 			tt.store(key, depth, eval_type::exact, eval);
 			return eval;
 		}

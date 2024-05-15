@@ -94,13 +94,13 @@ namespace chess
 
 			if (auto white_root = std::get_if<node<white>>(&root))
 			{
-				white_root->generate_static_eval(positions[0]);
+				boards[white_root->index].generate_static_eval(positions[0]);
 				white_root->generate_child_boards(positions[0]);
 				best_move = white_root->children.data(); // can be null
 			}
 			else if (auto black_root = std::get_if<node<black>>(&root))
 			{
-				black_root->generate_static_eval(positions[0]);
+				boards[black_root->index].generate_static_eval(positions[0]);
 				black_root->generate_child_boards(positions[0]);
 				best_move = black_root->children.data(); // can be null
 			}
@@ -538,7 +538,7 @@ namespace chess
 			{
 				ss << "Best move: ";
 				move_to_notation(ss, positions[0], *child_node);
-				ss << '\n' << std::fixed << std::setprecision(1) << float(child_node->get_eval()) / 100 << '\n';
+				ss << '\n' << std::fixed << std::setprecision(1) << float(boards[child_node->index].get_eval()) / 100 << '\n';
 			}
 			ss << '\n';
 

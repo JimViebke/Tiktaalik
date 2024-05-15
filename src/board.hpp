@@ -64,6 +64,9 @@ namespace chess
 		uint32_t& bitfield() { return *(uint32_t*)&board_state[0]; }
 		const uint32_t& bitfield() const { return *(uint32_t*)&board_state[0]; }
 
+		eval_t eval = 0;
+		eval_t static_eval = 0;
+
 	public:
 		board() { bitfield() = 0; }
 		explicit board(const bool w_castle_ks, const bool w_castle_qs, const bool b_castle_ks, const bool b_castle_qs,
@@ -225,16 +228,16 @@ namespace chess
 			// restore the color bit
 			return type + moved_piece_color;
 		}
-		rank start_rank() const { return (bitfield() >> start_rank_offset) & square_mask; }
-		file start_file() const { return (bitfield() >> start_file_offset) & square_mask; }
-		rank end_rank() const { return (bitfield() >> end_rank_offset) & square_mask; }
-		file end_file() const { return (bitfield() >> end_file_offset) & square_mask; }
-		file en_passant_file() const { return (bitfield() >> en_passant_file_offset) & en_passant_mask; }
+		rank get_start_rank() const { return (bitfield() >> start_rank_offset) & square_mask; }
+		file get_start_file() const { return (bitfield() >> start_file_offset) & square_mask; }
+		rank get_end_rank() const { return (bitfield() >> end_rank_offset) & square_mask; }
+		file get_end_file() const { return (bitfield() >> end_file_offset) & square_mask; }
+		file get_en_passant_file() const { return (bitfield() >> en_passant_file_offset) & en_passant_mask; }
 		bool white_can_castle_ks() const { return (bitfield() >> white_can_castle_ks_offset) & castling_right_mask; }
 		bool white_can_castle_qs() const { return (bitfield() >> white_can_castle_qs_offset) & castling_right_mask; }
 		bool black_can_castle_ks() const { return (bitfield() >> black_can_castle_ks_offset) & castling_right_mask; }
 		bool black_can_castle_qs() const { return (bitfield() >> black_can_castle_qs_offset) & castling_right_mask; }
-		size_t fifty_move_counter() const { return (bitfield() >> fifty_move_counter_offset) & fifty_move_counter_mask; }
+		size_t get_fifty_move_counter() const { return (bitfield() >> fifty_move_counter_offset) & fifty_move_counter_mask; }
 		result get_result() const { return result((bitfield() >> result_offset) & result_mask); }
 
 		// these can only set a field high
@@ -265,10 +268,10 @@ namespace chess
 		const std::string move_to_string() const
 		{
 			std::string result;
-			result += start_file().value() + 'a';
-			result += (start_rank().value() * -1) + 8 + '0';
-			result += end_file().value() + 'a';
-			result += (end_rank().value() * -1) + 8 + '0';
+			result += get_start_file().value() + 'a';
+			result += (get_start_rank().value() * -1) + 8 + '0';
+			result += get_end_file().value() + 'a';
+			result += (get_end_rank().value() * -1) + 8 + '0';
 			return result;
 		}
 
@@ -277,8 +280,117 @@ namespace chess
 
 		const piece& last_moved_piece(const position& position) const
 		{
-			return position.piece_at(end_rank(), end_file());
+			return position.piece_at(get_end_rank(), get_end_file());
 		}
+
+		void generate_static_eval(const position& position)
+		{
+			static_eval = position.evaluate_position();
+		}
+
+		template <color_t moving_color, piece_t moving_piece_type, move_type move_type>
+		void generate_incremental_static_eval(const position& parent_position, const eval_t parent_static_eval)
+		{
+			const rank start_rank = get_start_rank();
+			const file start_file = get_start_file();
+			const rank end_rank = get_end_rank();
+			const file end_file = get_end_file();
+
+			const size_t start_idx = to_index(start_rank, start_file);
+			const size_t end_idx = to_index(end_rank, end_file);
+
+			static_eval = parent_static_eval;
+
+			piece piece_before{};
+			if constexpr (moving_piece_type == pawn || moving_piece_type == king)
+			{
+				piece_before = moving_piece_type + moving_color; // known at compile time
+			}
+			else
+			{
+				piece_before = parent_position.piece_at(start_idx);
+			}
+
+			piece piece_after{};
+			if constexpr (moving_piece_type == pawn)
+			{
+				// will be a different type if promoting
+				piece_after = moved_piece<moving_color>();
+				static_eval -= eval::piece_eval(piece_before);
+				static_eval += eval::piece_eval(piece_after);
+			}
+			else
+			{
+				piece_after = piece_before;
+			}
+
+			static_eval -= eval::piece_square_eval(piece_before, start_idx);
+			static_eval += eval::piece_square_eval(piece_after, end_idx);
+
+			if constexpr (move_type == move_type::en_passant_capture)
+			{
+				const size_t captured_piece_idx = to_index(start_rank, end_file); // the captured pawn will have the moving pawn's start rank and end file
+				const piece captured_piece = parent_position.piece_at(captured_piece_idx); // todo: determine at compile time
+
+				static_eval -= eval::piece_eval(captured_piece);
+				static_eval -= eval::piece_square_eval(captured_piece, captured_piece_idx);
+			}
+			else if (move_type == move_type::castle_kingside ||
+					 move_type == move_type::castle_queenside)
+			{
+				// update evaluation for the moving rook
+				size_t rook_start_idx = 0;
+				size_t rook_end_idx = 0;
+
+				if constexpr (move_type == move_type::castle_kingside)
+				{
+					rook_start_idx = to_index(start_rank, 7); // todo: determine at compile time
+					rook_end_idx = to_index(start_rank, 5); // todo: determine at compile time
+				}
+				else
+				{
+					rook_start_idx = to_index(start_rank, 0); // todo: determine at compile time
+					rook_end_idx = to_index(start_rank, 3); // todo: determine at compile time
+				}
+
+				const piece moving_rook = parent_position.piece_at(rook_start_idx); // todo: determine at compile time
+				static_eval -= eval::piece_square_eval(moving_rook, rook_start_idx); // todo: determine at compile time
+				static_eval += eval::piece_square_eval(moving_rook, rook_end_idx); // todo: determine at compile time
+			}
+
+			if constexpr (move_type == move_type::capture &&
+						  move_type != move_type::en_passant_capture)
+			{
+				const piece captured_piece = parent_position.piece_at(end_idx);
+				static_eval -= eval::piece_eval(captured_piece);
+				static_eval -= eval::piece_square_eval(captured_piece, end_idx);
+			}
+		}
+
+		eval_t get_static_eval() const { return static_eval; }
+
+		void set_eval(const eval_t set_eval) { eval = set_eval; }
+		eval_t get_eval() const { return eval; }
+
+		bool is_terminal() const
+		{
+			// Anything other than "unknown" is a terminal (end) state.
+			return get_result() != result::unknown;
+		}
+		eval_t terminal_eval()
+		{
+			const result result = get_result();
+			if (result == result::white_wins_by_checkmate)
+				eval = eval::eval_max;
+			else if (result == result::black_wins_by_checkmate)
+				eval = eval::eval_min;
+			else if (result == result::draw_by_stalemate)
+				eval = 0;
+			else
+				std::cout << "Unknown terminal state: [" << size_t(result) << "]\n";
+			return eval;
+		}
+
 	};
 
 	extern std::array<board, positions_size> boards;
