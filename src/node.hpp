@@ -15,7 +15,7 @@ namespace chess
 	class node : public colorable<color_to_move>
 	{
 	public:
-		using other_node_t = node<other(color_to_move)>;
+		using other_node_t = node<other_color(color_to_move)>;
 
 		std::vector<other_node_t> children;
 		size_t index = 0;

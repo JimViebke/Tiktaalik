@@ -200,7 +200,7 @@ namespace chess
 			// if a king is moving, it can no longer castle either way
 			if constexpr (move_type == move_type::king)
 			{
-				if constexpr (other(color_to_move) == white)
+				if constexpr (other_color(color_to_move) == white)
 				{
 					board.white_cant_castle_ks();
 					board.white_cant_castle_qs();
@@ -222,7 +222,7 @@ namespace chess
 			// make room for the color bit
 			type <<= 1;
 			// restore the color bit
-			return type + other(color_to_move);
+			return type + other_color(color_to_move);
 		}
 		rank start_rank() const { return (bitfield() >> start_rank_offset) & square_mask; }
 		file start_file() const { return (bitfield() >> start_file_offset) & square_mask; }

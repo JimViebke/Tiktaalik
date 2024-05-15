@@ -256,18 +256,18 @@ namespace chess
 	{
 		if constexpr (check_type == check_type::do_all)
 		{
-			if (square_is_attacked_by_king(position, king | other(king_piece.get_color()), rank, file)) return true;
+			if (square_is_attacked_by_king(position, king | other_color(king_piece.get_color()), rank, file)) return true;
 		}
 
-		if (square_is_attacked_by_rook_or_queen(position, other(king_piece.get_color()), rank, file)) return true;
+		if (square_is_attacked_by_rook_or_queen(position, other_color(king_piece.get_color()), rank, file)) return true;
 
-		if (square_is_attacked_by_bishop_or_queen(position, other(king_piece.get_color()), rank, file)) return true;
+		if (square_is_attacked_by_bishop_or_queen(position, other_color(king_piece.get_color()), rank, file)) return true;
 
 		if constexpr (check_type == check_type::do_knight_checks ||
 					  check_type == check_type::opponent_move_unknown ||
 					  check_type == check_type::do_all)
 		{
-			if (square_is_attacked_by_knight(position, knight | other(king_piece.get_color()), rank, file)) return true;
+			if (square_is_attacked_by_knight(position, knight | other_color(king_piece.get_color()), rank, file)) return true;
 		}
 
 		if constexpr (check_type == check_type::do_pawn_checks ||
