@@ -13,22 +13,22 @@ namespace util
 
 		constexpr strong_alias() : _value{} {}
 
-		template<typename other>
-			requires std::is_arithmetic<other>::value
-		constexpr strong_alias(const other& set_value) : _value{ T(set_value) } {}
+		template<typename other_t>
+			requires std::is_arithmetic<other_t>::value
+		constexpr strong_alias(const other_t& set_value) : _value{ T(set_value) } {}
 
 		constexpr T& value() { return _value; }
 		constexpr const T& value() const { return _value; }
 
-		template <typename other>
-			requires std::is_arithmetic<other>::value
-		operator other() const { return other(value()); }
+		template <typename other_t>
+			requires std::is_arithmetic<other_t>::value
+		operator other_t() const { return other_t(value()); }
 
 		constexpr bool operator==(const strong_alias& rhs) const { return value() == rhs.value(); }
 		constexpr bool operator<(const auto& rhs) const { return value() < rhs.value(); }
-		template<typename other>
-			requires (std::is_arithmetic<other>::value)
-		constexpr bool operator<(const other& rhs) const { return value() < T(rhs); }
+		template<typename other_t>
+			requires (std::is_arithmetic<other_t>::value)
+		constexpr bool operator<(const other_t& rhs) const { return value() < T(rhs); }
 		constexpr bool operator>(const auto& rhs) const { return rhs < value(); }
 		constexpr bool operator<=(const auto& rhs) const { return !(*this > rhs); }
 		constexpr bool operator>=(const auto& rhs) const { return !(*this < rhs); }
