@@ -787,7 +787,7 @@ namespace chess
 		++out_index;
 
 		// generate incremental static eval
-		child_node.generate_incremental_static_eval(parent_position, parent_node.get_static_eval());
+		child_node.template generate_incremental_static_eval<moving_color, moving_piece_type, move_type>(parent_position, parent_node.get_static_eval());
 
 		if constexpr (config::verify_incremental_static_eval)
 			if (child_node.get_static_eval() != positions[child_node.index].evaluate_position())

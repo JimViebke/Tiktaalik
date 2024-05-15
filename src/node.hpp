@@ -32,6 +32,7 @@ namespace chess
 			static_eval = position.evaluate_position();
 		}
 
+		template <color_t moving_color, piece_t moving_piece_type, move_type move_type>
 		void generate_incremental_static_eval(const position& parent_position, const eval_t parent_static_eval)
 		{
 			const board& child_board = get_board();
@@ -46,53 +47,67 @@ namespace chess
 
 			static_eval = parent_static_eval;
 
-			const piece piece_before = parent_position.piece_at(start_idx);
-			static_eval -= eval::piece_eval(piece_before);
-			static_eval -= eval::piece_square_eval(piece_before, start_idx);
+			piece piece_before{};
+			if constexpr (moving_piece_type == pawn || moving_piece_type == king)
+			{
+				piece_before = moving_piece_type + moving_color; // known at compile time
+			}
+			else
+			{
+				piece_before = parent_position.piece_at(start_idx);
+			}
 
-			const piece piece_after = child_board.moved_piece<this->other_color()>(); // will be a different type if promoting
-			static_eval += eval::piece_eval(piece_after);
+			piece piece_after{};
+			if constexpr (moving_piece_type == pawn)
+			{
+				// will be a different type if promoting
+				piece_after = child_board.moved_piece<this->other_color()>();
+				static_eval -= eval::piece_eval(piece_before);
+				static_eval += eval::piece_eval(piece_after);
+			}
+			else
+			{
+				piece_after = piece_before;
+			}
+
+			static_eval -= eval::piece_square_eval(piece_before, start_idx);
 			static_eval += eval::piece_square_eval(piece_after, end_idx);
 
-			// check for en passant captures
-			if (parent_position.piece_at(start_idx).is_pawn() &&
-				start_file != end_file && // if a pawn captures...
-				parent_position.piece_at(end_idx).is_empty()) // ...into an empty square, it must be an en passant capture
+			if constexpr (move_type == move_type::en_passant_capture)
 			{
 				const size_t captured_piece_idx = to_index(start_rank, end_file); // the captured pawn will have the moving pawn's start rank and end file
-				const piece captured_piece = parent_position.piece_at(captured_piece_idx);
+				const piece captured_piece = parent_position.piece_at(captured_piece_idx); // todo: determine at compile time
 
 				static_eval -= eval::piece_eval(captured_piece);
 				static_eval -= eval::piece_square_eval(captured_piece, captured_piece_idx);
 			}
-			// if a king is castling
-			else if (parent_position.piece_at(start_idx).is_king() &&
-					 diff(start_file, end_file) > 1)
+			else if (move_type == move_type::castle_kingside ||
+					 move_type == move_type::castle_queenside)
 			{
 				// update evaluation for the moving rook
 				size_t rook_start_idx = 0;
 				size_t rook_end_idx = 0;
 
-				if (start_file < end_file) // kingside castle
+				if constexpr (move_type == move_type::castle_kingside)
 				{
-					rook_start_idx = to_index(start_rank, 7);
-					rook_end_idx = to_index(start_rank, 5);
+					rook_start_idx = to_index(start_rank, 7); // todo: determine at compile time
+					rook_end_idx = to_index(start_rank, 5); // todo: determine at compile time
 				}
-				else // queenside castle
+				else
 				{
-					rook_start_idx = to_index(start_rank, 0);
-					rook_end_idx = to_index(start_rank, 3);
+					rook_start_idx = to_index(start_rank, 0); // todo: determine at compile time
+					rook_end_idx = to_index(start_rank, 3); // todo: determine at compile time
 				}
 
-				const piece moving_rook = parent_position.piece_at(rook_start_idx);
-				static_eval -= eval::piece_square_eval(moving_rook, rook_start_idx);
-				static_eval += eval::piece_square_eval(moving_rook, rook_end_idx);
+				const piece moving_rook = parent_position.piece_at(rook_start_idx); // todo: determine at compile time
+				static_eval -= eval::piece_square_eval(moving_rook, rook_start_idx); // todo: determine at compile time
+				static_eval += eval::piece_square_eval(moving_rook, rook_end_idx); // todo: determine at compile time
 			}
 
-			// check for captures
-			const piece captured_piece = parent_position.piece_at(end_idx);
-			if (captured_piece.is_occupied())
+			if constexpr (move_type == move_type::capture &&
+						  move_type != move_type::en_passant_capture)
 			{
+				const piece captured_piece = parent_position.piece_at(end_idx);
 				static_eval -= eval::piece_eval(captured_piece);
 				static_eval -= eval::piece_square_eval(captured_piece, end_idx);
 			}
