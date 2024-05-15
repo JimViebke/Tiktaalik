@@ -29,12 +29,12 @@ namespace chess
 		bool is_opposing_color(piece piece) const { return !is_color(piece); }
 
 		// check piece type
-		bool is_king() const { return (_piece & detail::type_mask) == detail::king; }
-		bool is_queen() const { return (_piece & detail::type_mask) == detail::queen; }
-		bool is_rook() const { return (_piece & detail::type_mask) == detail::rook; }
-		bool is_bishop() const { return (_piece & detail::type_mask) == detail::bishop; }
-		bool is_knight() const { return (_piece & detail::type_mask) == detail::knight; }
-		bool is_pawn() const { return (_piece & detail::type_mask) == detail::pawn; }
+		bool is_king() const { return (_piece & detail::type_mask) == king; }
+		bool is_queen() const { return (_piece & detail::type_mask) == queen; }
+		bool is_rook() const { return (_piece & detail::type_mask) == rook; }
+		bool is_bishop() const { return (_piece & detail::type_mask) == bishop; }
+		bool is_knight() const { return (_piece & detail::type_mask) == knight; }
+		bool is_pawn() const { return (_piece & detail::type_mask) == pawn; }
 
 		// check piece type and color
 		bool is(const piece compare_piece) const { return compare_piece._piece == _piece; }

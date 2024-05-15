@@ -236,7 +236,7 @@ namespace chess
 	{
 		// Scan for the position of the first set bit in the mask.
 		// Assume that the board will always have a king of a given color.
-		return _tzcnt_u64(get_bitboard_for<check_color | detail::king>(position));
+		return _tzcnt_u64(get_bitboard_for<check_color | king>(position));
 	}
 
 	// If the opponent isn't checking with a pawn, skip pawn checks.
@@ -252,29 +252,29 @@ namespace chess
 	};
 
 	template<check_type check_type>
-	bool is_king_in_check(const position& position, const piece king, const rank rank, const file file)
+	bool is_king_in_check(const position& position, const piece king_piece, const rank rank, const file file)
 	{
 		if constexpr (check_type == check_type::do_all)
 		{
-			if (square_is_attacked_by_king(position, detail::king | other(king.get_color()), rank, file)) return true;
+			if (square_is_attacked_by_king(position, king | other(king_piece.get_color()), rank, file)) return true;
 		}
 
-		if (square_is_attacked_by_rook_or_queen(position, other(king.get_color()), rank, file)) return true;
+		if (square_is_attacked_by_rook_or_queen(position, other(king_piece.get_color()), rank, file)) return true;
 
-		if (square_is_attacked_by_bishop_or_queen(position, other(king.get_color()), rank, file)) return true;
+		if (square_is_attacked_by_bishop_or_queen(position, other(king_piece.get_color()), rank, file)) return true;
 
 		if constexpr (check_type == check_type::do_knight_checks ||
 					  check_type == check_type::opponent_move_unknown ||
 					  check_type == check_type::do_all)
 		{
-			if (square_is_attacked_by_knight(position, detail::knight | other(king.get_color()), rank, file)) return true;
+			if (square_is_attacked_by_knight(position, knight | other(king_piece.get_color()), rank, file)) return true;
 		}
 
 		if constexpr (check_type == check_type::do_pawn_checks ||
 					  check_type == check_type::opponent_move_unknown ||
 					  check_type == check_type::do_all)
 		{
-			if (king.is_white())
+			if (king_piece.is_white())
 			{
 				if (square_is_attacked_by_pawn<black>(position, rank, file)) return true;
 			}
@@ -289,24 +289,24 @@ namespace chess
 	using is_king_in_check_fn = bool(*)(const position&, const piece, const rank, const file);
 
 	template<color_t color_to_move>
-	bool is_king_in_check(const board& board, const position& position, const piece king, const rank rank, const file file)
+	bool is_king_in_check(const board& board, const position& position, const piece king_piece, const rank rank, const file file)
 	{
 		// If the last move is known, and a player is starting their turn, some piece checks can be skipped.
-		if (board.has_move<color_to_move>() && king.is_color(color_to_move))
+		if (board.has_move<color_to_move>() && king_piece.is_color(color_to_move))
 		{
 			const piece last_moved = board.last_moved_piece(position);
 
 			// Only look for pawn/knight/king checks if the last moved piece is a pawn/knight/king.
 			if (last_moved.is_pawn())
-				return is_king_in_check<check_type::do_pawn_checks>(position, king, rank, file);
+				return is_king_in_check<check_type::do_pawn_checks>(position, king_piece, rank, file);
 			else if (last_moved.is_knight())
-				return is_king_in_check<check_type::do_knight_checks>(position, king, rank, file);
+				return is_king_in_check<check_type::do_knight_checks>(position, king_piece, rank, file);
 			else
-				return is_king_in_check<check_type::skip_pawn_and_knight_checks>(position, king, rank, file);
+				return is_king_in_check<check_type::skip_pawn_and_knight_checks>(position, king_piece, rank, file);
 		}
 
 		// We don't know what move created this position, or it is not the king's color's turn to move; do all checks.
-		return is_king_in_check<check_type::do_all>(position, king, rank, file);
+		return is_king_in_check<check_type::do_all>(position, king_piece, rank, file);
 	}
 
 	// This is only used by the GUI.
@@ -677,22 +677,22 @@ namespace chess
 			}
 		}
 
-		const piece& king = position.piece_at(rank, file);
+		const piece& king_piece = position.piece_at(rank, file);
 
-		if ((king.is_white() && parent_node.get_board().white_can_castle_ks()) ||
-			(king.is_black() && parent_node.get_board().black_can_castle_ks()))
+		if ((king_piece.is_white() && parent_node.get_board().white_can_castle_ks()) ||
+			(king_piece.is_black() && parent_node.get_board().black_can_castle_ks()))
 		{
 			// If white can castle kingside, we already know the king and rook are in place.
 			if (position.piece_at(rank, file + 1).is_empty() && // Check if the squares in between are empty.
 				position.piece_at(rank, file + 2).is_empty() &&
-				!is_king_in_check<color_to_move>(parent_node.get_board(), position, king, rank, file)) // Check if the king is in check now...
+				!is_king_in_check<color_to_move>(parent_node.get_board(), position, king_piece, rank, file)) // Check if the king is in check now...
 			{
 				chess::position temp{};
 				make_move(temp, position, rank, file, rank, file + 1); // ...on his way...
-				if (!is_king_in_check<check_type::do_all>(temp, king, rank, file + 1))
+				if (!is_king_in_check<check_type::do_all>(temp, king_piece, rank, file + 1))
 				{
 					make_move(temp, position, rank, file, rank, file + 2);  // ...or at his destination.
-					if (!is_king_in_check<check_type::do_all>(temp, king, rank, file + 2))
+					if (!is_king_in_check<check_type::do_all>(temp, king_piece, rank, file + 2))
 					{
 						append_if_legal<move_type::king>(
 							out_index, parent_node, position, to_index(rank, file + 2), &is_king_in_check<check_type::do_all>,
@@ -702,20 +702,20 @@ namespace chess
 			}
 		}
 
-		if ((king.is_white() && parent_node.get_board().white_can_castle_qs()) || // (same logic as above)
-			(king.is_black() && parent_node.get_board().black_can_castle_qs()))
+		if ((king_piece.is_white() && parent_node.get_board().white_can_castle_qs()) || // (same logic as above)
+			(king_piece.is_black() && parent_node.get_board().black_can_castle_qs()))
 		{
 			if (position.piece_at(rank, file - 1).is_empty() &&
 				position.piece_at(rank, file - 2).is_empty() &&
 				position.piece_at(rank, file - 3).is_empty() && // we need to check that this square is empty for the rook to move through, but no check test is needed
-				!is_king_in_check<color_to_move>(parent_node.get_board(), position, king, rank, file))
+				!is_king_in_check<color_to_move>(parent_node.get_board(), position, king_piece, rank, file))
 			{
 				chess::position temp{};
 				make_move(temp, position, rank, file, rank, file - 1);
-				if (!is_king_in_check<check_type::do_all>(temp, king, rank, file - 1))
+				if (!is_king_in_check<check_type::do_all>(temp, king_piece, rank, file - 1))
 				{
 					make_move(temp, position, rank, file, rank, file - 2);
-					if (!is_king_in_check<check_type::do_all>(temp, king, rank, file - 2))
+					if (!is_king_in_check<check_type::do_all>(temp, king_piece, rank, file - 2))
 					{
 						append_if_legal<move_type::king>(
 							out_index, parent_node, position, to_index(rank, file - 2), &is_king_in_check<check_type::do_all>,
@@ -732,7 +732,7 @@ namespace chess
 						 board_args... args)
 	{
 		using child_node_t = parent_node_t::other_node_t;
-		constexpr piece king = detail::king | parent_node_t::color_to_move();
+		constexpr piece king_piece = king | parent_node_t::color_to_move();
 
 		constexpr color_t child_color = parent_node_t::other_color();
 
@@ -743,7 +743,7 @@ namespace chess
 		make_move<child_color>(child_position, parent_position, child_board);
 
 		// if the king is in check, bail now
-		if (check_fn(child_position, king, king_index / 8, king_index % 8)) return;
+		if (check_fn(child_position, king_piece, king_index / 8, king_index % 8)) return;
 
 		child_node_t& child_node = parent_node.children.emplace_back(out_index);
 		++out_index;
@@ -831,11 +831,11 @@ namespace chess
 		const size_t begin_idx = first_child_index(node.index);
 		size_t end_idx = begin_idx;
 
-		find_moves_for<color_to_move | detail::pawn>(end_idx, node, position, king_index, &find_pawn_moves<node_t>, check_fn);
-		find_moves_for<color_to_move | detail::knight>(end_idx, node, position, king_index, &find_knight_moves<node_t>, check_fn);
-		find_moves_for<color_to_move | detail::bishop>(end_idx, node, position, king_index, &find_bishop_moves<node_t>, check_fn);
-		find_moves_for<color_to_move | detail::rook>(end_idx, node, position, king_index, &find_rook_moves<node_t>, check_fn);
-		find_moves_for<color_to_move | detail::queen>(end_idx, node, position, king_index, &find_queen_moves<node_t>, check_fn);
+		find_moves_for<color_to_move | pawn>(end_idx, node, position, king_index, &find_pawn_moves<node_t>, check_fn);
+		find_moves_for<color_to_move | knight>(end_idx, node, position, king_index, &find_knight_moves<node_t>, check_fn);
+		find_moves_for<color_to_move | bishop>(end_idx, node, position, king_index, &find_bishop_moves<node_t>, check_fn);
+		find_moves_for<color_to_move | rook>(end_idx, node, position, king_index, &find_rook_moves<node_t>, check_fn);
+		find_moves_for<color_to_move | queen>(end_idx, node, position, king_index, &find_queen_moves<node_t>, check_fn);
 		find_king_moves(end_idx, node, position, king_index / 8, king_index % 8);
 
 		// If there are no legal moves, record the result
