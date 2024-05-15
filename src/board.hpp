@@ -15,10 +15,11 @@ namespace chess
 {
 	enum class move_type
 	{
-		rook, // indicates rook and queen moves
-		king,
+		capture,
+		en_passant_capture,
 		pawn_two_squares,
-		pawn_other,
+		castle_kingside,
+		castle_queenside,
 		other
 	};
 
@@ -95,26 +96,10 @@ namespace chess
 			set_white_can_castle_qs(parent_board.white_can_castle_qs());
 			set_black_can_castle_ks(parent_board.black_can_castle_ks());
 			set_black_can_castle_qs(parent_board.black_can_castle_qs());
-
-			// if a rook is captured, it cannot be used to castle
-			if (end_rank == 0) // black rooks
-			{
-				if (end_file == 0)
-					black_cant_castle_qs();
-				else if (end_file == 7)
-					black_cant_castle_ks();
-			}
-			else if (end_rank == 7) // white rooks
-			{
-				if (end_file == 0)
-					white_cant_castle_qs();
-				else if (end_file == 7)
-					white_cant_castle_ks();
-			}
 		}
 		explicit board(const board& parent_board, const position& parent_position,
 					   const rank start_rank, const file start_file, const rank end_rank, const file end_file,
-					   const piece& promote_to) // call this constructor for each pawn promotion
+					   const piece promote_to) // call this constructor for each pawn promotion
 			: board(parent_board, parent_position, start_rank, start_file, end_rank, end_file)
 		{
 			set_moved_piece(promote_to);
@@ -126,28 +111,8 @@ namespace chess
 			set_en_passant_file(start_file);
 		}
 
-		void update_50_move_counter(const board&, const position& position,
-									const rank, const file, const rank end_rank, const file end_file)
-		{
-			if (position.piece_at(end_rank, end_file).is_empty())
-			{
-				increment_50_move_counter();
-			}
-			else
-			{
-				clear_50_move_counter();
-			}
-		}
-
-		void update_50_move_counter(const board& board, const position& position,
-									const rank start_rank, const file start_file, const rank end_rank, const file end_file,
-									const piece&)
-		{
-			update_50_move_counter(board, position, start_rank, start_file, end_rank, end_file);
-		}
-
-		void update_castling_rights(const board&, const position&,
-									const rank start_rank, const file start_file, const rank, const file)
+		void update_castling_rights_for_moving_player(const board&, const position&,
+													  const rank start_rank, const file start_file, const rank, const file)
 		{
 			// if a rook moves, it cannot be used to castle
 			if (start_rank == 0) // black rooks
@@ -165,22 +130,54 @@ namespace chess
 					white_cant_castle_ks();
 			}
 		}
+		void update_castling_rights_for_moving_player(const board& parent_board, const position& parent_position,
+													  const rank start_rank, const file start_file, const rank end_rank, const file end_file,
+													  const piece)
+		{
+			update_castling_rights_for_moving_player(parent_board, parent_position,
+													 start_rank, start_file, end_rank, end_file);
+		}
+
+		void update_castling_rights_for_nonmoving_player(const board&, const position&,
+														 const rank, const file, const rank end_rank, const file end_file)
+		{
+			// if a rook is captured, it cannot be used to castle
+			if (end_rank == 0) // black rooks
+			{
+				if (end_file == 0)
+					black_cant_castle_qs();
+				else if (end_file == 7)
+					black_cant_castle_ks();
+			}
+			else if (end_rank == 7) // white rooks
+			{
+				if (end_file == 0)
+					white_cant_castle_qs();
+				else if (end_file == 7)
+					white_cant_castle_ks();
+			}
+		}
+		void update_castling_rights_for_nonmoving_player(const board& parent_board, const position& parent_position,
+														 const rank start_rank, const file start_file, const rank end_rank, const file end_file,
+														 const piece)
+		{
+			update_castling_rights_for_nonmoving_player(parent_board, parent_position,
+														start_rank, start_file, end_rank, end_file);
+		}
 
 	public:
-		template<color_t color_to_move, move_type move_type, typename... board_args>
+		template<color_t color_to_move, piece_t moving_piece_type, move_type move_type, typename... board_args>
 		static board make_board(board_args... args)
 		{
 			board board(std::forward<board_args>(args)...);
 
-			// reset for any kind of pawn move, otherwise, check the destination square
-			if constexpr (move_type == move_type::pawn_two_squares ||
-						  move_type == move_type::pawn_other)
+			if constexpr (move_type == move_type::capture || moving_piece_type == pawn)
 			{
 				board.clear_50_move_counter();
 			}
 			else
 			{
-				board.update_50_move_counter(std::forward<board_args>(args)...);
+				board.increment_50_move_counter();
 			}
 
 			if constexpr (move_type == move_type::pawn_two_squares)
@@ -192,13 +189,8 @@ namespace chess
 				board.set_en_passant_file(empty);
 			}
 
-			if constexpr (move_type == move_type::rook)
-			{
-				board.update_castling_rights(std::forward<board_args>(args)...);
-			}
-
-			// if a king is moving, it can no longer castle either way
-			if constexpr (move_type == move_type::king)
+			// check castling rights for the moving player
+			if constexpr (moving_piece_type == king)
 			{
 				if constexpr (other_color(color_to_move) == white)
 				{
@@ -210,6 +202,15 @@ namespace chess
 					board.black_cant_castle_ks();
 					board.black_cant_castle_qs();
 				}
+			}
+			else if constexpr (moving_piece_type == rook)
+			{
+				board.update_castling_rights_for_moving_player(std::forward<board_args>(args)...); // todo: only check the moving player's rooks
+			}
+
+			if constexpr (move_type == move_type::capture)
+			{
+				board.update_castling_rights_for_nonmoving_player(std::forward<board_args>(args)...); // todo: only check the nonmoving player's rooks
 			}
 
 			return board;
