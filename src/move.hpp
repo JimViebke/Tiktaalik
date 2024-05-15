@@ -783,7 +783,7 @@ namespace chess
 		// if the king is in check, bail now
 		if (check_fn(child_position, king_piece, king_index / 8, king_index % 8)) return;
 
-		auto& child_node = parent_node.children.emplace_back(out_index);
+		parent_node.children.emplace_back(out_index);
 
 		// generate incremental static eval
 		boards[out_index].generate_incremental_static_eval<moving_color, moving_piece_type, move_type>(
