@@ -215,14 +215,14 @@ namespace chess
 			return board;
 		}
 
-		template<color_t color_to_move>
+		template<color_t moved_piece_color>
 		piece moved_piece() const
 		{
 			piece_t type = (bitfield() >> moved_piece_offset) & moved_piece_mask;
 			// make room for the color bit
 			type <<= 1;
 			// restore the color bit
-			return type + other_color(color_to_move);
+			return type + moved_piece_color;
 		}
 		rank start_rank() const { return (bitfield() >> start_rank_offset) & square_mask; }
 		file start_file() const { return (bitfield() >> start_file_offset) & square_mask; }
@@ -272,7 +272,7 @@ namespace chess
 		}
 
 		template<color_t color_to_move>
-		bool has_move() const { return !moved_piece<color_to_move>().is(empty); }
+		bool has_move() const { return !moved_piece<other_color(color_to_move)>().is(empty); }
 
 		const piece& last_moved_piece(const position& position) const
 		{

@@ -50,7 +50,7 @@ namespace chess
 			static_eval -= eval::piece_eval(piece_before);
 			static_eval -= eval::piece_square_eval(piece_before, start_idx);
 
-			const piece piece_after = child_board.moved_piece<this->color_to_move()>(); // will be a different type if promoting
+			const piece piece_after = child_board.moved_piece<this->other_color()>(); // will be a different type if promoting
 			static_eval += eval::piece_eval(piece_after);
 			static_eval += eval::piece_square_eval(piece_after, end_idx);
 

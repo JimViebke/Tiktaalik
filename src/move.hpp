@@ -64,7 +64,7 @@ namespace chess
 		}
 
 		// handle the move, using child_board.moved_piece to handle promotion at the same time
-		const piece moved_piece = child_board.moved_piece<color_to_move>();
+		const piece moved_piece = child_board.moved_piece<other_color(child_color)>();
 		if (!moved_piece.is_empty())
 		{
 			child.piece_at(end_idx) = moved_piece;
@@ -763,7 +763,7 @@ namespace chess
 
 		last_moved_end_rank = board.end_rank();
 		last_moved_end_file = board.end_file();
-		return board.moved_piece<color_to_move>(); // will always be the opposite of color_to_move
+		return board.moved_piece<other_color(color_to_move)>();
 	}
 
 	template<color_t attacking_color>
