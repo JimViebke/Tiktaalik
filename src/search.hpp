@@ -30,12 +30,13 @@ namespace chess
 
 					eval_t cached_eval = 0;
 					const bool hit = detail::tt.simple_exact_probe(cached_eval, child_key);
-					if (hit)
-						++detail::tt_hit;
-					else
-						++detail::tt_miss;
 
-					board.set_eval(hit ? cached_eval : board.get_static_eval());
+					const eval_t static_eval = board.get_static_eval();
+
+					board.set_eval(hit ? cached_eval : static_eval);
+
+					detail::tt_hit += hit;
+					detail::tt_miss += !hit;
 				}
 			}
 			else // don't probe the TT for leaf nodes
