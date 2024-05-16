@@ -6,9 +6,9 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 
 #include <iostream>
-#include <string>
-#include <sstream>
 #include <mutex>
+#include <sstream>
+#include <string>
 #include <thread>
 #include <variant>
 
