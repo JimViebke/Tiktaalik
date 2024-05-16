@@ -49,9 +49,54 @@ namespace chess
 		}
 
 		template<bool white_to_move, typename child_nodes_t>
+		void swap_best_to_front(child_nodes_t& children)
+		{
+			size_t best_index = 0;
+			eval_t best_eval = boards[children[0].index].get_eval();
+
+			for (size_t i = 1; i < children.size(); ++i)
+			{
+				const board& board = boards[children[i].index];
+
+				if constexpr (white_to_move)
+				{
+					if (board.get_eval() > best_eval)
+					{
+						best_index = i;
+						best_eval = board.get_eval();
+					}
+				}
+				else
+				{
+					if (board.get_eval() < best_eval)
+					{
+						best_index = i;
+						best_eval = board.get_eval();
+					}
+				}
+			}
+
+			std::swap(children[0], children[best_index]);
+		}
+
+		template<bool white_to_move, typename child_nodes_t>
 		__forceinline void stable_sort_children(child_nodes_t& children)
 		{
 			std::stable_sort(children.begin(), children.end(), [](const auto& a, const auto& b)
+			{
+				const board& board_a = boards[a.index];
+				const board& board_b = boards[b.index];
+				if constexpr (white_to_move)
+					return board_a.get_eval() > board_b.get_eval();
+				else
+					return board_a.get_eval() < board_b.get_eval();
+			});
+		}
+
+		template<bool white_to_move, typename child_nodes_t>
+		__forceinline void stable_sort_remaining_children(child_nodes_t& children)
+		{
+			std::stable_sort(children.begin() + 1, children.end(), [](const auto& a, const auto& b)
 			{
 				const board& board_a = boards[a.index];
 				const board& board_b = boards[b.index];
