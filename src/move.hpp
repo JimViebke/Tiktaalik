@@ -761,7 +761,7 @@ namespace chess
 
 	template <piece_t moving_piece_type = other_piece, move_type move_type = move_type::other, typename parent_node_t, typename... board_args>
 	void append_if_legal(size_t& out_index, parent_node_t& parent_node, const position& parent_position, const size_t king_index, const tt::key key,
-						 is_king_in_check_fn check_fn, board_args... args)
+						 is_king_in_check_fn check_fn, board_args&&... args)
 	{
 		static_assert(moving_piece_type == pawn ||
 					  moving_piece_type == rook ||

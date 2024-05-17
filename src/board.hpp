@@ -164,7 +164,7 @@ namespace chess
 
 	public:
 		template<color_t color_to_move, piece_t moving_piece_type, move_type move_type, typename... board_args>
-		static board make_board(board_args... args)
+		static board make_board(board_args&&... args)
 		{
 			board board(std::forward<board_args>(args)...);
 
