@@ -9,6 +9,7 @@ namespace chess
 		static constexpr size_t engine_target_depth = 8;
 
 		static constexpr bool verify_incremental_static_eval = false;
+		static constexpr bool verify_incremental_zobrist_key = false;
 	}
 
 	namespace tt::config
