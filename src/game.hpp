@@ -246,8 +246,9 @@ namespace chess
 			requires (c1 != c2)
 		void play_move(node<c1>& root_node, node<c2>& child_node)
 		{
-			// update the root position
-			make_move<c2>(positions[0], positions[0], child_node.get_board());
+			// update the root position and board
+			positions[0] = positions[child_node.index];
+			boards[0] = boards[child_node.index];
 			child_node.index = 0;
 
 			// Move a ply-1 child node to become the root node.
