@@ -774,26 +774,25 @@ namespace chess
 
 		constexpr piece king_piece = king + moving_color;
 
-		const board child_board = board::template make_board<child_color, moving_piece_type, move_type>(std::forward<board_args>(args)...);
-		boards[out_index] = child_board;
+		board& child_board = boards[out_index];
+		child_board = board::template make_board<child_color, moving_piece_type, move_type>(std::forward<board_args>(args)...);
 
-		chess::position& child_position = positions[out_index];
+		position& child_position = positions[out_index];
 		make_move<moving_color, moving_piece_type, move_type>(child_position, parent_position, child_board);
 
 		// if the king is in check, bail now
 		if (check_fn(child_position, king_piece, king_index / 8, king_index % 8)) return;
 
 		parent_node.children.emplace_back(out_index);
+		++out_index;
 
 		// generate incremental static eval
-		boards[out_index].generate_incremental_static_eval<moving_color, moving_piece_type, move_type>(
+		child_board.generate_incremental_static_eval<moving_color, moving_piece_type, move_type>(
 			parent_position, boards[parent_node.index].get_static_eval());
 
 		if constexpr (config::verify_incremental_static_eval)
-			if (boards[out_index].get_static_eval() != positions[out_index].evaluate_position())
+			if (child_board.get_static_eval() != child_position.evaluate_position())
 				std::cout << "Incremental and generated static evals mismatch in append_if_legal\n";
-
-		++out_index;
 	}
 
 	template<color_t color_to_move>
