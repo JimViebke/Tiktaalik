@@ -27,20 +27,20 @@ namespace chess
 	{
 	private:
 		// bitfield sizes
-		static constexpr size_t moved_piece_bits = 3;
 		static constexpr size_t square_bits = 3;
+		static constexpr size_t moved_piece_bits = 3;
 		static constexpr size_t en_passant_bits = 4;
 		static constexpr size_t castling_right_bits = 1;
 		static constexpr size_t fifty_move_counter_bits = std::bit_width(50u * 2);
 		static constexpr size_t result_bits = 2;
 
 		// bitfield positions
-		static constexpr size_t moved_piece_offset = 0;
-		static constexpr size_t start_rank_offset = moved_piece_offset + moved_piece_bits; // the move that resulted in this position
-		static constexpr size_t start_file_offset = start_rank_offset + square_bits;
-		static constexpr size_t end_rank_offset = start_file_offset + square_bits;
-		static constexpr size_t end_file_offset = end_rank_offset + square_bits;
-		static constexpr size_t en_passant_file_offset = end_file_offset + square_bits;
+		static constexpr size_t start_file_offset = 0;
+		static constexpr size_t start_rank_offset = start_file_offset + square_bits; // the move that resulted in this position
+		static constexpr size_t end_file_offset = start_rank_offset + square_bits;
+		static constexpr size_t end_rank_offset = end_file_offset + square_bits;
+		static constexpr size_t moved_piece_offset = end_rank_offset + square_bits;
+		static constexpr size_t en_passant_file_offset = moved_piece_offset + moved_piece_bits;
 		static constexpr size_t white_can_castle_ks_offset = en_passant_file_offset + en_passant_bits;
 		static constexpr size_t white_can_castle_qs_offset = white_can_castle_ks_offset + castling_right_bits;
 		static constexpr size_t black_can_castle_ks_offset = white_can_castle_qs_offset + castling_right_bits;
@@ -49,8 +49,8 @@ namespace chess
 		static constexpr size_t result_offset = fifty_move_counter_offset + fifty_move_counter_bits;
 
 		// bitfield masks
-		static constexpr uint64_t moved_piece_mask = (1ull << moved_piece_bits) - 1;
 		static constexpr uint64_t square_mask = (1ull << square_bits) - 1;
+		static constexpr uint64_t moved_piece_mask = (1ull << moved_piece_bits) - 1;
 		static constexpr uint64_t en_passant_mask = (1ull << en_passant_bits) - 1;
 		static constexpr uint64_t castling_right_mask = (1ull << castling_right_bits) - 1;
 		static constexpr uint64_t fifty_move_counter_mask = (1ull << fifty_move_counter_bits) - 1;
