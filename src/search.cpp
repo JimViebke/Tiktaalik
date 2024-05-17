@@ -17,10 +17,6 @@ namespace chess
 
 		board& board = boards[node.index];
 
-		if constexpr (config::verify_incremental_static_eval)
-			if (board.get_static_eval() != positions[node.index].evaluate_position())
-				std::cout << "Incremental and generated static evals mismatch\n";
-
 		if (depth == 0)
 		{
 			++n_of_evals;

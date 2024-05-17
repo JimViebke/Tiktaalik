@@ -350,8 +350,7 @@ namespace chess
 				static_eval += eval::piece_square_eval(moving_rook, rook_end_idx); // todo: determine at compile time
 			}
 
-			if constexpr (move_type == move_type::capture &&
-						  move_type != move_type::en_passant_capture)
+			if constexpr (move_type == move_type::capture) // non-en passant capture
 			{
 				const piece captured_piece = parent_position.piece_at(end_idx);
 				static_eval -= eval::piece_eval(captured_piece);

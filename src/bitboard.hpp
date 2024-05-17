@@ -36,11 +36,11 @@ namespace chess
 		return mask;
 	}
 
-	template<piece_t piece, typename parent_node_t, typename generate_moves_fn_t, typename king_check_fn_t>
+	template<piece_t piece_type, typename parent_node_t, typename generate_moves_fn_t, typename king_check_fn_t>
 	__forceinline void find_moves_for(size_t& out_index, parent_node_t& parent_node, const position& position,
 									  const size_t king_index, generate_moves_fn_t generate_moves_fn, king_check_fn_t king_check_fn)
 	{
-		bitboard pieces = get_bitboard_for<piece>(position);
+		bitboard pieces = get_bitboard_for<piece_type>(position);
 
 		while (pieces)
 		{

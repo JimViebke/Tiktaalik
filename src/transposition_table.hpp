@@ -33,41 +33,41 @@ namespace chess::tt
 		bool is_valid() const { return eval_depth != invalid_depth; }
 	};
 
+	struct z_keys_t
+	{
+		std::array<std::array<key, 12>, 64> piece_square_keys;
+		key black_to_move;
+		std::array<key, 8> en_passant_keys;
+		key w_castle_ks;
+		key w_castle_qs;
+		key b_castle_ks;
+		key b_castle_qs;
+	};
+
+	static const z_keys_t z_keys = []()
+	{
+		std::mt19937_64 rng{ 0xdeadbeefdeadbeef }; // seed our RNG with a constant so our keys are deterministic
+		z_keys_t keys{};
+
+		for (auto& piece_square_keys : keys.piece_square_keys)
+			for (auto& piece_square_key : piece_square_keys)
+				piece_square_key = rng();
+
+		keys.black_to_move = rng();
+
+		for (auto& ep_key : keys.en_passant_keys)
+			ep_key = rng();
+
+		keys.w_castle_ks = rng();
+		keys.w_castle_qs = rng();
+		keys.b_castle_ks = rng();
+		keys.b_castle_qs = rng();
+
+		return keys;
+	}();
+
 	namespace detail
 	{
-		struct z_keys_t
-		{
-			std::array<std::array<key, 12>, 64> piece_square_keys;
-			key black_to_move;
-			std::array<key, 8> en_passant_keys;
-			key w_castle_ks;
-			key w_castle_qs;
-			key b_castle_ks;
-			key b_castle_qs;
-		};
-
-		static const z_keys_t z_keys = []()
-		{
-			std::mt19937_64 rng{ 0xdeadbeefdeadbeef }; // seed our RNG with a constant so our keys are deterministic
-			z_keys_t keys{};
-
-			for (auto& piece_square_keys : keys.piece_square_keys)
-				for (auto& piece_square_key : piece_square_keys)
-					piece_square_key = rng();
-
-			keys.black_to_move = rng();
-
-			for (auto& ep_key : keys.en_passant_keys)
-				ep_key = rng();
-
-			keys.w_castle_ks = rng();
-			keys.w_castle_qs = rng();
-			keys.b_castle_ks = rng();
-			keys.b_castle_qs = rng();
-
-			return keys;
-		}();
-
 		constexpr size_t tt_size_in_bytes = (config::size_in_mb * 1024 * 1024);
 		constexpr size_t tt_size_in_entries = tt_size_in_bytes / sizeof(entry);
 

@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "types.hpp"
+
 namespace chess
 {
 	using piece_t = int8_t;
