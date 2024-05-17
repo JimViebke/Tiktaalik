@@ -26,10 +26,8 @@ namespace chess
 				{
 					board& board = boards[idx];
 
-					const tt::key child_key = tt::make_key<node_t::other_color()>(positions[idx], board);
-
 					eval_t cached_eval = 0;
-					const bool hit = detail::tt.simple_exact_probe(cached_eval, child_key);
+					const bool hit = detail::tt.simple_exact_probe(cached_eval, board.get_key());
 
 					const eval_t static_eval = board.get_static_eval();
 

@@ -4,17 +4,13 @@
 #include <memory>
 #include <random>
 
-#include "board.hpp"
 #include "config.hpp"
 #include "evaluation.hpp"
-#include "position.hpp"
-#include "util/strong_alias.hpp"
+#include "types.hpp"
 
 namespace chess::tt
 {
 	static_assert(config::size_in_mb / 1024 <= 16); // sanity check, size <= 16 GB
-
-	using key = ::util::strong_alias<uint64_t, struct tt_key_tag>;
 
 	enum class eval_type : uint8_t
 	{
@@ -77,41 +73,6 @@ namespace chess::tt
 
 		static_assert(std::popcount(tt_size_in_entries) == 1);
 		constexpr uint64_t key_mask = tt_size_in_entries - 1;
-	}
-
-	template<color_t color_to_move>
-	key make_key(const position& position, const board& board)
-	{
-		using namespace detail;
-
-		key key = 0;
-
-		for (size_t i = 0; i < position._position.size(); ++i)
-		{
-			const piece piece = position.piece_at(i);
-			if (piece.is_occupied())
-			{
-				key ^= z_keys.piece_square_keys[i][piece.value()];
-			}
-		}
-
-		if constexpr (color_to_move == black)
-		{
-			key ^= z_keys.black_to_move;
-		}
-
-		const file en_passant_file = board.get_en_passant_file();
-		if (en_passant_file != empty)
-		{
-			key ^= z_keys.en_passant_keys[en_passant_file];
-		}
-
-		key ^= (z_keys.w_castle_ks * board.white_can_castle_ks());
-		key ^= (z_keys.w_castle_qs * board.white_can_castle_qs());
-		key ^= (z_keys.b_castle_ks * board.black_can_castle_ks());
-		key ^= (z_keys.b_castle_qs * board.black_can_castle_qs());
-
-		return key;
 	}
 
 	class transposition_table

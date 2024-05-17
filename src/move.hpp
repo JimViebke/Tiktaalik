@@ -4,10 +4,11 @@
 
 #include "bitboard.hpp"
 #include "board.hpp"
+#include "capture.hpp"
 #include "config.hpp"
 #include "node.hpp"
 #include "position.hpp"
-#include "capture.hpp"
+#include "transposition_table.hpp"
 
 namespace chess
 {
@@ -789,6 +790,8 @@ namespace chess
 		// generate incremental static eval
 		child_board.generate_incremental_static_eval<moving_color, moving_piece_type, move_type>(
 			parent_position, boards[parent_node.index].get_static_eval());
+
+		child_board.set_key(generate_key(child_board, child_position, child_color));
 
 		if constexpr (config::verify_incremental_static_eval)
 			if (child_board.get_static_eval() != child_position.evaluate_position())

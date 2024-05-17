@@ -67,19 +67,13 @@ namespace chess
 		eval_t eval = 0;
 		eval_t static_eval = 0;
 
+		tt::key key;
+
 	public:
 		board() { bitfield() = 0; }
-		explicit board(const bool w_castle_ks, const bool w_castle_qs, const bool b_castle_ks, const bool b_castle_qs,
-					   const file en_passant_file, const int8_t fifty_move_counter)
-		{
-			set_white_can_castle_ks(w_castle_ks);
-			set_white_can_castle_qs(w_castle_qs);
-			set_black_can_castle_ks(b_castle_ks);
-			set_black_can_castle_qs(b_castle_qs);
-
-			set_en_passant_file(en_passant_file.value());
-			set_fifty_move_counter(fifty_move_counter);
-		}
+		explicit board(const position& loaded_position, const color_t color_to_move,
+					   const bool w_castle_ks, const bool w_castle_qs, const bool b_castle_ks, const bool b_castle_qs,
+					   const file en_passant_file, const int8_t fifty_move_counter);
 
 	private:
 		explicit board(const board& parent_board, const position& parent_position,
@@ -219,6 +213,9 @@ namespace chess
 			return board;
 		}
 
+		void set_key(const tt::key& set_key) { key = set_key; }
+		tt::key get_key() const { return key; }
+
 		template<color_t moved_piece_color>
 		piece moved_piece() const
 		{
@@ -281,11 +278,6 @@ namespace chess
 		const piece& last_moved_piece(const position& position) const
 		{
 			return position.piece_at(get_end_rank(), get_end_file());
-		}
-
-		void generate_static_eval(const position& position)
-		{
-			static_eval = position.evaluate_position();
 		}
 
 		template <color_t moving_color, piece_t moving_piece_type, move_type move_type>
@@ -390,8 +382,9 @@ namespace chess
 				std::cout << "Unknown terminal state: [" << size_t(result) << "]\n";
 			return eval;
 		}
-
 	};
 
 	extern std::array<board, positions_size> boards;
+
+	tt::key generate_key(const board& board, const position& position, const color_t color_to_move);
 }

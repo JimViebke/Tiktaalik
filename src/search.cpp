@@ -27,9 +27,7 @@ namespace chess
 			return board.get_static_eval();
 		}
 
-		const position& position = positions[node.index];
-
-		const tt::key key = tt::make_key<node.color_to_move()>(position, node.get_board());
+		const tt::key key = boards[node.index].get_key();
 
 		{
 			eval_t eval = 0;
@@ -39,6 +37,7 @@ namespace chess
 			}
 		}
 
+		const position& position = positions[node.index];
 		node.generate_child_boards(position);
 
 		if (board.is_terminal())

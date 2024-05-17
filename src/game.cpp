@@ -91,7 +91,8 @@ namespace chess
 
 		// (ignored)
 
-		boards[0] = board{ white_can_castle_ks, white_can_castle_qs, black_can_castle_ks, black_can_castle_qs,
+		boards[0] = board{ positions[0], color_to_move,
+			white_can_castle_ks, white_can_castle_qs, black_can_castle_ks, black_can_castle_qs,
 			en_passant_file, fifty_move_counter };
 
 		if (color_to_move == white)
