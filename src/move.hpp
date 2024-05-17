@@ -785,10 +785,7 @@ namespace chess
 		parent_node.children.emplace_back(out_index);
 		++out_index;
 
-		child_board.generate_incremental_key<moving_color, moving_piece_type, move_type>(parent_position, boards[parent_node.index], key);
-
-		child_board.generate_incremental_static_eval<moving_color, moving_piece_type, move_type>(
-			parent_position, boards[parent_node.index].get_static_eval());
+		child_board.update_key_and_static_eval<moving_color, moving_piece_type, move_type>(parent_position, boards[parent_node.index], key);
 
 		if constexpr (config::verify_incremental_zobrist_key)
 			if (child_board.get_key() != generate_key(child_board, child_position, child_color))

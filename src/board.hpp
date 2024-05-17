@@ -300,6 +300,110 @@ namespace chess
 		}
 
 		template <color_t moving_color, piece_t moving_piece_type, move_type move_type>
+		void update_key_and_static_eval(const position& parent_position, const board& parent_board, tt::key incremental_key)
+		{
+			// The incremental_key has already had the leaving piece removed, and the color to move toggled.
+			// We receive it by copy so we can modify it before writing it.
+
+			const rank start_rank = get_start_rank();
+			const file start_file = get_start_file();
+			const rank end_rank = get_end_rank();
+			const file end_file = get_end_file();
+
+			const size_t start_idx = to_index(start_rank, start_file);
+			const size_t end_idx = to_index(end_rank, end_file);
+
+			eval_t incremental_eval = parent_board.get_static_eval();
+
+			piece piece_before{};
+			if constexpr (moving_piece_type == pawn || moving_piece_type == king)
+			{
+				piece_before = moving_piece_type + moving_color; // known at compile time
+			}
+			else
+			{
+				piece_before = parent_position.piece_at(start_idx);
+			}
+
+			piece piece_after{};
+			if constexpr (moving_piece_type == king ||
+						  move_type == move_type::pawn_two_squares ||
+						  move_type == move_type::en_passant_capture)
+			{
+				piece_after = moving_color | moving_piece_type; // determine at compile time when possible
+			}
+			else if (moving_piece_type == pawn)
+			{
+				piece_after = moved_piece<moving_color>(); // will be a different type if promoting
+				incremental_eval -= eval::piece_eval(piece_before);
+				incremental_eval += eval::piece_eval(piece_after);
+			}
+			else
+			{
+				piece_after = piece_before;
+			}
+			// add the key for the arriving piece
+			incremental_key ^= tt::z_keys.piece_square_keys[end_idx][piece_after.value()];
+			// update square eval for the piece
+			incremental_eval -= eval::piece_square_eval(piece_before, start_idx);
+			incremental_eval += eval::piece_square_eval(piece_after, end_idx);
+
+			if constexpr (move_type == move_type::pawn_two_squares)
+			{
+				// add en passant rights for the opponent
+				incremental_key ^= tt::z_keys.en_passant_keys[end_file];
+			}
+			else if (move_type == move_type::en_passant_capture)
+			{
+				const size_t captured_pawn_idx = to_index(start_rank, end_file); // the captured pawn is at the start rank and end file
+				constexpr piece_t captured_pawn = other_color(moving_color) | pawn;
+				// remove key for the captured pawn
+				incremental_key ^= tt::z_keys.piece_square_keys[captured_pawn_idx][captured_pawn];
+				// udpate eval for the captured pawn
+				incremental_eval -= eval::piece_eval(captured_pawn);
+				incremental_eval -= eval::piece_square_eval(captured_pawn, captured_pawn_idx);
+			}
+			else if (move_type == move_type::castle_kingside ||
+					 move_type == move_type::castle_queenside)
+			{
+				constexpr size_t rook_start_file = (move_type == move_type::castle_kingside ? 7 : 0);
+				constexpr size_t rook_start_rank = (moving_color == white ? 7 : 0);
+
+				constexpr size_t rook_start_index = rook_start_rank * 8 + rook_start_file;
+				constexpr size_t rook_end_index = rook_start_index + (move_type == move_type::castle_kingside ? -2 : 3);
+
+				constexpr piece_t moving_rook = moving_color | rook;
+				// update keys for the moving rook
+				incremental_key ^= tt::z_keys.piece_square_keys[rook_start_index][moving_rook];
+				incremental_key ^= tt::z_keys.piece_square_keys[rook_end_index][moving_rook];
+				// update eval for the moving rook
+				incremental_eval -= eval::piece_square_eval(moving_rook, rook_start_index); // todo: determine at compile time
+				incremental_eval += eval::piece_square_eval(moving_rook, rook_end_index); // todo: determine at compile time
+			}
+			else if (move_type == move_type::capture) // non-en passant capture
+			{
+				const piece_t captured_piece = parent_position.piece_at(end_idx).value();
+				// remove the key for the captured piece
+				incremental_key ^= tt::z_keys.piece_square_keys[end_idx][captured_piece];
+				// update our opponent's castling rights
+				update_key_castling_rights_for<other_color(moving_color)>(incremental_key, parent_board);
+				// update eval for the captured piece
+				incremental_eval -= eval::piece_eval(captured_piece);
+				incremental_eval -= eval::piece_square_eval(captured_piece, end_idx);
+			}
+
+			if constexpr (moving_piece_type == king ||
+						  moving_piece_type == rook)
+			{
+				// a king or rook is moving; update our castling rights
+				update_key_castling_rights_for<moving_color>(incremental_key, parent_board);
+			}
+
+			key = incremental_key;
+			static_eval = incremental_eval;
+		}
+
+		template <color_t moving_color, piece_t moving_piece_type, move_type move_type>
 		void generate_incremental_key(const position& parent_position, const board& parent_board, tt::key incremental_key)
 		{
 			// The incremental_key has already had the leaving piece removed, and the color to move toggled.
