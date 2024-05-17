@@ -727,16 +727,12 @@ namespace chess
 				!is_king_in_check<color_to_move>(parent_node.get_board(), position, king_piece, rank, file)) // Check if the king is in check now...
 			{
 				chess::position temp{};
-				make_move(temp, position, rank, file, rank, file + 1); // ...on his way...
+				make_move(temp, position, rank, file, rank, file + 1); // ...on his way.
 				if (!is_king_in_check<check_type::do_all>(temp, king_piece, rank, file + 1))
 				{
-					make_move(temp, position, rank, file, rank, file + 2);  // ...or at his destination.
-					if (!is_king_in_check<check_type::do_all>(temp, king_piece, rank, file + 2))
-					{
-						append_if_legal<king, move_type::castle_kingside>(
-							out_index, parent_node, position, to_index(rank, file + 2), &is_king_in_check<check_type::do_all>,
-							parent_node.get_board(), position, rank, file, rank, file + 2); // the board constructor detects a castle and moves both pieces
-					}
+					append_if_legal<king, move_type::castle_kingside>(
+						out_index, parent_node, position, to_index(rank, file + 2), incremental_key, &is_king_in_check<check_type::do_all>,
+						parent_node.get_board(), position, rank, file, rank, file + 2); // the board constructor detects a castle and moves both pieces
 				}
 			}
 		}
@@ -753,13 +749,9 @@ namespace chess
 				make_move(temp, position, rank, file, rank, file - 1);
 				if (!is_king_in_check<check_type::do_all>(temp, king_piece, rank, file - 1))
 				{
-					make_move(temp, position, rank, file, rank, file - 2);
-					if (!is_king_in_check<check_type::do_all>(temp, king_piece, rank, file - 2))
-					{
-						append_if_legal<king, move_type::castle_queenside>(
-							out_index, parent_node, position, to_index(rank, file - 2), &is_king_in_check<check_type::do_all>,
-							parent_node.get_board(), position, rank, file, rank, file - 2);
-					}
+					append_if_legal<king, move_type::castle_queenside>(
+						out_index, parent_node, position, to_index(rank, file - 2), incremental_key, &is_king_in_check<check_type::do_all>,
+						parent_node.get_board(), position, rank, file, rank, file - 2);
 				}
 			}
 		}
