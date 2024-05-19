@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include "piece.hpp"
 #include "position.hpp"
 #include "types.hpp"
@@ -11,6 +13,10 @@ namespace chess
 	using bitboard = ::util::strong_alias<uint64_t, struct bitboard_tag>;
 
 	void print_bitboard(const bitboard bitboard);
+
+	using movemasks = std::array<bitboard, 64>;
+
+	extern const movemasks knight_movemasks;
 
 	template<piece_t piece>
 	__forceinline bitboard get_bitboard_for(const position& position)
