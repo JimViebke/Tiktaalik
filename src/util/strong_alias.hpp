@@ -66,9 +66,12 @@ namespace util
 		constexpr strong_alias operator|(const auto& rhs) const { return value() | rhs; }
 		constexpr strong_alias operator^(const auto& rhs) const { return value() ^ rhs; }
 
-		constexpr strong_alias& operator&=(const auto& rhs) { value() &= rhs.value(); return *this; }
-		constexpr strong_alias& operator|=(const auto& rhs) { value() |= rhs.value(); return *this; }
-		constexpr strong_alias& operator^=(const auto& rhs) { value() ^= rhs.value(); return *this; }
+		constexpr strong_alias& operator&=(const strong_alias& rhs) { value() &= rhs.value(); return *this; }
+		constexpr strong_alias& operator|=(const strong_alias& rhs) { value() |= rhs.value(); return *this; }
+		constexpr strong_alias& operator^=(const strong_alias& rhs) { value() ^= rhs.value(); return *this; }
+		constexpr strong_alias& operator&=(const auto& rhs) { value() &= rhs; return *this; }
+		constexpr strong_alias& operator|=(const auto& rhs) { value() |= rhs; return *this; }
+		constexpr strong_alias& operator^=(const auto& rhs) { value() ^= rhs; return *this; }
 
 	private:
 		T _value;
