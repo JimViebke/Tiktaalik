@@ -3,6 +3,7 @@
 #include "piece.hpp"
 #include "position.hpp"
 #include "types.hpp"
+#include "util/intrinsics.hpp"
 #include "util/strong_alias.hpp"
 
 namespace chess
@@ -36,6 +37,16 @@ namespace chess
 		return mask;
 	}
 
+	inline size_t get_next_bit(const bitboard bitboard)
+	{
+		return ::util::tzcnt(bitboard);
+	}
+
+	inline bitboard clear_next_bit(const bitboard bitboard)
+	{
+		return ::util::blsr(bitboard);
+	}
+
 	template<piece_t piece_type, typename parent_node_t, typename generate_moves_fn_t, typename king_check_fn_t>
 	__forceinline void find_moves_for(size_t& out_index, parent_node_t& parent_node, const position& position,
 									  const size_t king_index, const tt::key key, generate_moves_fn_t generate_moves_fn, king_check_fn_t king_check_fn)
@@ -44,8 +55,8 @@ namespace chess
 
 		while (pieces)
 		{
-			const size_t piece_idx = _tzcnt_u64(pieces);
-			pieces = _blsr_u64(pieces);
+			const size_t piece_idx = get_next_bit(pieces);
+			pieces = clear_next_bit(pieces);
 
 			// XOR the key for the leaving piece once for all of its moves
 			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[piece_idx][piece_type];

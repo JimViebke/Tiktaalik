@@ -26,6 +26,7 @@
     <ClInclude Include="src\search.hpp" />
     <ClInclude Include="src\transposition_table.hpp" />
     <ClInclude Include="src\types.hpp" />
+    <ClInclude Include="src\util\intrinsics.hpp" />
     <ClInclude Include="src\util\strong_alias.hpp" />
     <ClInclude Include="src\util\util.hpp" />
   </ItemGroup>
