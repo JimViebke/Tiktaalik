@@ -650,36 +650,41 @@ namespace chess
 		}
 	}
 	template<typename parent_node_t>
-	void find_knight_move(size_t& out_index, parent_node_t& parent_node, const position& position, const rank start_rank, const file start_file,
-						  const rank end_rank, const file end_file,
-						  const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
-	{
-		if (bounds_check(end_rank, end_file))
-		{
-			if (position.piece_at(end_rank, end_file).is_empty())
-			{
-				append_if_legal(out_index, parent_node, position, king_index, key, check_fn,
-								parent_node.get_board(), position, start_rank, start_file, end_rank, end_file);
-			}
-			else if (position.piece_at(end_rank, end_file).is_color(parent_node_t::other_color()))
-			{
-				append_if_legal<other_piece, move_type::capture>(out_index, parent_node, position, king_index, key, check_fn,
-																 parent_node.get_board(), position, start_rank, start_file, end_rank, end_file);
-			}
-		}
-	}
-	template<typename parent_node_t>
 	void find_knight_moves(size_t& out_index, parent_node_t& parent_node, const position& position, const rank rank, const file file,
 						   const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
 	{
-		find_knight_move(out_index, parent_node, position, rank, file, rank - 2, file + 1, king_index, key, check_fn);
-		find_knight_move(out_index, parent_node, position, rank, file, rank - 1, file + 2, king_index, key, check_fn);
-		find_knight_move(out_index, parent_node, position, rank, file, rank + 1, file + 2, king_index, key, check_fn);
-		find_knight_move(out_index, parent_node, position, rank, file, rank + 2, file + 1, king_index, key, check_fn);
-		find_knight_move(out_index, parent_node, position, rank, file, rank + 2, file - 1, king_index, key, check_fn);
-		find_knight_move(out_index, parent_node, position, rank, file, rank + 1, file - 2, king_index, key, check_fn);
-		find_knight_move(out_index, parent_node, position, rank, file, rank - 1, file - 2, king_index, key, check_fn);
-		find_knight_move(out_index, parent_node, position, rank, file, rank - 2, file - 1, king_index, key, check_fn);
+		const bitboards bitboards = get_bitboards_for(position);
+
+		constexpr color_t color_to_move = parent_node_t::color_to_move();
+
+		const bitboard our_pieces = (color_to_move == white) ? bitboards.white : bitboards.black;
+		const bitboard opp_pieces = (color_to_move == white) ? bitboards.black : bitboards.white;
+
+		const size_t knight_index = to_index(rank, file);
+
+		const bitboard moves = knight_movemasks[knight_index];
+
+		bitboard captures = moves & opp_pieces;
+		const bitboard blockers = moves & our_pieces;
+		bitboard noncaptures = moves ^ captures ^ blockers;
+
+		while (captures)
+		{
+			size_t target_square = get_next_bit(captures);
+			captures = clear_next_bit(captures);
+
+			append_if_legal<other_piece, move_type::capture>(out_index, parent_node, position, king_index, key, check_fn,
+							parent_node.get_board(), position, rank, file, target_square / 8, target_square % 8);
+		}
+
+		while (noncaptures)
+		{
+			size_t target_square = get_next_bit(noncaptures);
+			noncaptures = clear_next_bit(noncaptures);
+
+			append_if_legal(out_index, parent_node, position, king_index, key, check_fn,
+							parent_node.get_board(), position, rank, file, target_square / 8, target_square % 8);
+		}
 	}
 	template<typename parent_node_t>
 	void find_queen_moves(size_t& out_index, parent_node_t& parent_node, const position& position, const rank rank, const file file,
