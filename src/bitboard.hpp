@@ -98,11 +98,12 @@ namespace chess
 		return ::util::blsr(bitboard);
 	}
 
-	template<piece_t piece_type, typename parent_node_t, typename generate_moves_fn_t, typename king_check_fn_t>
-	__forceinline void find_moves_for(size_t& out_index, parent_node_t& parent_node, const position& position,
+	template<piece_t piece_type, typename generate_moves_fn_t, typename king_check_fn_t>
+	__forceinline void find_moves_for(size_t& out_index, const size_t parent_idx,
 									  const size_t king_index, const tt::key key, generate_moves_fn_t generate_moves_fn, king_check_fn_t king_check_fn)
 	{
-		bitboard pieces = get_bitboard_for<piece_type>(position);
+		const position& parent_position = positions[parent_idx];
+		bitboard pieces = get_bitboard_for<piece_type>(parent_position);
 
 		while (pieces)
 		{
@@ -112,7 +113,7 @@ namespace chess
 			// XOR the key for the leaving piece once for all of its moves
 			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[piece_idx][piece_type];
 
-			generate_moves_fn(out_index, parent_node, position, piece_idx / 8, piece_idx % 8, king_index, incremental_key, king_check_fn);
+			generate_moves_fn(out_index, parent_idx, piece_idx / 8, piece_idx % 8, king_index, incremental_key, king_check_fn);
 		}
 	}
 }

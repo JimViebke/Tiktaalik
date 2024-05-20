@@ -15,6 +15,9 @@ namespace chess
 		draw_by_stalemate
 	};
 
+	using piece_t = int8_t;
+	using color_t = piece_t;
+
 	using file = ::util::strong_alias<int8_t, struct file_tag>;
 	using rank = ::util::strong_alias<int8_t, struct rank_tag>;
 

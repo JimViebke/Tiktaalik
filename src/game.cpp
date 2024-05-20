@@ -6,7 +6,7 @@
 namespace chess
 {
 	// Simple, nonvalidating FEN parser
-	root_v load_fen(const std::string& fen, position& _position)
+	color_t load_fen(const std::string& fen, position& _position)
 	{
 		// reset the position in case this is not the first call to load_fen()
 		_position = position{};
@@ -95,13 +95,6 @@ namespace chess
 			white_can_castle_ks, white_can_castle_qs, black_can_castle_ks, black_can_castle_qs,
 			en_passant_file, fifty_move_counter };
 
-		if (color_to_move == white)
-		{
-			return node<white>{0};
-		}
-		else
-		{
-			return node<black>{0};
-		}
+		return color_to_move;
 	}
 }

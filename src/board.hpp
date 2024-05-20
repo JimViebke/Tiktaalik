@@ -23,6 +23,10 @@ namespace chess
 		other
 	};
 
+	class board;
+
+	extern std::array<board, positions_size> boards;
+
 	class board
 	{
 	private:
@@ -76,10 +80,10 @@ namespace chess
 					   const file en_passant_file, const int8_t fifty_move_counter);
 
 	private:
-		explicit board(const board& parent_board, const position& parent_position,
+		explicit board(const size_t parent_idx,
 					   const rank start_rank, const file start_file, const rank end_rank, const file end_file)
 		{
-			const piece moved_piece = parent_position.piece_at(start_rank, start_file);
+			const piece moved_piece = positions[parent_idx].piece_at(start_rank, start_file);
 			set_moved_piece(moved_piece);
 
 			// record the move that resulted in this position
@@ -89,27 +93,26 @@ namespace chess
 			set_end_file(end_file);
 
 			// copy castling rights
+			const board& parent_board = boards[parent_idx];
 			set_white_can_castle_ks(parent_board.white_can_castle_ks());
 			set_white_can_castle_qs(parent_board.white_can_castle_qs());
 			set_black_can_castle_ks(parent_board.black_can_castle_ks());
 			set_black_can_castle_qs(parent_board.black_can_castle_qs());
 		}
-		explicit board(const board& parent_board, const position& parent_position,
+		explicit board(const size_t parent_idx,
 					   const rank start_rank, const file start_file, const rank end_rank, const file end_file,
 					   const piece promote_to) // call this constructor for each pawn promotion
-			: board(parent_board, parent_position, start_rank, start_file, end_rank, end_file)
+			: board(parent_idx, start_rank, start_file, end_rank, end_file)
 		{
 			set_moved_piece(promote_to);
 		}
 
-		void set_en_passant_file(const board&, const position&,
-								 const rank, const file start_file, const rank, const file)
+		void set_en_passant_file(const size_t, const rank, const file start_file, const rank, const file)
 		{
 			set_en_passant_file(start_file);
 		}
 
-		void update_castling_rights_for_moving_player(const board&, const position&,
-													  const rank start_rank, const file start_file, const rank, const file)
+		void update_castling_rights_for_moving_player(const size_t, const rank start_rank, const file start_file, const rank, const file)
 		{
 			// if a rook moves, it cannot be used to castle
 			if (start_rank == 0) // black rooks
@@ -127,16 +130,14 @@ namespace chess
 					white_cant_castle_ks();
 			}
 		}
-		void update_castling_rights_for_moving_player(const board& parent_board, const position& parent_position,
+		void update_castling_rights_for_moving_player(const size_t parent_idx,
 													  const rank start_rank, const file start_file, const rank end_rank, const file end_file,
 													  const piece)
 		{
-			update_castling_rights_for_moving_player(parent_board, parent_position,
-													 start_rank, start_file, end_rank, end_file);
+			update_castling_rights_for_moving_player(parent_idx, start_rank, start_file, end_rank, end_file);
 		}
 
-		void update_castling_rights_for_nonmoving_player(const board&, const position&,
-														 const rank, const file, const rank end_rank, const file end_file)
+		void update_castling_rights_for_nonmoving_player(const size_t, const rank, const file, const rank end_rank, const file end_file)
 		{
 			// if a rook is captured, it cannot be used to castle
 			if (end_rank == 0) // black rooks
@@ -154,12 +155,11 @@ namespace chess
 					white_cant_castle_ks();
 			}
 		}
-		void update_castling_rights_for_nonmoving_player(const board& parent_board, const position& parent_position,
+		void update_castling_rights_for_nonmoving_player(const size_t parent_idx,
 														 const rank start_rank, const file start_file, const rank end_rank, const file end_file,
 														 const piece)
 		{
-			update_castling_rights_for_nonmoving_player(parent_board, parent_position,
-														start_rank, start_file, end_rank, end_file);
+			update_castling_rights_for_nonmoving_player(parent_idx, start_rank, start_file, end_rank, end_file);
 		}
 
 	public:
@@ -219,11 +219,8 @@ namespace chess
 		template<color_t moved_piece_color>
 		piece moved_piece() const
 		{
-			piece_t type = (bitfield() >> moved_piece_offset) & moved_piece_mask;
-			// make room for the color bit
-			type <<= 1;
 			// restore the color bit
-			return type + moved_piece_color;
+			return moved_piece_without_color().value() | moved_piece_color;
 		}
 		rank get_start_rank() const { return (bitfield() >> start_rank_offset) & square_mask; }
 		file get_start_file() const { return (bitfield() >> start_file_offset) & square_mask; }
@@ -236,6 +233,13 @@ namespace chess
 		bool black_can_castle_qs() const { return (bitfield() >> black_can_castle_qs_offset) & castling_right_mask; }
 		size_t get_fifty_move_counter() const { return (bitfield() >> fifty_move_counter_offset) & fifty_move_counter_mask; }
 		result get_result() const { return result((bitfield() >> result_offset) & result_mask); }
+
+		piece moved_piece_without_color() const
+		{
+			piece_t type = (bitfield() >> moved_piece_offset) & moved_piece_mask;
+			// make room for the color bit
+			return type << 1;
+		}
 
 		// these can only set a field high
 	private:
@@ -272,8 +276,7 @@ namespace chess
 			return result;
 		}
 
-		template<color_t color_to_move>
-		bool has_move() const { return !moved_piece<other_color(color_to_move)>().is(empty); }
+		bool has_move() const { return moved_piece_without_color().is_occupied(); }
 
 		const piece& last_moved_piece(const position& position) const
 		{
@@ -581,8 +584,6 @@ namespace chess
 			return eval;
 		}
 	};
-
-	extern std::array<board, positions_size> boards;
 
 	tt::key generate_key(const board& board, const position& position, const color_t color_to_move);
 }

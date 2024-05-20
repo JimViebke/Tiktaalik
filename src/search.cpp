@@ -10,12 +10,12 @@ namespace chess
 		size_t tt_miss = 0;
 	}
 
-	template<typename node_t>
-	eval_t detail::alpha_beta(node_t& node, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
+	template<color_t color_to_move>
+	eval_t detail::alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
 	{
 		using eval_type = tt::eval_type;
 
-		board& board = boards[node.index];
+		board& board = boards[idx];
 
 		if (depth == 0)
 		{
@@ -23,7 +23,7 @@ namespace chess
 			return board.get_static_eval();
 		}
 
-		const tt::key key = boards[node.index].get_key();
+		const tt::key key = board.get_key();
 
 		{
 			eval_t eval = 0;
@@ -33,8 +33,8 @@ namespace chess
 			}
 		}
 
-		const position& position = positions[node.index];
-		node.generate_child_boards(position);
+		const size_t begin_idx = first_child_index(idx);
+		const size_t end_idx = generate_child_boards<color_to_move>(idx);
 
 		if (board.is_terminal())
 		{
@@ -43,19 +43,18 @@ namespace chess
 			return eval;
 		}
 
-		get_evals_for_children(node, depth);
-		swap_best_to_front<node.white_to_move()>(node.children);
+		get_evals_for_children(begin_idx, end_idx, depth);
 
-		eval_t eval = (node.white_to_move() ? eval::eval_min : eval::eval_max);
-		eval_type node_eval_type = (node.white_to_move() ? eval_type::alpha : eval_type::beta);
+		eval_t eval = (color_to_move == white ? eval::eval_min : eval::eval_max);
+		eval_type node_eval_type = (color_to_move == white ? eval_type::alpha : eval_type::beta);
 
-		for (size_t i = 0; i < node.children.size(); ++i)
+		for (size_t child_idx = begin_idx; child_idx < end_idx; ++child_idx)
 		{
-			auto& child = node.children[i];
+			swap_best_to_front<color_to_move>(child_idx, end_idx);
 
-			eval_t ab = alpha_beta(child, ply + 1, depth - 1, alpha, beta, n_of_evals);
+			eval_t ab = alpha_beta<other_color(color_to_move)>(child_idx, ply + 1, depth - 1, alpha, beta, n_of_evals);
 
-			if constexpr (node.white_to_move())
+			if constexpr (color_to_move == white)
 			{
 				if (ab > eval::eval_max - 100) --ab;
 
@@ -63,7 +62,6 @@ namespace chess
 				if (eval >= beta)
 				{
 					tt.store(key, depth, eval_type::beta, beta);
-					node.clear_node();
 					return beta;
 				}
 				if (eval > alpha)
@@ -80,7 +78,6 @@ namespace chess
 				if (eval <= alpha)
 				{
 					tt.store(key, depth, eval_type::alpha, alpha);
-					node.clear_node();
 					return alpha;
 				}
 				if (eval < beta)
@@ -89,18 +86,12 @@ namespace chess
 					node_eval_type = eval_type::exact;
 				}
 			}
-
-			if (i == 0) // best child failed to trigger a cutoff, sort the rest
-			{
-				stable_sort_remaining_children<node.white_to_move()>(node.children);
-			}
 		}
 
 		tt.store(key, depth, node_eval_type, eval);
-		node.clear_node();
 		return eval;
 	}
 
-	template eval_t detail::alpha_beta<node<white>>(node<white>& node, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals);
-	template eval_t detail::alpha_beta<node<black>>(node<black>& node, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals);
+	template eval_t detail::alpha_beta<white>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals);
+	template eval_t detail::alpha_beta<black>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals);
 }
