@@ -15,20 +15,23 @@ namespace chess
 
 		inline void get_evals_for_children(const size_t begin_idx, const size_t end_idx)
 		{
+			size_t hits = 0;
+
 			for (size_t idx = begin_idx; idx != end_idx; ++idx)
 			{
 				board& board = boards[idx];
 
 				eval_t cached_eval = 0;
 				const bool hit = detail::tt.simple_exact_probe(cached_eval, board.get_key());
+				hits += hit;
 
 				const eval_t static_eval = board.get_static_eval();
 
 				board.set_eval(hit ? cached_eval : static_eval);
-
-				detail::tt_hit += hit;
-				detail::tt_miss += !hit;
 			}
+
+			detail::tt_hit += hits;
+			detail::tt_miss += (end_idx - begin_idx) - hits;
 		}
 
 		inline void get_evals_for_children(const size_t begin_idx, const size_t end_idx, const depth_t depth)
