@@ -794,17 +794,7 @@ namespace chess
 
 		if constexpr (config::verify_incremental_zobrist_key)
 			if (child_board.get_key() != generate_key(child_board, child_position, child_color))
-			{
 				std::cout << "Incremental and generated zobrist key mismatch in append_if_legal\n";
-
-				std::cout << "parent idx: " << parent_idx << '\n';
-				std::cout << "child idx: " << (out_index - 1) << '\n';
-
-				parent_position.print(moving_color);
-				std::cout << '\n';
-				child_position.print(child_color);
-				std::cout << '\n';
-			}
 
 		if constexpr (config::verify_incremental_static_eval)
 			if (child_board.get_static_eval() != child_position.evaluate_position())
