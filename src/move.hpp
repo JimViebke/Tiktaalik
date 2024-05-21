@@ -269,7 +269,7 @@ namespace chess
 	{
 		// Scan for the position of the first set bit in the mask.
 		// Assume that the board will always have a king of a given color.
-		return _tzcnt_u64(get_bitboard_for<check_color | king>(position));
+		return get_next_bit(get_bitboard_for<check_color | king>(position));
 	}
 
 	// If the opponent isn't checking with a pawn, skip pawn checks.
