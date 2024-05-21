@@ -556,15 +556,14 @@ namespace chess
 					else
 						best_move_idx = search<black>(end_idx, engine_depth, n_of_evals);
 
-
 					engine_time = util::time_in_ms() - start_time;
 
 					std::cout << "depth " << engine_depth << ", " << n_of_evals << " evals, " << engine_time << " ms\n";
-					std::cout << "\ttt hit: " << detail::tt_hit << " tt miss: " << detail::tt_miss << '\n';
+					std::cout << "\ttt hit: " << detail::tt.hit << " tt miss: " << detail::tt.miss << '\n';
 					std::cout << "\toccupied: " << detail::tt.occupied_entries << " insertions: " << detail::tt.insertions << " updates: " << detail::tt.updates << '\n';
 
-					detail::tt_hit = 0;
-					detail::tt_miss = 0;
+					detail::tt.hit = 0;
+					detail::tt.miss = 0;
 				}
 			}
 		}

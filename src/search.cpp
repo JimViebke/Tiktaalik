@@ -5,9 +5,6 @@ namespace chess
 	namespace detail
 	{
 		chess::tt::transposition_table tt;
-
-		size_t tt_hit = 0;
-		size_t tt_miss = 0;
 	}
 
 	template<color_t color_to_move>

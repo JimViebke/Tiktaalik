@@ -85,6 +85,9 @@ namespace chess::tt
 		size_t insertions = 0;
 		size_t updates = 0;
 
+		size_t hit = 0;
+		size_t miss = 0;
+
 		transposition_table() : table{ detail::tt_size_in_entries, entry{} } {}
 
 		inline_toggle void store(const key key, const depth_t eval_depth, const eval_type eval_type, const eval_t eval)

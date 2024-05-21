@@ -10,8 +10,6 @@ namespace chess
 	namespace detail
 	{
 		extern chess::tt::transposition_table tt;
-		extern size_t tt_hit;
-		extern size_t tt_miss;
 
 		static inline_toggle void get_evals_for_children(const size_t begin_idx, const size_t end_idx)
 		{
@@ -30,8 +28,8 @@ namespace chess
 				board.set_eval(hit ? cached_eval : static_eval);
 			}
 
-			detail::tt_hit += hits;
-			detail::tt_miss += (end_idx - begin_idx) - hits;
+			detail::tt.hit += hits;
+			detail::tt.miss += (end_idx - begin_idx) - hits;
 		}
 
 		static inline_toggle void get_evals_for_children(const size_t begin_idx, const size_t end_idx, const depth_t depth)
