@@ -111,7 +111,8 @@ namespace chess
 	}
 
 	template<color_t attacking_pawn_color>
-	inline bool square_is_attacked_by_pawn(const position& position, const rank rank, const file file)
+	static inline_toggle bool square_is_attacked_by_pawn(const position& position,
+														 const rank rank, const file file)
 	{
 		if constexpr (attacking_pawn_color == white)
 		{
@@ -126,11 +127,13 @@ namespace chess
 
 		return false;
 	}
-	inline bool square_is_attacked_by_knight(const position& position, const piece attacking_knight, const rank rank, const file file)
+	static inline_toggle bool square_is_attacked_by_knight(const position& position, const piece attacking_knight,
+														   const rank rank, const file file)
 	{
 		return knight_attacks[to_index(rank, file)](position, attacking_knight);
 	}
-	inline bool square_is_attacked_by_bishop_or_queen(const position& position, const color_t attacker_color, const rank rank, const file file)
+	static inline_toggle bool square_is_attacked_by_bishop_or_queen(const position& position, const color_t attacker_color,
+																	const rank rank, const file file)
 	{
 		// iterate in all four diagonal directions to find a bishop or queen
 
@@ -191,7 +194,8 @@ namespace chess
 
 		return false;
 	}
-	inline bool square_is_attacked_by_rook_or_queen(const position& position, const color_t attacker_color, const rank rank, const file file)
+	static inline_toggle bool square_is_attacked_by_rook_or_queen(const position& position, const color_t attacker_color,
+																  const rank rank, const file file)
 	{
 		// iterate in all four vertical and horizontal directions to check for a rook or queen (these loops only look within bounds)
 
@@ -240,7 +244,8 @@ namespace chess
 
 		return false;
 	}
-	inline bool square_is_attacked_by_king(const position& position, const piece attacking_king, const rank rank, const file file)
+	static inline_toggle bool square_is_attacked_by_king(const position& position, const piece attacking_king,
+														 const rank rank, const file file)
 	{
 		// Check adjacent squares for a king.
 		// Check rank first, because a king is likely on a top or bottom rank.
