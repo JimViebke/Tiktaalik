@@ -36,7 +36,7 @@ namespace chess
 
 		static inline_toggle void get_evals_for_children(const size_t begin_idx, const size_t end_idx, const depth_t depth)
 		{
-			if (tt::config::use_tt_move_ordering && depth > 1)
+			if (tt::config::use_tt_move_ordering && depth > 5)
 			{
 				get_evals_for_children(begin_idx, end_idx);
 			}
