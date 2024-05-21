@@ -321,27 +321,6 @@ namespace chess
 	}
 	using is_king_in_check_fn = bool(*)(const position&, const piece, const rank, const file);
 
-	template<color_t color_to_move>
-	bool is_king_in_check(const board& board, const position& position, const piece king_piece, const rank rank, const file file)
-	{
-		// If the last move is known, and a player is starting their turn, some piece checks can be skipped.
-		if (board.has_move() && king_piece.is_color(color_to_move))
-		{
-			const piece last_moved = board.last_moved_piece(position);
-
-			// Only look for pawn/knight/king checks if the last moved piece is a pawn/knight/king.
-			if (last_moved.is_pawn())
-				return is_king_in_check<check_type::do_pawn_checks>(position, king_piece, rank, file);
-			else if (last_moved.is_knight())
-				return is_king_in_check<check_type::do_knight_checks>(position, king_piece, rank, file);
-			else
-				return is_king_in_check<check_type::skip_pawn_and_knight_checks>(position, king_piece, rank, file);
-		}
-
-		// We don't know what move created this position, or it is not the king's color's turn to move; do all checks.
-		return is_king_in_check<check_type::do_all>(position, king_piece, rank, file);
-	}
-
 	// This is only used by the GUI.
 	inline bool is_king_in_check(const position& position, const color_t king_color)
 	{
@@ -694,9 +673,13 @@ namespace chess
 		find_bishop_moves<color_to_move>(out_index, parent_idx, rank, file, king_index, key, check_fn);
 	}
 	template<color_t color_to_move>
-	void find_king_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file, const tt::key key)
+	void find_king_moves(size_t& out_index, const size_t parent_idx,
+						 const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
 	{
 		const position& position = positions[parent_idx];
+
+		const rank rank = king_index / 8;
+		const file file = king_index % 8;
 
 		const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[to_index(rank, file)][color_to_move | king];
 
@@ -723,7 +706,7 @@ namespace chess
 			}
 		}
 
-		const piece& king_piece = position.piece_at(rank, file);
+		const piece& king_piece = position.piece_at(king_index);
 
 		const board& board = boards[parent_idx];
 
@@ -733,7 +716,7 @@ namespace chess
 			// If white can castle kingside, we already know the king and rook are in place.
 			if (position.piece_at(rank, file + 1).is_empty() && // Check if the squares in between are empty.
 				position.piece_at(rank, file + 2).is_empty() &&
-				!is_king_in_check<color_to_move>(board, position, king_piece, rank, file)) // Check if the king is in check now...
+				!check_fn(position, king_piece, rank, file)) // Check if the king is in check now...
 			{
 				chess::position temp{};
 				make_move(temp, position, rank, file, rank, file + 1); // ...on his way.
@@ -752,7 +735,7 @@ namespace chess
 			if (position.piece_at(rank, file - 1).is_empty() &&
 				position.piece_at(rank, file - 2).is_empty() &&
 				position.piece_at(rank, file - 3).is_empty() && // we need to check that this square is empty for the rook to move through, but no check test is needed
-				!is_king_in_check<color_to_move>(board, position, king_piece, rank, file))
+				!check_fn(position, king_piece, rank, file))
 			{
 				chess::position temp{};
 				make_move(temp, position, rank, file, rank, file - 1);
@@ -890,7 +873,7 @@ namespace chess
 		find_moves_for<color_to_move | bishop>(end_idx, parent_idx, king_index, key, &find_bishop_moves<color_to_move>, check_fn);
 		find_moves_for<color_to_move | rook>(end_idx, parent_idx, king_index, key, &find_rook_moves<color_to_move>, check_fn);
 		find_moves_for<color_to_move | queen>(end_idx, parent_idx, king_index, key, &find_queen_moves<color_to_move>, check_fn);
-		find_king_moves<color_to_move>(end_idx, parent_idx, king_index / 8, king_index % 8, key);
+		find_king_moves<color_to_move>(end_idx, parent_idx, king_index, key, check_fn);
 
 		if constexpr (!perft)
 		{
