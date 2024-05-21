@@ -26,7 +26,12 @@ namespace chess
 			eval_t eval = 0;
 			if (tt.probe(eval, key, depth, alpha, beta))
 			{
+				++tt.hit;
 				return eval;
+			}
+			else
+			{
+				++tt.miss;
 			}
 		}
 
