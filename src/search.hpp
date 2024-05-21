@@ -13,7 +13,7 @@ namespace chess
 		extern size_t tt_hit;
 		extern size_t tt_miss;
 
-		inline void get_evals_for_children(const size_t begin_idx, const size_t end_idx)
+		static inline_toggle void get_evals_for_children(const size_t begin_idx, const size_t end_idx)
 		{
 			size_t hits = 0;
 
@@ -34,7 +34,7 @@ namespace chess
 			detail::tt_miss += (end_idx - begin_idx) - hits;
 		}
 
-		inline void get_evals_for_children(const size_t begin_idx, const size_t end_idx, const depth_t depth)
+		static inline_toggle void get_evals_for_children(const size_t begin_idx, const size_t end_idx, const depth_t depth)
 		{
 			if (tt::config::use_tt_move_ordering && depth > 1)
 			{
@@ -51,7 +51,7 @@ namespace chess
 		}
 
 		template<color_t color_to_move>
-		void swap_best_to_front(const size_t begin_idx, const size_t end_idx)
+		inline_toggle void swap_best_to_front(const size_t begin_idx, const size_t end_idx)
 		{
 			size_t best_index = begin_idx;
 			eval_t best_eval = boards[begin_idx].get_eval();

@@ -19,3 +19,9 @@ namespace chess
 		static constexpr bool use_tt_move_ordering = true;
 	}
 }
+
+#if 0
+#define inline_toggle __attribute__((noinline))
+#else
+#define inline_toggle inline
+#endif
