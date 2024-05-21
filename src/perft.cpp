@@ -18,7 +18,7 @@ namespace chess
 				   std::map<depth_t, size_t>& node_counter)
 		{
 			const size_t begin_idx = first_child_index(idx);
-			const size_t end_idx = generate_child_boards<color_to_move>(idx);
+			const size_t end_idx = generate_child_boards<color_to_move, true>(idx);
 
 			node_counter[depth] += (end_idx - begin_idx);
 
