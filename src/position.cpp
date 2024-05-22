@@ -5,7 +5,10 @@ namespace chess
 	void position::print(const color_t color_to_move) const
 	{
 		std::cout << (color_to_move == white ? "White" : "Black") << " to move:\n";
-
+		print();
+	}
+	void position::print() const
+	{
 		for (size_t i = 0; i < _position.size(); ++i)
 		{
 			if (i % 8 == 0) std::cout << ' ';
@@ -33,7 +36,7 @@ namespace chess
 			}
 
 			if (i % 8 == 7) std::cout << '\n';
-		}	
+		}
 	}
 
 	std::array<position, max_ply * max_n_of_moves> positions{};

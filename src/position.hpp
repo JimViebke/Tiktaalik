@@ -61,6 +61,7 @@ namespace chess
 		}
 
 		void print(const color_t side_to_move) const;
+		void print() const;
 	};
 
 	static_assert(sizeof(position) == 64 && alignof(position) == 64);
