@@ -17,6 +17,8 @@ namespace chess
 	using movemasks = std::array<bitboard, 64>;
 
 	extern const movemasks knight_movemasks;
+	extern const movemasks bishop_movemasks;
+	extern const movemasks rook_movemasks;
 
 	class bitboards
 	{
