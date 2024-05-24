@@ -269,12 +269,11 @@ namespace chess
 		return false;
 	}
 
-	template<color_t check_color>
-	inline size_t find_king_index(const position& position)
+	inline size_t find_king_index(const piece king_piece, const position& position)
 	{
 		// Scan for the position of the first set bit in the mask.
 		// Assume that the board will always have a king of a given color.
-		return get_next_bit(get_bitboard_for<check_color | king>(position));
+		return get_next_bit(get_bitboard_for(king_piece, position));
 	}
 
 	// If the opponent isn't checking with a pawn, skip pawn checks.
@@ -294,7 +293,7 @@ namespace chess
 	{
 		if constexpr (check_type == check_type::do_all)
 		{
-			if (square_is_attacked_by_king(position, king | other_color(king_piece.get_color()), rank, file)) return true;
+			if (square_is_attacked_by_king(position, king | king_piece.other_color(), rank, file)) return true;
 		}
 
 		if (square_is_attacked_by_rook_or_queen(position, other_color(king_piece.get_color()), rank, file)) return true;
@@ -305,7 +304,7 @@ namespace chess
 					  check_type == check_type::opponent_move_unknown ||
 					  check_type == check_type::do_all)
 		{
-			if (square_is_attacked_by_knight(position, knight | other_color(king_piece.get_color()), rank, file)) return true;
+			if (square_is_attacked_by_knight(position, knight | king_piece.other_color(), rank, file)) return true;
 		}
 
 		if constexpr (check_type == check_type::do_pawn_checks ||
@@ -329,11 +328,7 @@ namespace chess
 	// This is only used by the GUI.
 	inline bool is_king_in_check(const position& position, const color_t king_color)
 	{
-		size_t index = 0;
-		if (king_color == white)
-			index = find_king_index<white>(position);
-		else
-			index = find_king_index<black>(position);
+		const size_t index = find_king_index(king_color | king, position);
 		return is_king_in_check<check_type::do_all>(position, position.piece_at(index), index / 8, index % 8);
 	}
 
@@ -839,7 +834,7 @@ namespace chess
 		rank last_moved_end_rank{};
 		file last_moved_end_file{};
 		const piece last_moved_piece = get_last_moved_info<color_to_move>(parent_board, last_moved_end_rank, last_moved_end_file);
-		const size_t king_index = find_king_index<color_to_move>(parent_position);
+		const size_t king_index = find_king_index(king_piece, parent_position);
 
 		// Filter which types of checks we need to look for during move generation,
 		// based on which piece (if any) is known to be attacking the king.

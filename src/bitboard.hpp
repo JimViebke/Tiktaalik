@@ -65,8 +65,7 @@ namespace chess
 		return bitboards;
 	}
 
-	template<piece_t piece>
-	__forceinline bitboard get_bitboard_for(const position& position)
+	__forceinline bitboard get_bitboard_for(const piece piece, const position& position)
 	{
 		static_assert(sizeof(chess::position) == 64);
 		static_assert(alignof(chess::position) == 64);
@@ -76,7 +75,7 @@ namespace chess
 		uint256_t ymm1 = _mm256_loadu_si256((uint256_t*)(position._position.data() + 32));
 
 		// broadcast the target piece (type | color) to all positions of a register
-		const uint256_t piece_mask = _mm256_set1_epi8(piece);
+		const uint256_t piece_mask = _mm256_set1_epi8(piece.value());
 
 		// find the matching bytes
 		ymm1 = _mm256_cmpeq_epi8(ymm1, piece_mask); // high half first
@@ -95,17 +94,17 @@ namespace chess
 		return ::util::tzcnt(bitboard);
 	}
 
-	inline bitboard clear_next_bit(const bitboard bitboard)
+	[[nodiscard]] inline bitboard clear_next_bit(const bitboard bitboard)
 	{
 		return ::util::blsr(bitboard);
 	}
 
 	template<piece_t piece_type, typename generate_moves_fn_t, typename king_check_fn_t>
-	__forceinline void find_moves_for(size_t& out_index, const size_t parent_idx,
-									  const size_t king_index, const tt::key key, generate_moves_fn_t generate_moves_fn, king_check_fn_t king_check_fn)
+	static inline_toggle void find_moves_for(size_t& out_index, const size_t parent_idx,
+											 const size_t king_index, const tt::key key, generate_moves_fn_t generate_moves_fn, king_check_fn_t king_check_fn)
 	{
 		const position& parent_position = positions[parent_idx];
-		bitboard pieces = get_bitboard_for<piece_type>(parent_position);
+		bitboard pieces = get_bitboard_for(piece_type, parent_position);
 
 		while (pieces)
 		{
