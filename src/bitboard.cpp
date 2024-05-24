@@ -6,6 +6,10 @@
 
 namespace chess
 {
+	std::array<bitboard, 2> qb_and_qr_bitboards;
+	bitboard qbr_attack_masks;
+	bitboard captured_piece;
+
 	void print_bitboard(const bitboard bitboard)
 	{
 		std::string str;

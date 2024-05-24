@@ -2,6 +2,7 @@
 
 #include <array>
 
+#include "config.hpp"
 #include "piece.hpp"
 #include "position.hpp"
 #include "types.hpp"
@@ -97,6 +98,229 @@ namespace chess
 	[[nodiscard]] inline bitboard clear_next_bit(const bitboard bitboard)
 	{
 		return ::util::blsr(bitboard);
+	}
+
+	// The positions of the opponent's queens and bishops, and queens and rooks.
+	extern std::array<bitboard, 2> qb_and_qr_bitboards;
+	// All of the squares that the opponent's queens, bishops, and rooks could move to, if each
+	// were on an empty board. Used to cheaply determine if the king can possibly be in check
+	// from a sliding piece.
+	extern bitboard qbr_attack_masks;
+	// Contains a bit representing the position of the piece that was captured, if any. This is used 
+	// to remove any captured piece from qb_and_qr_bitboards before performing sliding piece checks.
+	extern bitboard captured_piece;
+
+	inline void set_up_opponent_qb_and_qr_bitboards(const position& position, const piece king_piece)
+	{
+		const color_t opponent_color = king_piece.other_color();
+
+		// broadcast the target piece (type | color) to all positions of a register
+		const uint256_t piece_mask_q = _mm256_set1_epi8(opponent_color | queen);
+		const uint256_t piece_mask_r = _mm256_set1_epi8(opponent_color | rook);
+		const uint256_t piece_mask_b = _mm256_set1_epi8(opponent_color | bishop);
+
+		// load the 64 bytes of the board into two ymm registers
+		const uint256_t ymm0 = _mm256_loadu_si256((uint256_t*)(position._position.data() + 0));
+		const uint256_t ymm1 = _mm256_loadu_si256((uint256_t*)(position._position.data() + 32));
+
+		// find the matching bytes
+		const uint256_t q_mask_hi = _mm256_cmpeq_epi8(ymm1, piece_mask_q); // high half first
+		const uint256_t q_mask_lo = _mm256_cmpeq_epi8(ymm0, piece_mask_q);
+
+		// combine hi and lo halves of the masks, and extract
+		const uint256_t r_mask_hi = _mm256_cmpeq_epi8(ymm1, piece_mask_r); // high half first
+		const uint64_t qr_mask_hi = uint32_t(_mm256_movemask_epi8(_mm256_or_si256(q_mask_hi, r_mask_hi)));
+		const uint256_t r_mask_lo = _mm256_cmpeq_epi8(ymm0, piece_mask_r);
+		const uint64_t qr_mask_lo = uint32_t(_mm256_movemask_epi8(_mm256_or_si256(q_mask_lo, r_mask_lo)));
+		const uint256_t b_mask_hi = _mm256_cmpeq_epi8(ymm1, piece_mask_b); // high half first
+		const uint64_t qb_mask_hi = uint32_t(_mm256_movemask_epi8(_mm256_or_si256(q_mask_hi, b_mask_hi)));
+		const uint256_t b_mask_lo = _mm256_cmpeq_epi8(ymm0, piece_mask_b);
+		const uint64_t qb_mask_lo = uint32_t(_mm256_movemask_epi8(_mm256_or_si256(q_mask_lo, b_mask_lo)));
+
+		bitboard queens_and_rooks_bb = (qr_mask_hi << 32) | qr_mask_lo; // queens | rooks;
+		bitboard queens_and_bishops_bb = (qb_mask_hi << 32) | qb_mask_lo; // queens | bishops;
+
+		qb_and_qr_bitboards[0] = queens_and_bishops_bb;
+		qb_and_qr_bitboards[1] = queens_and_rooks_bb;
+		captured_piece = 0;
+
+		bitboard attack_mask = 0;
+		while (queens_and_bishops_bb)
+		{
+			const size_t index = get_next_bit(queens_and_bishops_bb);
+			attack_mask |= bishop_movemasks[index];
+			queens_and_bishops_bb = clear_next_bit(queens_and_bishops_bb);
+		}
+
+		while (queens_and_rooks_bb)
+		{
+			const size_t index = get_next_bit(queens_and_rooks_bb);
+			attack_mask |= rook_movemasks[index];
+			queens_and_rooks_bb = clear_next_bit(queens_and_rooks_bb);
+		}
+
+		qbr_attack_masks = attack_mask;
+	}
+
+	static inline_toggle bool is_attacked_by_sliding_piece(const position& position, const piece king_piece,
+														   const bitboard king_position)
+	{
+		if constexpr (config::verify_cached_sliding_piece_bitboards)
+		{
+			// Generate the qb and qr bitboards from scratch, and see if they ever mismatch the cached version
+
+			const color_t opponent_color = king_piece.other_color();
+
+			const bitboard queens = get_bitboard_for(opponent_color | queen, position);
+			const bitboard bishops = get_bitboard_for(opponent_color | bishop, position);
+			const bitboard rooks = get_bitboard_for(opponent_color | rook, position);
+
+			const bitboard queens_and_bishops = queens | bishops;
+			const bitboard queens_and_rooks = queens | rooks;
+			const bool qb_mismatch = (queens_and_bishops != (qb_and_qr_bitboards[0] & ~captured_piece.value()));
+			const bool qr_mismatch = (queens_and_rooks != (qb_and_qr_bitboards[1] & ~captured_piece.value()));
+
+			if (qb_mismatch || qr_mismatch)
+			{
+				if (qb_mismatch)
+				{
+					std::cout << "queen/bishop bitboard mismatch\n";
+					std::cout << "cached:\n";
+					print_bitboard(qb_and_qr_bitboards[0]);
+					std::cout << "generated:\n";
+					print_bitboard(queens_and_bishops);
+				}
+
+				if (qr_mismatch)
+				{
+					std::cout << "queen/rook bitboard mismatch\n";
+					std::cout << "cached:\n";
+					print_bitboard(qb_and_qr_bitboards[1]);
+					std::cout << "generated:\n";
+					print_bitboard(queens_and_rooks);
+				}
+
+				std::cout << "cached captured_piece:\n";
+				print_bitboard(captured_piece);
+				position.print();
+				std::cin.ignore();
+			}
+		}
+
+		/*
+		 0  1  2  3  4  5  6  7
+		 8 ...
+		16 ...
+		24 ...
+		32 ...
+		40 ...
+		48 ...
+		56 57 58 59 60 61 62 63
+		*/
+
+		/*
+		NW   N  NE
+		 W       E
+		SW   S  SE
+
+		-9  -8  -7
+		-1       1
+		 7   8   9
+		*/
+
+		const uint256_t ymm_captured_piece = _mm256_set1_epi64x(captured_piece);
+		captured_piece = 0; // clear so we don't read this again.
+		// if no sliding piece could capture the king on an otherwise empty board,
+		// the king can't be in check
+		if ((king_position & qbr_attack_masks) == 0) return false;
+
+		// broadcast empty bitboard to all four positions
+		const uint256_t empty_squares = _mm256_set1_epi64x(get_bitboard_for(empty, position));
+
+		constexpr uint64_t move_se = 0xFE'FE'FE'FE'FE'FE'FE'00;
+		constexpr uint64_t move__s = 0xFF'FF'FF'FF'FF'FF'FF'00;
+		constexpr uint64_t move_sw = 0x7F'7F'7F'7F'7F'7F'7F'00;
+		constexpr uint64_t move__e = 0xFE'FE'FE'FE'FE'FE'FE'FE;
+		constexpr uint64_t move__w = 0x7F'7F'7F'7F'7F'7F'7F'7F;
+		constexpr uint64_t move_ne = 0x00'FE'FE'FE'FE'FE'FE'FE;
+		constexpr uint64_t move__n = 0x00'FF'FF'FF'FF'FF'FF'FF;
+		constexpr uint64_t move_nw = 0x00'7F'7F'7F'7F'7F'7F'7F;
+		constexpr static std::array<uint64_t, 4> static_right_shift_masks = { move_nw, move__n, move_ne, move__w };
+		constexpr static std::array<uint64_t, 4> static_left_shift_masks = { move_se, move__s, move_sw, move__e };
+		uint256_t right_shift_masks = _mm256_loadu_si256((uint256_t*)&static_right_shift_masks);
+		uint256_t left_shift_masks = _mm256_loadu_si256((uint256_t*)&static_left_shift_masks);
+
+		// load 2x slider bitmasks created by generate_child_boards() into 4x positions
+		uint256_t sliders = _mm256_broadcastsi128_si256(_mm_loadu_si128((uint128_t*)qb_and_qr_bitboards.data()));
+
+		// Remove any slider that was just captured. Equivalent to:
+		// sliders = _mm256_andnot_si256(ymm_captured_piece, sliders);
+		asm(R"(VPANDN	%[sliders], %[ymm_captured_piece], %[sliders])"
+			: [sliders] "+&v" (sliders)
+			: [ymm_captured_piece] "v" (ymm_captured_piece));
+
+		constexpr static std::array<uint8_t, 4> shift_amounts = { 9, 8, 7, 1 };
+		const uint256_t shifts = _mm256_cvtepi8_epi64(_mm_loadu_si32(shift_amounts.data()));
+
+		// select all empty bits within the allowable regions
+		uint256_t right_shift_and_empty = _mm256_and_si256(right_shift_masks, empty_squares);
+		uint256_t left_shift_and_empty = _mm256_and_si256(left_shift_masks, empty_squares);
+
+		// shift left and right by [7, 8, 9, 1]
+		uint256_t right_temp = _mm256_srlv_epi64(sliders, shifts);
+		uint256_t left_temp = _mm256_sllv_epi64(sliders, shifts);
+		// select only the pieces that can correctly end up here
+		right_temp = _mm256_and_si256(right_temp, right_shift_and_empty);
+		left_temp = _mm256_and_si256(left_temp, left_shift_and_empty);
+		// accumulate movements
+		uint256_t right_sliders = _mm256_or_si256(sliders, right_temp);
+		uint256_t left_sliders = _mm256_or_si256(sliders, left_temp);
+
+		// empty &= (empty >> shift);
+		right_shift_and_empty = _mm256_and_si256(right_shift_and_empty, _mm256_srlv_epi64(right_shift_and_empty, shifts));
+		left_shift_and_empty = _mm256_and_si256(left_shift_and_empty, _mm256_sllv_epi64(left_shift_and_empty, shifts));
+
+		const uint256_t shifts_2 = _mm256_add_epi64(shifts, shifts);
+
+		// shift left and right by [7, 8, 9, 1]*2
+		right_temp = _mm256_srlv_epi64(right_sliders, shifts_2);
+		left_temp = _mm256_sllv_epi64(left_sliders, shifts_2);
+		// select only the pieces that can correctly end up here
+		right_temp = _mm256_and_si256(right_temp, right_shift_and_empty);
+		left_temp = _mm256_and_si256(left_temp, left_shift_and_empty);
+		// accumulate movements
+		right_sliders = _mm256_or_si256(right_sliders, right_temp);
+		left_sliders = _mm256_or_si256(left_sliders, left_temp);
+
+		// empty &= (empty >> shift_2);
+		right_shift_and_empty = _mm256_and_si256(right_shift_and_empty, _mm256_srlv_epi64(right_shift_and_empty, shifts_2));
+		left_shift_and_empty = _mm256_and_si256(left_shift_and_empty, _mm256_sllv_epi64(left_shift_and_empty, shifts_2));
+
+		const uint256_t shifts_3 = _mm256_add_epi64(shifts_2, shifts_2);
+
+		// shift left and right by [7, 8, 9, 1]*4
+		right_temp = _mm256_srlv_epi64(right_sliders, shifts_3);
+		left_temp = _mm256_sllv_epi64(left_sliders, shifts_3);
+		// select only the pieces that can correctly end up here
+		right_temp = _mm256_and_si256(right_temp, right_shift_and_empty);
+		left_temp = _mm256_and_si256(left_temp, left_shift_and_empty);
+		// accumulate movements
+		right_sliders = _mm256_or_si256(right_sliders, right_temp);
+		left_sliders = _mm256_or_si256(left_sliders, left_temp);
+
+		// (no intermediate third step, because we use the original masks)
+
+		// 4th and final step; shift the accumulated masks by the original shift
+		right_sliders = _mm256_srlv_epi64(right_sliders, shifts);
+		left_sliders = _mm256_sllv_epi64(left_sliders, shifts);
+		// select only the pieces that can correctly end up here
+		right_sliders = _mm256_and_si256(right_sliders, right_shift_masks);
+		left_sliders = _mm256_and_si256(left_sliders, left_shift_masks);
+		// combine 8 sliding attack maps into 4
+		const uint256_t out = _mm256_or_si256(left_sliders, right_sliders);
+
+		// if any of the masks intersect with the king (sliders & king), the king is being checked by a slider
+		return _mm256_testnzc_si256(out, _mm256_set1_epi64x(king_position));
 	}
 
 	template<piece_t piece_type, typename generate_moves_fn_t, typename king_check_fn_t>

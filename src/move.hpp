@@ -37,7 +37,13 @@ namespace chess
 		const size_t start_idx = to_index(start_rank, start_file);
 		const size_t end_idx = to_index(end_rank, end_file);
 
-		if constexpr (move_type == move_type::en_passant_capture)
+		if constexpr (move_type == move_type::capture)
+		{
+			// Record the position of the captured piece, so we don't generate sliding piece
+			// attacks for it when searching for a check.
+			captured_piece = (1ull << end_idx);
+		}
+		else if (move_type == move_type::en_passant_capture)
 		{
 			child.piece_at(start_rank, end_file) = empty; // the captured pawn will have the moving pawn's start rank and end file
 		}
@@ -132,118 +138,6 @@ namespace chess
 	{
 		return knight_attacks[to_index(rank, file)](position, attacking_knight);
 	}
-	static inline_toggle bool square_is_attacked_by_bishop_or_queen(const position& position, const color_t attacker_color,
-																	const rank rank, const file file)
-	{
-		// iterate in all four diagonal directions to find a bishop or queen
-
-		// search rank and file descending
-		for (int offset = 1; offset < 8; ++offset)
-		{
-			// if the coordinates are in bounds
-			if (!bounds_check(rank - offset, file - offset)) break;
-
-			// if there is a piece here
-			if (position.piece_at(rank - offset, file - offset).is_occupied())
-			{
-				// if the piece is a bishop/queen of the opposing color, the king is in check
-				if ((position.piece_at(rank - offset, file - offset).is_bishop() || position.piece_at(rank - offset, file - offset).is_queen())
-					&& position.piece_at(rank - offset, file - offset).is_color(attacker_color)) return true;
-				break; // a piece is here, don't keep searching in this direction
-			}
-		}
-
-		// search rank descending and file ascending (same logic as above)
-		for (int offset = 1; offset < 8; ++offset)
-		{
-			if (!bounds_check(rank - offset, file + offset)) break;
-
-			if (position.piece_at(rank - offset, file + offset).is_occupied())
-			{
-				if ((position.piece_at(rank - offset, file + offset).is_bishop() || position.piece_at(rank - offset, file + offset).is_queen())
-					&& position.piece_at(rank - offset, file + offset).is_color(attacker_color)) return true;
-				break;
-			}
-		}
-
-		// search rank ascending and file descending (same logic as above)
-		for (int offset = 1; offset < 8; ++offset)
-		{
-			if (!bounds_check(rank + offset, file - offset)) break;
-
-			if (position.piece_at(rank + offset, file - offset).is_occupied())
-			{
-				if ((position.piece_at(rank + offset, file - offset).is_bishop() || position.piece_at(rank + offset, file - offset).is_queen())
-					&& position.piece_at(rank + offset, file - offset).is_color(attacker_color)) return true;
-				break;
-			}
-		}
-
-		// search rank and file ascending (same logic as above)
-		for (int offset = 1; offset < 8; ++offset)
-		{
-			if (!bounds_check(rank + offset, file + offset)) break;
-
-			if (position.piece_at(rank + offset, file + offset).is_occupied())
-			{
-				if ((position.piece_at(rank + offset, file + offset).is_bishop() || position.piece_at(rank + offset, file + offset).is_queen())
-					&& position.piece_at(rank + offset, file + offset).is_color(attacker_color)) return true;
-				break;
-			}
-		}
-
-		return false;
-	}
-	static inline_toggle bool square_is_attacked_by_rook_or_queen(const position& position, const color_t attacker_color,
-																  const rank rank, const file file)
-	{
-		// iterate in all four vertical and horizontal directions to check for a rook or queen (these loops only look within bounds)
-
-		// rank descending
-		for (auto other_rank = rank - 1; other_rank >= 0; --other_rank)
-		{
-			// if a square is found that is not empty
-			if (position.piece_at(other_rank, file).is_occupied())
-			{
-				// if the piece is a rook/queen AND is hostile, the king is in check
-				if ((position.piece_at(other_rank, file).is_rook() || position.piece_at(other_rank, file).is_queen())
-					&& position.piece_at(other_rank, file).is_color(attacker_color)) return true;
-				break; // a piece was found in this direction, stop checking in this direction
-			}
-		}
-		// rank ascending (same logic as above)
-		for (auto other_rank = rank + 1; other_rank < 8; ++other_rank)
-		{
-			if (position.piece_at(other_rank, file).is_occupied())
-			{
-				if ((position.piece_at(other_rank, file).is_rook() || position.piece_at(other_rank, file).is_queen())
-					&& position.piece_at(other_rank, file).is_color(attacker_color)) return true;
-				break;
-			}
-		}
-		// file descending (same logic as above)
-		for (auto other_file = file - 1; other_file >= 0; --other_file)
-		{
-			if (position.piece_at(rank, other_file).is_occupied())
-			{
-				if ((position.piece_at(rank, other_file).is_rook() || position.piece_at(rank, other_file).is_queen())
-					&& position.piece_at(rank, other_file).is_color(attacker_color)) return true;
-				break;
-			}
-		}
-		// file ascending (same logic as above)
-		for (auto other_file = file + 1; other_file < 8; ++other_file)
-		{
-			if (position.piece_at(rank, other_file).is_occupied())
-			{
-				if ((position.piece_at(rank, other_file).is_rook() || position.piece_at(rank, other_file).is_queen())
-					&& position.piece_at(rank, other_file).is_color(attacker_color)) return true;
-				break;
-			}
-		}
-
-		return false;
-	}
 	static inline_toggle bool square_is_attacked_by_king(const position& position, const piece attacking_king,
 														 const rank rank, const file file)
 	{
@@ -291,14 +185,12 @@ namespace chess
 	template<check_type check_type>
 	bool is_king_in_check(const position& position, const piece king_piece, const rank rank, const file file)
 	{
+		if (is_attacked_by_sliding_piece(position, king_piece, 1ull << to_index(rank, file))) return true;
+
 		if constexpr (check_type == check_type::do_all)
 		{
 			if (square_is_attacked_by_king(position, king | king_piece.other_color(), rank, file)) return true;
 		}
-
-		if (square_is_attacked_by_rook_or_queen(position, other_color(king_piece.get_color()), rank, file)) return true;
-
-		if (square_is_attacked_by_bishop_or_queen(position, other_color(king_piece.get_color()), rank, file)) return true;
 
 		if constexpr (check_type == check_type::do_knight_checks ||
 					  check_type == check_type::opponent_move_unknown ||
@@ -830,6 +722,9 @@ namespace chess
 		}
 
 		const position& parent_position = positions[parent_idx];
+
+		constexpr piece king_piece = color_to_move | king;
+		set_up_opponent_qb_and_qr_bitboards(parent_position, king_piece);
 
 		rank last_moved_end_rank{};
 		file last_moved_end_file{};
