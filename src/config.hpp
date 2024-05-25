@@ -21,8 +21,8 @@ namespace chess
 	}
 }
 
-#if 0
-#define inline_toggle __attribute__((noinline))
-#else
+#if 1
 #define inline_toggle inline
+#else
+#define inline_toggle __attribute__((noinline))
 #endif
