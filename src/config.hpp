@@ -22,7 +22,13 @@ namespace chess
 }
 
 #if 1
+#define inline_unspecified
 #define inline_toggle inline
+#define inline_toggle_member inline
+#define force_inline_toggle [[clang::always_inline]] [[maybe_unused]] static
 #else
-#define inline_toggle __attribute__((noinline))
+#define inline_unspecified [[clang::noinline]] static
+#define inline_toggle [[clang::noinline]] [[maybe_unused]] static
+#define inline_toggle_member [[clang::noinline]]
+#define force_inline_toggle [[clang::noinline]] [[maybe_unused]] static
 #endif

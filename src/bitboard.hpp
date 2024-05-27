@@ -110,7 +110,7 @@ namespace chess
 	// to remove any captured piece from qb_and_qr_bitboards before performing sliding piece checks.
 	extern bitboard captured_piece;
 
-	inline void set_up_opponent_qb_and_qr_bitboards(const position& position, const piece king_piece)
+	force_inline_toggle void set_up_opponent_qb_and_qr_bitboards(const position& position, const piece king_piece)
 	{
 		const color_t opponent_color = king_piece.other_color();
 
@@ -162,8 +162,8 @@ namespace chess
 		qbr_attack_masks = attack_mask;
 	}
 
-	static inline_toggle bool is_attacked_by_sliding_piece(const position& position, const piece king_piece,
-														   const bitboard king_position)
+	force_inline_toggle bool is_attacked_by_sliding_piece(const position& position, const piece king_piece,
+														  const bitboard king_position)
 	{
 		if constexpr (config::verify_cached_sliding_piece_bitboards)
 		{
@@ -324,8 +324,8 @@ namespace chess
 	}
 
 	template<piece_t piece_type, typename generate_moves_fn_t, typename king_check_fn_t>
-	static inline_toggle void find_moves_for(size_t& out_index, const size_t parent_idx,
-											 const size_t king_index, const tt::key key, generate_moves_fn_t generate_moves_fn, king_check_fn_t king_check_fn)
+	force_inline_toggle void find_moves_for(size_t& out_index, const size_t parent_idx,
+											const size_t king_index, const tt::key key, generate_moves_fn_t generate_moves_fn, king_check_fn_t king_check_fn)
 	{
 		const position& parent_position = positions[parent_idx];
 		bitboard pieces = get_bitboard_for(piece_type, parent_position);

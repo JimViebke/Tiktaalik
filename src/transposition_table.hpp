@@ -90,7 +90,7 @@ namespace chess::tt
 
 		transposition_table() : table{ detail::tt_size_in_entries, entry{} } {}
 
-		inline_toggle void store(const key key, const depth_t eval_depth, const eval_type eval_type, const eval_t eval)
+		inline_toggle_member void store(const key key, const depth_t eval_depth, const eval_type eval_type, const eval_t eval)
 		{
 			entry& entry = get_entry(key);
 
@@ -108,7 +108,7 @@ namespace chess::tt
 			entry.eval = eval;
 		}
 
-		inline_toggle bool probe(eval_t& eval, const key key, const depth_t eval_depth, const eval_t alpha, const eval_t beta) const
+		inline_toggle_member bool probe(eval_t& eval, const key key, const depth_t eval_depth, const eval_t alpha, const eval_t beta) const
 		{
 			const entry& entry = get_entry(key);
 
@@ -145,7 +145,7 @@ namespace chess::tt
 			return false;
 		}
 
-		inline_toggle bool simple_exact_probe(eval_t& eval, const key key) const
+		inline_toggle_member bool simple_exact_probe(eval_t& eval, const key key) const
 		{
 			const entry& entry = get_entry(key);
 			eval = entry.eval;

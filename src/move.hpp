@@ -24,7 +24,7 @@ namespace chess
 	}
 
 	template<color_t moving_color, piece_t moving_piece_type, move_type move_type>
-	void make_move(position& child, const position& parent, const board& child_board)
+	[[clang::always_inline]] void make_move(position& child, const position& parent, const board& child_board)
 	{
 		// copy the parent position
 		child = parent;
@@ -62,6 +62,7 @@ namespace chess
 		child.piece_at(start_idx) = empty;
 	}
 
+	// This is only used by the GUI.
 	template<color_t child_color>
 	void make_move(position& child, const position& parent, const board& child_board)
 	{
@@ -117,8 +118,8 @@ namespace chess
 	}
 
 	template<color_t attacking_pawn_color>
-	static inline_toggle bool square_is_attacked_by_pawn(const position& position,
-														 const rank rank, const file file)
+	inline_toggle bool square_is_attacked_by_pawn(const position& position,
+												  const rank rank, const file file)
 	{
 		if constexpr (attacking_pawn_color == white)
 		{
@@ -133,13 +134,13 @@ namespace chess
 
 		return false;
 	}
-	static inline_toggle bool square_is_attacked_by_knight(const position& position, const piece attacking_knight,
-														   const rank rank, const file file)
+	inline_toggle bool square_is_attacked_by_knight(const position& position, const piece attacking_knight,
+													const rank rank, const file file)
 	{
 		return knight_attacks[to_index(rank, file)](position, attacking_knight);
 	}
-	static inline_toggle bool square_is_attacked_by_king(const position& position, const piece attacking_king,
-														 const rank rank, const file file)
+	inline_toggle bool square_is_attacked_by_king(const position& position, const piece attacking_king,
+												  const rank rank, const file file)
 	{
 		// Check adjacent squares for a king.
 		// Check rank first, because a king is likely on a top or bottom rank.
@@ -183,7 +184,7 @@ namespace chess
 	};
 
 	template<check_type check_type>
-	bool is_king_in_check(const position& position, const piece king_piece, const rank rank, const file file)
+	inline_unspecified bool is_king_in_check(const position& position, const piece king_piece, const rank rank, const file file)
 	{
 		if (is_attacked_by_sliding_piece(position, king_piece, 1ull << to_index(rank, file))) return true;
 
@@ -225,8 +226,8 @@ namespace chess
 	}
 
 	template<color_t color_to_move>
-	void find_pawn_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
-						 const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
+	force_inline_toggle void find_pawn_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
+											 const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
 	{
 		const position& position = positions[parent_idx];
 		const board& board = boards[parent_idx];
@@ -359,8 +360,8 @@ namespace chess
 		}
 	}
 	template<color_t color_to_move>
-	void find_rook_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
-						 const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
+	force_inline_toggle void find_rook_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
+											 const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
 	{
 		const position& position = positions[parent_idx];
 
@@ -439,8 +440,8 @@ namespace chess
 		}
 	}
 	template<color_t color_to_move>
-	void find_bishop_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
-						   const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
+	force_inline_toggle void find_bishop_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
+											   const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
 	{
 		const position& position = positions[parent_idx];
 
@@ -523,8 +524,8 @@ namespace chess
 		}
 	}
 	template<color_t color_to_move>
-	void find_knight_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
-						   const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
+	force_inline_toggle void find_knight_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
+											   const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
 	{
 		const bitboards bitboards = get_bitboards_for(positions[parent_idx]);
 
@@ -558,15 +559,15 @@ namespace chess
 		}
 	}
 	template<color_t color_to_move>
-	void find_queen_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
-						  const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
+	force_inline_toggle void find_queen_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
+											  const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
 	{
 		find_rook_moves<color_to_move>(out_index, parent_idx, rank, file, king_index, key, check_fn);
 		find_bishop_moves<color_to_move>(out_index, parent_idx, rank, file, king_index, key, check_fn);
 	}
 	template<color_t color_to_move>
-	void find_king_moves(size_t& out_index, const size_t parent_idx,
-						 const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
+	force_inline_toggle void find_king_moves(size_t& out_index, const size_t parent_idx,
+											 const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
 	{
 		const position& position = positions[parent_idx];
 
@@ -642,8 +643,8 @@ namespace chess
 	}
 
 	template <color_t moving_color, piece_t moving_piece_type = other_piece, move_type move_type = move_type::other, typename... board_args>
-	void append_if_legal(size_t& out_index, const size_t parent_idx, const size_t king_index, const tt::key key,
-						 is_king_in_check_fn check_fn, board_args&&... args)
+	force_inline_toggle void append_if_legal(size_t& out_index, const size_t parent_idx, const size_t king_index, const tt::key key,
+											 is_king_in_check_fn check_fn, board_args&&... args)
 	{
 		static_assert(moving_piece_type == pawn ||
 					  moving_piece_type == rook ||
@@ -687,8 +688,8 @@ namespace chess
 	}
 
 	template<color_t attacking_color>
-	inline bool pawn_is_attacking(const rank attack_rank, const file attack_file,
-								  const rank target_rank, const file target_file)
+	inline_toggle bool pawn_is_attacking(const rank attack_rank, const file attack_file,
+										 const rank target_rank, const file target_file)
 	{
 		if (diff(attack_file, target_file) != 1) return false;
 
@@ -698,8 +699,8 @@ namespace chess
 			return target_rank == attack_rank + 1;
 	}
 
-	inline bool knight_is_attacking(const rank attack_rank, const file attack_file,
-									const rank target_rank, const file target_file)
+	inline_toggle bool knight_is_attacking(const rank attack_rank, const file attack_file,
+										   const rank target_rank, const file target_file)
 	{
 		const auto rank_diff = diff(attack_rank, target_rank);
 		const auto file_diff = diff(attack_file, target_file);

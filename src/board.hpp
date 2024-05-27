@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "capture.hpp"
+#include "config.hpp"
 #include "evaluation.hpp"
 #include "piece.hpp"
 #include "position.hpp"
@@ -112,7 +113,7 @@ namespace chess
 			set_en_passant_file(start_file);
 		}
 
-		void update_castling_rights_for_moving_player(const size_t, const rank start_rank, const file start_file, const rank, const file)
+		inline_toggle_member void update_castling_rights_for_moving_player(const size_t, const rank start_rank, const file start_file, const rank, const file)
 		{
 			// if a rook moves, it cannot be used to castle
 			if (start_rank == 0) // black rooks
@@ -137,7 +138,7 @@ namespace chess
 			update_castling_rights_for_moving_player(parent_idx, start_rank, start_file, end_rank, end_file);
 		}
 
-		void update_castling_rights_for_nonmoving_player(const size_t, const rank, const file, const rank end_rank, const file end_file)
+		inline_toggle_member void update_castling_rights_for_nonmoving_player(const size_t, const rank, const file, const rank end_rank, const file end_file)
 		{
 			// if a rook is captured, it cannot be used to castle
 			if (end_rank == 0) // black rooks
@@ -164,7 +165,7 @@ namespace chess
 
 	public:
 		template<color_t color_to_move, piece_t moving_piece_type, move_type move_type, typename... board_args>
-		static board make_board(board_args&&... args)
+		inline_toggle_member static board make_board(board_args&&... args)
 		{
 			board board(std::forward<board_args>(args)...);
 
@@ -284,7 +285,7 @@ namespace chess
 		}
 
 		template<color_t update_color>
-		void update_key_castling_rights_for(tt::key& incremental_key, const board& parent_board)
+		inline_toggle_member void update_key_castling_rights_for(tt::key& incremental_key, const board& parent_board)
 		{
 			if constexpr (update_color == white)
 			{
@@ -303,7 +304,7 @@ namespace chess
 		}
 
 		template <color_t moving_color, piece_t moving_piece_type, move_type move_type>
-		void update_key_and_static_eval(const position& parent_position, const board& parent_board, tt::key incremental_key)
+		inline_toggle_member void update_key_and_static_eval(const position& parent_position, const board& parent_board, tt::key incremental_key)
 		{
 			// The incremental_key has already had the leaving piece removed, and the color to move toggled.
 			// We receive it by copy so we can modify it before writing it.
@@ -407,7 +408,7 @@ namespace chess
 		}
 
 		template <color_t moving_color, piece_t moving_piece_type, move_type move_type>
-		void generate_incremental_key(const position& parent_position, const board& parent_board, tt::key incremental_key)
+		inline_toggle void generate_incremental_key(const position& parent_position, const board& parent_board, tt::key incremental_key)
 		{
 			// The incremental_key has already had the leaving piece removed, and the color to move toggled.
 			// We receive it by copy so we can modify it before writing it.
@@ -483,7 +484,7 @@ namespace chess
 		}
 
 		template <color_t moving_color, piece_t moving_piece_type, move_type move_type>
-		void generate_incremental_static_eval(const position& parent_position, const eval_t parent_static_eval)
+		inline_toggle void generate_incremental_static_eval(const position& parent_position, const eval_t parent_static_eval)
 		{
 			const rank start_rank = get_start_rank();
 			const file start_file = get_start_file();

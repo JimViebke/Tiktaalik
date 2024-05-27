@@ -11,7 +11,7 @@ namespace chess
 	{
 		extern chess::tt::transposition_table tt;
 
-		static inline_toggle void get_evals_for_children(const size_t begin_idx, const size_t end_idx)
+		inline_toggle void get_evals_for_children(const size_t begin_idx, const size_t end_idx)
 		{
 			size_t hits = 0;
 
@@ -32,7 +32,7 @@ namespace chess
 			detail::tt.miss += (end_idx - begin_idx) - hits;
 		}
 
-		static inline_toggle void get_evals_for_children(const size_t begin_idx, const size_t end_idx, const depth_t depth)
+		inline_toggle void get_evals_for_children(const size_t begin_idx, const size_t end_idx, const depth_t depth)
 		{
 			if (tt::config::use_tt_move_ordering && depth > 5)
 			{
