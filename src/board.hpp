@@ -113,54 +113,59 @@ namespace chess
 			set_en_passant_file(start_file);
 		}
 
+		template<color_t color>
+		void update_castling_rights_for(const rank rank, const file file)
+		{
+			// rank and file might be start or end idx.
+			if constexpr (color == white)
+			{
+				if (rank == 7)
+				{
+					if (file == 0)
+						white_cant_castle_qs();
+					else if (file == 7)
+						white_cant_castle_ks();
+				}
+			}
+			else
+			{
+				if (rank == 0)
+				{
+					if (file == 0)
+						black_cant_castle_qs();
+					else if (file == 7)
+						black_cant_castle_ks();
+				}
+			}
+		}
+
+		template<color_t moving_color>
 		inline_toggle_member void update_castling_rights_for_moving_player(const size_t, const rank start_rank, const file start_file, const rank, const file)
 		{
 			// if a rook moves, it cannot be used to castle
-			if (start_rank == 0) // black rooks
-			{
-				if (start_file == 0)
-					black_cant_castle_qs();
-				else if (start_file == 7)
-					black_cant_castle_ks();
-			}
-			else if (start_rank == 7) // white rooks
-			{
-				if (start_file == 0)
-					white_cant_castle_qs();
-				else if (start_file == 7)
-					white_cant_castle_ks();
-			}
+			update_castling_rights_for<moving_color>(start_rank, start_file);
 		}
+		template<color_t moving_color>
 		void update_castling_rights_for_moving_player(const size_t parent_idx,
 													  const rank start_rank, const file start_file, const rank end_rank, const file end_file,
 													  const piece)
 		{
-			update_castling_rights_for_moving_player(parent_idx, start_rank, start_file, end_rank, end_file);
+			update_castling_rights_for_moving_player<moving_color>(parent_idx, start_rank, start_file, end_rank, end_file);
 		}
 
-		inline_toggle_member void update_castling_rights_for_nonmoving_player(const size_t, const rank, const file, const rank end_rank, const file end_file)
+		template<color_t nonmoving_color>
+		inline_toggle_member void update_castling_rights_for_nonmoving_player(const size_t,
+																			  const rank, const file, const rank end_rank, const file end_file)
 		{
 			// if a rook is captured, it cannot be used to castle
-			if (end_rank == 0) // black rooks
-			{
-				if (end_file == 0)
-					black_cant_castle_qs();
-				else if (end_file == 7)
-					black_cant_castle_ks();
-			}
-			else if (end_rank == 7) // white rooks
-			{
-				if (end_file == 0)
-					white_cant_castle_qs();
-				else if (end_file == 7)
-					white_cant_castle_ks();
-			}
+			update_castling_rights_for<nonmoving_color>(end_rank, end_file);
 		}
+		template<color_t nonmoving_color>
 		void update_castling_rights_for_nonmoving_player(const size_t parent_idx,
 														 const rank start_rank, const file start_file, const rank end_rank, const file end_file,
 														 const piece)
 		{
-			update_castling_rights_for_nonmoving_player(parent_idx, start_rank, start_file, end_rank, end_file);
+			update_castling_rights_for_nonmoving_player<nonmoving_color>(parent_idx, start_rank, start_file, end_rank, end_file);
 		}
 
 	public:
@@ -203,12 +208,12 @@ namespace chess
 			}
 			else if constexpr (moving_piece_type == rook)
 			{
-				board.update_castling_rights_for_moving_player(std::forward<board_args>(args)...); // todo: only check the moving player's rooks
+				board.update_castling_rights_for_moving_player<other_color(color_to_move)>(std::forward<board_args>(args)...);
 			}
 
 			if constexpr (move_type == move_type::capture)
 			{
-				board.update_castling_rights_for_nonmoving_player(std::forward<board_args>(args)...); // todo: only check the nonmoving player's rooks
+				board.update_castling_rights_for_nonmoving_player<color_to_move>(std::forward<board_args>(args)...);
 			}
 
 			return board;
