@@ -21,6 +21,30 @@ namespace chess
 	extern const movemasks bishop_movemasks;
 	extern const movemasks rook_movemasks;
 
+	constexpr bitboard rank_8 = 0xFF;
+	constexpr bitboard rank_7 = rank_8 << 8;
+	constexpr bitboard rank_6 = rank_7 << 8;
+	constexpr bitboard rank_5 = rank_6 << 8;
+	constexpr bitboard rank_4 = rank_5 << 8;
+	constexpr bitboard rank_3 = rank_4 << 8;
+	constexpr bitboard rank_2 = rank_3 << 8;
+	constexpr bitboard rank_1 = rank_2 << 8;
+
+	constexpr bitboard file_a = 0x0101010101010101;
+	constexpr bitboard file_b = file_a << 1;
+	constexpr bitboard file_c = file_b << 1;
+	constexpr bitboard file_d = file_c << 1;
+	constexpr bitboard file_e = file_d << 1;
+	constexpr bitboard file_f = file_e << 1;
+	constexpr bitboard file_g = file_f << 1;
+	constexpr bitboard file_h = file_g << 1;
+
+	constexpr bitboard pawn_capture_lower_file = ~rank_1 & ~rank_8 & ~file_a;
+	constexpr bitboard pawn_capture_higher_file = pawn_capture_lower_file >> 1;
+
+	// Centers on a5. Shift left by ep_file. If black is moving, also shift left by 8.
+	constexpr bitboard ep_capture_mask = 0b10'10000000'00000000'00000000;
+
 	class bitboards
 	{
 	public:
