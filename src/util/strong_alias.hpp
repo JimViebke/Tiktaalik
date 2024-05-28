@@ -41,6 +41,7 @@ namespace util
 		constexpr auto operator--(int) { auto t = *this; operator--(); return t; }
 
 		constexpr strong_alias operator-() const { return -value(); }
+		constexpr strong_alias operator~() const { return ~value(); }
 
 		template <typename other_t>
 			requires std::is_arithmetic<other_t>::value
