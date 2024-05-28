@@ -47,6 +47,7 @@ namespace chess
 		else
 			make_move<black>(child_position, parent_position, child_board);
 
+		set_up_opponent_qb_and_qr_bitboards(child_position, child_color_to_move | king);
 		if (is_king_in_check(child_position, child_color_to_move))
 		{
 			if (child_board.is_terminal())
