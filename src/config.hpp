@@ -21,7 +21,7 @@ namespace chess
 	}
 }
 
-#if 1
+#if !_DEBUG && 1
 #define inline_unspecified
 #define inline_toggle inline
 #define inline_toggle_member inline
