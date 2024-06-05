@@ -245,10 +245,10 @@ namespace chess
 		const position& position = positions[parent_idx];
 
 		const bitboard pawns = get_bitboard_for(color_to_move | pawn, position);
-		bitboard empty_squares = get_bitboard_for(empty, position);
 
 		const bitboards bitboards = get_bitboards_for(position);
 		const bitboard opp_pieces = (color_to_move == white) ? bitboards.black : bitboards.white;
+		bitboard empty_squares = bitboards.empty;
 
 		bitboard move_one_square = pawns & ((color_to_move == white) ? empty_squares << 8 : empty_squares >> 8);
 
@@ -568,17 +568,13 @@ namespace chess
 											   const size_t king_index, const tt::key key, is_king_in_check_fn check_fn)
 	{
 		const bitboards bitboards = get_bitboards_for(positions[parent_idx]);
-
-		const bitboard our_pieces = (color_to_move == white) ? bitboards.white : bitboards.black;
 		const bitboard opp_pieces = (color_to_move == white) ? bitboards.black : bitboards.white;
 
 		const size_t knight_index = to_index(rank, file);
-
 		const bitboard moves = knight_movemasks[knight_index];
 
 		bitboard captures = moves & opp_pieces;
-		const bitboard blockers = moves & our_pieces;
-		bitboard noncaptures = moves ^ captures ^ blockers;
+		bitboard noncaptures = moves & bitboards.empty;
 
 		while (captures)
 		{
