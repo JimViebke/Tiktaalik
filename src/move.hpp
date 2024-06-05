@@ -58,7 +58,15 @@ namespace chess
 			child.piece_at(start_rank, 0) = empty;
 		}
 
-		child.piece_at(end_idx) = child_board.moved_piece<moving_color>();
+		if constexpr (moving_piece_type == king)
+		{
+			child.piece_at(end_idx) = moving_piece_type | moving_color;
+		}
+		else
+		{
+			child.piece_at(end_idx) = child_board.moved_piece<moving_color>();
+		}
+
 		child.piece_at(start_idx) = empty;
 	}
 
