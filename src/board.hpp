@@ -55,6 +55,7 @@ namespace chess
 
 		// bitfield masks
 		static constexpr uint64_t square_mask = (1ull << square_bits) - 1;
+		static constexpr uint64_t index_mask = (square_mask << square_bits) | square_mask;
 		static constexpr uint64_t moved_piece_mask = (1ull << moved_piece_bits) - 1;
 		static constexpr uint64_t en_passant_mask = (1ull << en_passant_bits) - 1;
 		static constexpr uint64_t castling_right_mask = (1ull << castling_right_bits) - 1;
@@ -232,6 +233,8 @@ namespace chess
 		file get_start_file() const { return (bitfield() >> start_file_offset) & square_mask; }
 		rank get_end_rank() const { return (bitfield() >> end_rank_offset) & square_mask; }
 		file get_end_file() const { return (bitfield() >> end_file_offset) & square_mask; }
+		size_t get_start_index() const { return (bitfield() >> start_file_offset) & index_mask; }
+		size_t get_end_index() const { return (bitfield() >> end_file_offset) & index_mask; }
 		file get_en_passant_file() const { return (bitfield() >> en_passant_file_offset) & en_passant_mask; }
 		bool white_can_castle_ks() const { return (bitfield() >> white_can_castle_ks_offset) & castling_right_mask; }
 		bool white_can_castle_qs() const { return (bitfield() >> white_can_castle_qs_offset) & castling_right_mask; }
