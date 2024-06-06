@@ -13,12 +13,10 @@ namespace chess
 		const position& parent_position = positions[parent_idx];
 		const board& child_board = boards[child_idx];
 
-		const rank start_rank = child_board.get_start_rank();
-		const file start_file = child_board.get_start_file();
-		const rank end_rank = child_board.get_end_rank();
-		const file end_file = child_board.get_end_file();
+		const size_t start_index = child_board.get_start_index();
+		const size_t end_index = child_board.get_end_index();
 
-		const piece piece = parent_position.piece_at(start_rank, start_file);
+		const piece piece = parent_position.piece_at(start_index);
 		if (!piece.is_pawn())
 		{
 			ss << piece.to_algebraic_char();
@@ -29,26 +27,26 @@ namespace chess
 
 		const std::string move = child_board.move_to_string();
 
-		if (parent_position.is_occupied(end_rank, end_file))
+		if (parent_position.is_occupied(end_index))
 		{
-			if (parent_position.piece_at(start_rank, start_file).is_pawn())
+			if (parent_position.piece_at(start_index).is_pawn())
 			{
 				ss << move[0];
 			}
 			ss << 'x';
 		}
 
-		// add the destination coordinates
+		// Add the destination coordinates.
 		ss << move[2] << move[3];
 
-		position child_position{};
+		// Generate child boards for this position, to determine if it is terminal.
 		if (child_color_to_move == white)
-			make_move<white>(child_position, parent_position, child_board);
+			generate_child_boards<white>(child_idx);
 		else
-			make_move<black>(child_position, parent_position, child_board);
+			generate_child_boards<black>(child_idx);
 
-		set_up_opponent_qb_and_qr_bitboards(child_position, child_color_to_move | king);
-		if (is_king_in_check(child_position, child_color_to_move))
+		// Add notation for check and checkmate.
+		if (is_king_in_check(positions[child_idx], child_color_to_move))
 		{
 			if (child_board.is_terminal())
 				ss << '#';
