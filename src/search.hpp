@@ -7,6 +7,8 @@
 
 namespace chess
 {
+	extern std::atomic_bool searching;
+
 	namespace detail
 	{
 		extern chess::tt::transposition_table tt;
@@ -103,6 +105,8 @@ namespace chess
 			detail::swap_best_to_front<color_to_move>(idx, end_idx);
 
 			const eval_t ab = detail::alpha_beta<other_color(color_to_move)>(idx, 1, depth - 1, alpha, beta, n_of_evals);
+
+			if (!searching) return 0;
 
 			if constexpr (color_to_move == white)
 			{
