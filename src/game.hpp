@@ -49,6 +49,7 @@ namespace chess
 
 	const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	const std::string kiwipete = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 0";
+	const std::string position_5 = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8";
 	const std::string sicilian_defense = "rnbqkbnr/pp2pppp/3p4/2p5/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq d3 0 3";
 
 	const std::string colle_v_grau_M3 = "1k5r/pP3ppp/3p2b1/1BN1n3/1Q2P3/P1B5/KP3P1P/7q w - - 1 0";
@@ -62,10 +63,10 @@ namespace chess
 	const std::string agdestein_v_al_qudaimi_M4 = "3r1r2/1pp2p1k/p5pp/4P3/2nP3R/2P3QP/P1B1q1P1/5RK1 w - - 1 0";
 	const std::string giese_v_alekhine_M4 = "2k4r/ppp2p2/2b2B2/7p/6pP/2P1q1bP/PP3N2/R4QK1 b - - 0 1";
 
-	const std::string short_mate_test = "6k1/P6R/8/8/8/8/8/4K3 w - - 0 0";
+	const std::string short_mate_test_M2 = "6k1/P6R/8/8/8/8/8/4K3 w - - 0 0";
 	const std::string two_rooks_endgame_w = "4k3/8/8/8/8/8/8/R3K2R w - - 0 0";
 	const std::string one_rook_endgame_w = "4k3/8/8/8/8/8/8/R3K3 w - - 0 0";
-	const std::string two_rooks_endgame_b = "r3k2r/8/8/8/8/8/8/4K3 b - - 0 0";
+	const std::string two_rooks_endgame_b_M2 = "r3k2r/8/8/8/8/8/8/4K3 b - - 0 0";
 	const std::string white_in_check = "4k3/8/8/8/8/4K2r/8/8 w - - 0 0";
 
 	const std::string start_fen = start_pos;
@@ -109,7 +110,7 @@ namespace chess
 			right_overlay.setFont(arial);
 			right_overlay.setCharacterSize(detail::right_overlay_font_size);
 			right_overlay.setFillColor(detail::text_color);
-			right_overlay.setPosition({ detail::board_size_px + detail::board_x * 2, detail::board_y / 2 });
+			right_overlay.setPosition({ detail::right_overlay_x, detail::right_overlay_y });
 
 			if (!wk_texture.loadFromFile("../Chess_Engine/res/wk.png"))
 				std::cout << "wk failed to load";

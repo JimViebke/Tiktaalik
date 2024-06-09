@@ -53,5 +53,7 @@ namespace chess
 			else
 				ss << '+';
 		}
+
+		// (no standard notation for stalemate)
 	}
 }
