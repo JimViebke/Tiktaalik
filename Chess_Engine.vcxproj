@@ -35,6 +35,7 @@
     <ClCompile Include="src\board.cpp" />
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\move.cpp" />
     <ClCompile Include="src\notation.cpp" />
     <ClCompile Include="src\perft.cpp" />
     <ClCompile Include="src\position.cpp" />
