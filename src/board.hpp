@@ -441,4 +441,6 @@ namespace chess
 	};
 
 	tt::key generate_key(const board& board, const position& position, const color_t color_to_move);
+
+	bool same_move(const board& move_a, const board& move_b);
 }
