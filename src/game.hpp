@@ -241,9 +241,67 @@ namespace chess
 			generate_right_overlay();
 		}
 
+		bool get_ply_1_board_idx(size_t& result, const board& board)
+		{
+			constexpr size_t begin_idx = first_child_index(0);
+
+			for (size_t idx = begin_idx; idx != begin_idx + moves.size(); ++idx)
+			{
+				if (same_move(boards[idx], board))
+				{
+					result = idx;
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		void play_move_inner(const board& move)
+		{
+			size_t idx = 0;
+
+			if (!get_ply_1_board_idx(idx, move))
+			{
+				// should never happen
+				std::cout << "play_move_inner() recieved an illegal move: " << move.move_to_string() << std::endl;
+			}
+
+			// Update root color, position, and board.
+			color_to_move = other_color(color_to_move);
+			positions[0] = positions[idx];
+			boards[0] = boards[idx];
+
+			// Update PV.
+			auto& pv = pv_moves[0];
+			if (same_move(move, pv[0]))
+			{
+				// The played move, whether played manually or from the PV, matches the first move in the PV.
+				// Update the PV by shifting it up by one.
+				auto& pv_length = pv_lengths[0];
+				std::copy(pv.begin() + 1,
+						  pv.begin() + pv_length,
+						  pv.begin());
+				--pv_length;
+				std::cout << "Played the PV move.\n";
+			}
+			else
+			{
+				// The PV is no longer valid, mark it as length 0.
+				pv_lengths[0] = 0;
+				std::cout << "Played a non-PV move.\n";
+			}
+
+			update_info_for_new_root_position();
+
+			// Decrement the current depth because we're advancing down the tree by one node.
+			if (engine_depth > 0)
+				--engine_depth;
+		}
+
 		// If a move is passed, is it legal. Play it.
-		// If no move is passed, find and play the best move.
-		void play_move(const std::optional<board> move = std::optional<board>())
+		// If no move is passed, play the PV move.
+		void play_move(std::optional<board> move = std::optional<board>())
 		{
 			if (moves.empty())
 			{
@@ -255,66 +313,17 @@ namespace chess
 			searching.store(false);
 			const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
 
-			const size_t begin_idx = first_child_index(0);
-			const size_t old_end_idx = begin_idx + moves.size();
-			size_t idx = begin_idx;
-
-			/*
-			TODO: Read from the PV if no move was passed.
-
-			if (!move)
-			{
-				if (pv.size() > 0)
-				{
-					move = pv.pop_front();
-				}
-				else
-				{
-					std::cout << "No PV move.\n";
-					// [ cleanup ]
-					return;
-				}
-			}
-			*/
-
 			if (move)
 			{
-				// A legal move was passed; find its index.
-				for (; idx != old_end_idx; ++idx)
-				{
-					const board board = boards[idx];
-					if (board.get_start_index() == move->get_start_index() &&
-						board.get_end_index() == move->get_end_index() &&
-						board.moved_piece_without_color().is(move->moved_piece_without_color()))
-					{
-						break;
-					}
-				}
+				play_move_inner(move.value());
+			}
+			else if (pv_lengths[0] > 0)
+			{
+				play_move_inner(pv_moves[0][0]);
 			}
 			else
 			{
-				// No move was provided, try use the best move.
-				idx = best_move_idx;
-			}
-
-			if (idx != 0)
-			{
-				// Update root color, position, board, and best move.
-				color_to_move = other_color(color_to_move);
-				positions[0] = positions[idx];
-				boards[0] = boards[idx];
-				best_move_idx = 0;
-
-				update_info_for_new_root_position();
-
-				// Decrement the current depth because we're advancing down the tree by one node.
-				if (engine_depth > 0)
-					--engine_depth;
-			}
-			else
-			{
-				// The only way index is zero is if we tried to play the best move, without having one.
-				std::cout << "No best move to play.\n";
+				std::cout << "No move or pv move.\n";
 			}
 
 			searching.store(true);
@@ -447,13 +456,26 @@ namespace chess
 			// List legal moves if any exist.
 			if (moves.size() > 0)
 			{
-				// Display the best move if we have one.
-				if (best_move_idx != 0)
+				if (pv_lengths[0] > 0)
 				{
+					size_t idx = 0;
+					if (!get_ply_1_board_idx(idx, pv_moves[0][0]))
+					{
+						// should never happen
+						std::cout << "generate_right_overlay() can't find pv_moves[0][0]: " << pv_moves[0][0].move_to_string() << std::endl;
+					}
+
 					ss << "Best move: ";
-					move_to_notation(ss, 0, best_move_idx, other_color(color_to_move));
-					ss << '\n' << std::fixed << std::setprecision(1) << float(boards[best_move_idx].get_eval()) / 100 << '\n';
+					move_to_notation(ss, 0, idx, other_color(color_to_move));
 					ss << '\n';
+					ss << std::fixed << std::setprecision(1) << float(boards[idx].get_eval()) / 100 << "\n\n";
+
+					ss << "PV:\n";
+					for (size_t i = 0; i < pv_lengths[0]; ++i)
+					{
+						ss << pv_moves[0][i].move_to_string() << ' ';
+					}
+					ss << "\n\n";
 				}
 
 				ss << moves.size() << " moves:\n";
@@ -626,27 +648,30 @@ namespace chess
 
 					const auto start_time = util::time_in_ms();
 
-					size_t result = 0;
 					const size_t end_idx = first_child_index(0) + moves.size();
 					n_of_evals = 0;
 					if (color_to_move == white)
-						result = search<white>(end_idx, engine_depth + 1, n_of_evals);
+						search<white>(end_idx, engine_depth + 1, n_of_evals);
 					else
-						result = search<black>(end_idx, engine_depth + 1, n_of_evals);
+						search<black>(end_idx, engine_depth + 1, n_of_evals);
 
 					engine_time = util::time_in_ms() - start_time;
 
 					// If searching is still true, we finished another round of iterative deepening.
-					// Otherwise, we were stopped by the main thread, and our depth and best move
-					// are unchanged.
+					// Otherwise, we were stopped by the main thread, and our depth is unchanged.
 					if (searching)
 					{
-						best_move_idx = result;
 						++engine_depth;
 
 						std::cout << "depth " << engine_depth << ", " << n_of_evals << " evals, " << engine_time << " ms\n";
 						std::cout << "\ttt hit: " << detail::tt.hit << " tt miss: " << detail::tt.miss << '\n';
 						std::cout << "\toccupied: " << detail::tt.occupied_entries << " insertions: " << detail::tt.insertions << " updates: " << detail::tt.updates << '\n';
+						std::cout << "\tpv:";
+						for (size_t i = 0; i < pv_lengths[0]; ++i)
+						{
+							std::cout << ' ' << pv_moves[0][i].move_to_string();
+						}
+						std::cout << '\n';
 
 						generate_right_overlay();
 
@@ -770,7 +795,6 @@ namespace chess
 		depth_t engine_depth = 0;
 		size_t n_of_evals = 0;
 		util::timepoint engine_time = 0;
-		size_t best_move_idx = 0;
 
 		std::vector<board> moves;
 

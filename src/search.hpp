@@ -12,7 +12,17 @@ namespace chess
 	namespace detail
 	{
 		extern chess::tt::transposition_table tt;
+	}
 
+	constexpr size_t max_depth = 256;
+
+	extern std::array<std::array<board, max_depth>, max_depth> pv_moves;
+	extern std::array<size_t, max_depth> pv_lengths;
+
+	void update_pv(const size_t ply, const board& board);
+
+	namespace detail
+	{
 		inline_toggle void get_evals_for_children(const size_t begin_idx, const size_t end_idx)
 		{
 			size_t hits = 0;
@@ -87,7 +97,7 @@ namespace chess
 	}
 
 	template<color_t color_to_move>
-	size_t search(const size_t end_idx, depth_t depth, size_t& n_of_evals)
+	void search(const size_t end_idx, depth_t depth, size_t& n_of_evals)
 	{
 		eval_t alpha = eval::eval_min;
 		eval_t beta = eval::eval_max;
@@ -97,23 +107,20 @@ namespace chess
 
 		detail::get_evals_for_children(begin_idx, end_idx, depth);
 
-		// default to first move if one exists
-		size_t best_move_idx = (begin_idx != end_idx) ? begin_idx : 0;
-
 		for (size_t idx = begin_idx; idx != end_idx; ++idx)
 		{
 			detail::swap_best_to_front<color_to_move>(idx, end_idx);
 
 			const eval_t ab = detail::alpha_beta<other_color(color_to_move)>(idx, 1, depth - 1, alpha, beta, n_of_evals);
 
-			if (!searching) return 0;
+			if (!searching) return;
 
 			if constexpr (color_to_move == white)
 			{
 				if (ab > eval)
 				{
 					eval = ab;
-					best_move_idx = idx;
+					update_pv(0, boards[idx]);
 				}
 				alpha = std::max(alpha, eval);
 			}
@@ -122,17 +129,15 @@ namespace chess
 				if (ab < eval)
 				{
 					eval = ab;
-					best_move_idx = idx;
+					update_pv(0, boards[idx]);
 				}
 				beta = std::min(beta, eval);
 			}
 		}
 
-		if (best_move_idx == 0)
+		if (pv_lengths[0] == 0)
 		{
-			std::cout << "No best move found (node is likely terminal).\n";
+			std::cout << "No PV (position is likely terminal).\n";
 		}
-
-		return best_move_idx;
 	}
 }

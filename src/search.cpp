@@ -9,10 +9,26 @@ namespace chess
 		chess::tt::transposition_table tt;
 	}
 
+	std::array<size_t, max_depth> pv_lengths;
+	std::array<std::array<board, max_depth>, max_depth> pv_moves;
+
+	void update_pv(const size_t ply, const board& board)
+	{
+		pv_moves[ply][ply] = board;
+		for (size_t next_ply = ply + 1; next_ply < pv_lengths[ply + 1]; ++next_ply)
+		{
+			pv_moves[ply][next_ply] = pv_moves[ply + 1][next_ply];
+		}
+
+		pv_lengths[ply] = pv_lengths[ply + 1];
+	}
+
 	template<color_t color_to_move>
 	eval_t detail::alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
 	{
 		using eval_type = tt::eval_type;
+
+		pv_lengths[ply] = ply;
 
 		board& board = boards[idx];
 
@@ -74,6 +90,7 @@ namespace chess
 				{
 					alpha = eval;
 					node_eval_type = eval_type::exact;
+					update_pv(ply, boards[child_idx]);
 				}
 			}
 			else
@@ -90,6 +107,7 @@ namespace chess
 				{
 					beta = eval;
 					node_eval_type = eval_type::exact;
+					update_pv(ply, boards[child_idx]);
 				}
 			}
 		}
