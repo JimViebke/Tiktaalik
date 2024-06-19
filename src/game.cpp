@@ -2,6 +2,7 @@
 
 #include "game.hpp"
 #include "position.hpp"
+#include "search.hpp"
 
 namespace chess
 {
@@ -97,4 +98,56 @@ namespace chess
 
 		return color_to_move;
 	}
+
+	template<color_t color_to_move>
+	void Game::search(const size_t end_idx, depth_t depth, size_t& n_of_evals)
+	{
+		eval_t alpha = eval::eval_min;
+		eval_t beta = eval::eval_max;
+		eval_t eval = (color_to_move == white ? eval::eval_min : eval::eval_max);
+
+		const size_t begin_idx = first_child_index(0);
+
+		detail::get_evals_for_children(begin_idx, end_idx, depth);
+
+		for (size_t idx = begin_idx; idx != end_idx; ++idx)
+		{
+			detail::swap_best_to_front<color_to_move>(idx, end_idx);
+
+			const eval_t ab = detail::alpha_beta<other_color(color_to_move)>(idx, 1, depth - 1, alpha, beta, n_of_evals);
+
+			if (!searching) return;
+
+			if constexpr (color_to_move == white)
+			{
+				if (ab > eval)
+				{
+					eval = ab;
+					boards[idx].set_eval(eval);
+					update_pv(0, boards[idx]);
+					generate_right_overlay();
+				}
+				alpha = std::max(alpha, eval);
+			}
+			else
+			{
+				if (ab < eval)
+				{
+					eval = ab;
+					boards[idx].set_eval(eval);
+					update_pv(0, boards[idx]);
+					generate_right_overlay();
+				}
+				beta = std::min(beta, eval);
+			}
+		}
+
+		if (pv_lengths[0] == 0)
+		{
+			std::cout << "No PV (position is likely terminal).\n";
+		}
+	}
+
+	template void Game::search<white>(const size_t, depth_t, size_t&);
+	template void Game::search<black>(const size_t, depth_t, size_t&);
 }

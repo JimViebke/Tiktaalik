@@ -274,11 +274,11 @@ namespace chess
 
 			// Update PV.
 			auto& pv = pv_moves[0];
+			auto& pv_length = pv_lengths[0];
 			if (same_move(move, pv[0]))
 			{
 				// The played move, whether played manually or from the PV, matches the first move in the PV.
 				// Update the PV by shifting it up by one.
-				auto& pv_length = pv_lengths[0];
 				std::copy(pv.begin() + 1,
 						  pv.begin() + pv_length,
 						  pv.begin());
@@ -288,7 +288,7 @@ namespace chess
 			else
 			{
 				// The PV is no longer valid, mark it as length 0.
-				pv_lengths[0] = 0;
+				pv_length = 0;
 				std::cout << "Played a non-PV move.\n";
 			}
 
@@ -468,14 +468,18 @@ namespace chess
 					ss << "Best move: ";
 					move_to_notation(ss, 0, idx, other_color(color_to_move));
 					ss << '\n';
-					ss << std::fixed << std::setprecision(1) << float(boards[idx].get_eval()) / 100 << "\n\n";
 
-					ss << "PV:\n";
+					// Create a second stringstream here so we can send the same information to the console and GUI.
+					std::stringstream ss2;
+					ss2 << std::fixed << std::setprecision(1) << float(pv_moves[0][0].get_eval()) / 100 << '\t';
 					for (size_t i = 0; i < pv_lengths[0]; ++i)
 					{
-						ss << pv_moves[0][i].move_to_string() << ' ';
+						ss2 << pv_moves[0][i].move_to_string() << ' ';
 					}
-					ss << "\n\n";
+					ss2 << '\n';
+
+					std::cout << ss2.str();
+					ss << ss2.str() << '\n';
 				}
 
 				ss << moves.size() << " moves:\n";
@@ -488,6 +492,7 @@ namespace chess
 			}
 
 			// Replace the old stringstream.
+			std::lock_guard<decltype(right_overlay_mutex)> lock(right_overlay_mutex);
 			right_overlay_ss = std::move(ss);
 		}
 
@@ -615,7 +620,11 @@ namespace chess
 		}
 		void render_right_overlay()
 		{
-			right_overlay.setString(right_overlay_ss.str());
+			{
+				std::lock_guard<decltype(right_overlay_mutex)> lock(right_overlay_mutex);
+				right_overlay.setString(right_overlay_ss.str());
+			}
+
 			// update the position to handle scroll events
 			right_overlay.setPosition({ detail::right_overlay_x, detail::right_overlay_y + right_overlay_scroll });
 			window->draw(right_overlay);
@@ -630,68 +639,64 @@ namespace chess
 			render_right_overlay();
 		}
 
+		template<color_t color_to_move>
+		void search(const size_t end_idx, depth_t depth, size_t& n_of_evals);
+
 		void worker_thread()
 		{
-			std::cout << "Worker thread started with depth " << engine_depth << '\n';
-
 			// Sleep until the main thread sets searching to true.
 			searching.wait(false);
 			std::unique_lock<decltype(game_mutex)> lock(game_mutex); // constructs and locks
 
 			while (1)
 			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(1)); // todo: remove me
-
-				if (engine_depth < config::engine_target_depth) // todo: remove engine_target_depth and wrapping `if`
-				{
-					std::cout << "Engine evaluating as " << (color_to_move == white ? "white\n" : "black\n");
-
-					const auto start_time = util::time_in_ms();
-
-					const size_t end_idx = first_child_index(0) + moves.size();
-					n_of_evals = 0;
-					if (color_to_move == white)
-						search<white>(end_idx, engine_depth + 1, n_of_evals);
-					else
-						search<black>(end_idx, engine_depth + 1, n_of_evals);
-
-					engine_time = util::time_in_ms() - start_time;
-
-					// If searching is still true, we finished another round of iterative deepening.
-					// Otherwise, we were stopped by the main thread, and our depth is unchanged.
-					if (searching)
-					{
-						++engine_depth;
-
-						std::cout << "depth " << engine_depth << ", " << n_of_evals << " evals, " << engine_time << " ms\n";
-						std::cout << "\ttt hit: " << detail::tt.hit << " tt miss: " << detail::tt.miss << '\n';
-						std::cout << "\toccupied: " << detail::tt.occupied_entries << " insertions: " << detail::tt.insertions << " updates: " << detail::tt.updates << '\n';
-						std::cout << "\tpv:";
-						for (size_t i = 0; i < pv_lengths[0]; ++i)
-						{
-							std::cout << ' ' << pv_moves[0][i].move_to_string();
-						}
-						std::cout << '\n';
-
-						generate_right_overlay();
-
-						detail::tt.hit = 0;
-						detail::tt.miss = 0;
-					}
-				}
-				else
-				{
-					// Stop the search ourself.
-					// todo: remove me when removing engine_target_depth.
-					searching.store(false);
-				}
-
 				if (!searching)
 				{
 					// Stop searching and release the mutex until the main thread tells us to resume.
 					lock.unlock();
 					searching.wait(false);
 					lock.lock();
+				}
+
+				if (moves.size() == 0)
+				{
+					// Position is terminal; stop searching.
+					searching.store(false);
+					continue;
+				}
+
+				// Search until we complete another round of iterative deepening,
+				// or until the main thread stops us.
+
+				const auto start_time = util::time_in_ms();
+
+				const size_t end_idx = first_child_index(0) + moves.size();
+				n_of_evals = 0;
+				if (color_to_move == white)
+					search<white>(end_idx, engine_depth + 1, n_of_evals);
+				else
+					search<black>(end_idx, engine_depth + 1, n_of_evals);
+
+				engine_time = util::time_in_ms() - start_time;
+
+				// If searching is still true, we finished another round of iterative deepening.
+				// Otherwise, we were stopped by the main thread.
+				if (searching)
+				{
+					++engine_depth;
+
+					std::cout << "depth " << engine_depth << ", " << n_of_evals << " evals, " << engine_time << " ms\n";
+					std::cout << "\ttt hit: " << detail::tt.hit << " tt miss: " << detail::tt.miss << '\n';
+					std::cout << "\toccupied: " << detail::tt.occupied_entries << " insertions: " << detail::tt.insertions << " updates: " << detail::tt.updates << '\n';
+					std::cout << "\tpv:";
+					for (size_t i = 0; i < pv_lengths[0]; ++i)
+					{
+						std::cout << ' ' << pv_moves[0][i].move_to_string();
+					}
+					std::cout << '\n';
+
+					detail::tt.hit = 0;
+					detail::tt.miss = 0;
 				}
 			}
 		}
@@ -789,6 +794,7 @@ namespace chess
 		sf::Text right_overlay; // main text overlay
 		std::stringstream right_overlay_ss;
 		float right_overlay_scroll = 0.f;
+		std::mutex right_overlay_mutex;
 
 		color_t color_to_move;
 
