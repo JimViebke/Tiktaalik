@@ -123,6 +123,9 @@ namespace chess
 					update_pv(ply, boards[child_idx]);
 				}
 			}
+
+			// If our immediate children are leaf nodes, sibling nodes cannot be an improvement (futility pruning).
+			if (depth == 1) break;
 		}
 
 		tt.store(key, depth, node_eval_type, eval);
