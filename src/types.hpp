@@ -2,6 +2,7 @@
 
 #include <immintrin.h>
 #include <stdint.h>
+#include <type_traits>
 
 #include "util/strong_alias.hpp"
 
