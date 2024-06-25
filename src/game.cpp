@@ -100,8 +100,10 @@ namespace chess
 	}
 
 	template<color_t color_to_move>
-	void Game::search(const size_t end_idx, depth_t depth, size_t& n_of_evals)
+	void Game::search(const size_t end_idx, depth_t depth)
 	{
+		++nodes;
+
 		eval_t alpha = eval::eval_min;
 		eval_t beta = eval::eval_max;
 		eval_t eval = (color_to_move == white ? eval::eval_min : eval::eval_max);
@@ -114,7 +116,7 @@ namespace chess
 		{
 			detail::swap_best_to_front<color_to_move>(idx, end_idx);
 
-			const eval_t ab = detail::alpha_beta<other_color(color_to_move)>(idx, 1, depth - 1, alpha, beta, n_of_evals);
+			const eval_t ab = detail::alpha_beta<other_color(color_to_move)>(idx, 1, depth - 1, alpha, beta);
 
 			if (!searching) return;
 
@@ -148,6 +150,6 @@ namespace chess
 		}
 	}
 
-	template void Game::search<white>(const size_t, depth_t, size_t&);
-	template void Game::search<black>(const size_t, depth_t, size_t&);
+	template void Game::search<white>(const size_t, depth_t);
+	template void Game::search<black>(const size_t, depth_t);
 }

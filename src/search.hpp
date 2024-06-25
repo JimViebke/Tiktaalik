@@ -8,6 +8,7 @@
 namespace chess
 {
 	extern std::atomic_bool searching;
+	extern size_t nodes;
 
 	namespace detail
 	{
@@ -50,7 +51,7 @@ namespace chess
 			{
 				get_evals_for_children(begin_idx, end_idx);
 			}
-			else // don't probe the TT for leaf nodes
+			else // don't probe the TT for nodes that are leaves or close to leaves.
 			{
 				for (size_t idx = begin_idx; idx != end_idx; ++idx)
 				{
@@ -93,6 +94,6 @@ namespace chess
 		}
 
 		template<color_t color_to_move>
-		eval_t alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals);
+		eval_t alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta);
 	}
 }

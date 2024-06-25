@@ -640,7 +640,7 @@ namespace chess
 		}
 
 		template<color_t color_to_move>
-		void search(const size_t end_idx, depth_t depth, size_t& n_of_evals);
+		void search(const size_t end_idx, depth_t depth);
 
 		void worker_thread()
 		{
@@ -671,11 +671,11 @@ namespace chess
 				const auto start_time = util::time_in_ms();
 
 				const size_t end_idx = first_child_index(0) + moves.size();
-				n_of_evals = 0;
+				nodes = 0;
 				if (color_to_move == white)
-					search<white>(end_idx, engine_depth + 1, n_of_evals);
+					search<white>(end_idx, engine_depth + 1);
 				else
-					search<black>(end_idx, engine_depth + 1, n_of_evals);
+					search<black>(end_idx, engine_depth + 1);
 
 				engine_time = util::time_in_ms() - start_time;
 
@@ -685,7 +685,7 @@ namespace chess
 				{
 					++engine_depth;
 
-					std::cout << "depth " << engine_depth << ", " << n_of_evals << " evals, " << engine_time << " ms\n";
+					std::cout << "depth " << engine_depth << ", " << nodes << " nodes, " << engine_time << " ms\n";
 					std::cout << "\ttt hit: " << detail::tt.hit << " tt miss: " << detail::tt.miss << '\n';
 					std::cout << "\toccupied: " << detail::tt.occupied_entries << " insertions: " << detail::tt.insertions << " updates: " << detail::tt.updates << '\n';
 					std::cout << "\tpv:";

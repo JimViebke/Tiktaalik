@@ -3,6 +3,7 @@
 namespace chess
 {
 	std::atomic_bool searching{ false };
+	size_t nodes{ 0 };
 
 	namespace detail
 	{
@@ -24,17 +25,17 @@ namespace chess
 	}
 
 	template<color_t color_to_move>
-	eval_t detail::alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals)
+	eval_t detail::alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta)
 	{
 		using eval_type = tt::eval_type;
 
+		++nodes;
 		pv_lengths[ply] = ply;
 
 		board& board = boards[idx];
 
 		if (depth == 0)
 		{
-			++n_of_evals;
 			return board.get_static_eval();
 		}
 
@@ -72,7 +73,7 @@ namespace chess
 		{
 			swap_best_to_front<color_to_move>(child_idx, end_idx);
 
-			eval_t ab = alpha_beta<other_color(color_to_move)>(child_idx, ply + 1, depth - 1, alpha, beta, n_of_evals);
+			eval_t ab = alpha_beta<other_color(color_to_move)>(child_idx, ply + 1, depth - 1, alpha, beta);
 
 			if (!searching) return 0;
 
@@ -116,6 +117,6 @@ namespace chess
 		return eval;
 	}
 
-	template eval_t detail::alpha_beta<white>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals);
-	template eval_t detail::alpha_beta<black>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta, size_t& n_of_evals);
+	template eval_t detail::alpha_beta<white>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta);
+	template eval_t detail::alpha_beta<black>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta);
 }
