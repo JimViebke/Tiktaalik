@@ -634,6 +634,8 @@ namespace chess
 			}
 		}
 
+		if (started_in_check) return; // A king cannot castle out of check.
+
 		const piece& king_piece = position.piece_at(king_index);
 
 		const board& board = boards[parent_idx];
@@ -643,8 +645,7 @@ namespace chess
 		{
 			// If white can castle kingside, we already know the king and rook are in place.
 			if (position.piece_at(rank, file + 1).is_empty() && // Check that the passed-through squares are empty.
-				position.piece_at(rank, file + 2).is_empty() &&
-				!is_king_in_check<check_type>(position, king_piece, rank, file)) // Check that the king is not starting in check.
+				position.piece_at(rank, file + 2).is_empty())
 			{
 				chess::position temp{};
 				make_move(temp, position, rank, file, rank, file + 1);
@@ -663,8 +664,7 @@ namespace chess
 		{
 			if (position.piece_at(rank, file - 1).is_empty() &&
 				position.piece_at(rank, file - 2).is_empty() &&
-				position.piece_at(rank, file - 3).is_empty() &&
-				!is_king_in_check<check_type>(position, king_piece, rank, file))
+				position.piece_at(rank, file - 3).is_empty())
 			{
 				chess::position temp{};
 				make_move(temp, position, rank, file, rank, file - 1);
