@@ -234,7 +234,7 @@ namespace chess
 
 	template<color_t color_to_move, check_type check_type>
 	force_inline_toggle void find_pawn_moves(size_t& out_index, const size_t parent_idx,
-											 const size_t king_index, const tt::key key)
+											 const size_t king_index, const bool started_in_check, const tt::key key)
 	{
 		constexpr int rank_delta = (color_to_move == white) ? -1 : 1;
 		constexpr bitboard promotion_start_file = (color_to_move == white) ? rank_7 : rank_2;
@@ -263,13 +263,13 @@ namespace chess
 
 			const rank rank = start_idx / 8;
 			const file file = start_idx % 8;
-			append_if_legal<color_to_move, check_type, pawn>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 															 parent_idx, rank, file, rank + rank_delta, file, queen);
-			append_if_legal<color_to_move, check_type, pawn>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 															 parent_idx, rank, file, rank + rank_delta, file, knight);
-			append_if_legal<color_to_move, check_type, pawn>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 															 parent_idx, rank, file, rank + rank_delta, file, rook);
-			append_if_legal<color_to_move, check_type, pawn>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 															 parent_idx, rank, file, rank + rank_delta, file, bishop);
 		}
 
@@ -286,7 +286,7 @@ namespace chess
 
 			const rank rank = start_idx / 8;
 			const file file = start_idx % 8;
-			append_if_legal<color_to_move, check_type, pawn, move_type::pawn_two_squares>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn, move_type::pawn_two_squares>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 																						  parent_idx, rank, file, rank + 2 * rank_delta, file);
 		}
 
@@ -299,7 +299,7 @@ namespace chess
 
 			const rank rank = start_idx / 8;
 			const file file = start_idx % 8;
-			append_if_legal<color_to_move, check_type, pawn>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 															 parent_idx, rank, file, rank + rank_delta, file);
 		}
 
@@ -317,13 +317,13 @@ namespace chess
 
 			const rank rank = start_idx / 8;
 			const file file = start_idx % 8;
-			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 																				 parent_idx, rank, file, rank + rank_delta, file - 1, queen);
-			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 																				 parent_idx, rank, file, rank + rank_delta, file - 1, knight);
-			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 																				 parent_idx, rank, file, rank + rank_delta, file - 1, rook);
-			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 																				 parent_idx, rank, file, rank + rank_delta, file - 1, bishop);
 		}
 
@@ -336,7 +336,7 @@ namespace chess
 
 			const rank rank = start_idx / 8;
 			const file file = start_idx % 8;
-			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 																				 parent_idx, rank, file, rank + rank_delta, file - 1);
 		}
 
@@ -354,13 +354,13 @@ namespace chess
 
 			const rank rank = start_idx / 8;
 			const file file = start_idx % 8;
-			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 																				 parent_idx, rank, file, rank + rank_delta, file + 1, queen);
-			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 																				 parent_idx, rank, file, rank + rank_delta, file + 1, knight);
-			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 																				 parent_idx, rank, file, rank + rank_delta, file + 1, rook);
-			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 																				 parent_idx, rank, file, rank + rank_delta, file + 1, bishop);
 		}
 
@@ -373,7 +373,7 @@ namespace chess
 
 			const rank rank = start_idx / 8;
 			const file file = start_idx % 8;
-			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, incremental_key,
+			append_if_legal<color_to_move, check_type, pawn, move_type::capture>(out_index, parent_idx, king_index, started_in_check, incremental_key,
 																				 parent_idx, rank, file, rank + rank_delta, file + 1);
 		}
 
@@ -393,14 +393,14 @@ namespace chess
 				const rank rank = start_idx / 8;
 				const file file = start_idx % 8;
 				append_if_legal<color_to_move, check_type, pawn, move_type::en_passant_capture>(
-					out_index, parent_idx, king_index, incremental_key,
+					out_index, parent_idx, king_index, started_in_check, incremental_key,
 					parent_idx, rank, file, ep_capture_end_rank, ep_capture_file);
 			}
 		}
 	}
 	template<color_t color_to_move, check_type check_type>
 	force_inline_toggle void find_rook_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
-											 const size_t king_index, const tt::key key)
+											 const size_t king_index, const bool started_in_check, const tt::key key)
 	{
 		const position& position = positions[parent_idx];
 
@@ -411,14 +411,14 @@ namespace chess
 
 			if (position.piece_at(end_rank, file).is_empty()) // if the square is empty, the rook can move here
 			{
-				append_if_legal<color_to_move, check_type, rook>(out_index, parent_idx, king_index, key, parent_idx, rank, file, end_rank, file);
+				append_if_legal<color_to_move, check_type, rook>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, end_rank, file);
 				continue; // keep searching in the current direction
 			}
 			// if the rook has encountered an enemy piece
 			else if (position.piece_at(end_rank, file).is_opposing_color(color_to_move))
 			{
 				// the rook can capture...
-				append_if_legal<color_to_move, check_type, rook, move_type::capture>(out_index, parent_idx, king_index, key, parent_idx, rank, file, end_rank, file);
+				append_if_legal<color_to_move, check_type, rook, move_type::capture>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, end_rank, file);
 				break; // ...but the rook cannot keep moving
 			}
 			else break; // the rook cannot move into a friendly piece; stop searching this way
@@ -431,12 +431,12 @@ namespace chess
 
 			if (position.piece_at(end_rank, file).is_empty())
 			{
-				append_if_legal<color_to_move, check_type, rook>(out_index, parent_idx, king_index, key, parent_idx, rank, file, end_rank, file);
+				append_if_legal<color_to_move, check_type, rook>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, end_rank, file);
 				continue;
 			}
 			else if (position.piece_at(end_rank, file).is_opposing_color(color_to_move))
 			{
-				append_if_legal<color_to_move, check_type, rook, move_type::capture>(out_index, parent_idx, king_index, key, parent_idx, rank, file, end_rank, file);
+				append_if_legal<color_to_move, check_type, rook, move_type::capture>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, end_rank, file);
 				break;
 			}
 			else break;
@@ -449,12 +449,12 @@ namespace chess
 
 			if (position.piece_at(rank, end_file).is_empty())
 			{
-				append_if_legal<color_to_move, check_type, rook>(out_index, parent_idx, king_index, key, parent_idx, rank, file, rank, end_file);
+				append_if_legal<color_to_move, check_type, rook>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, rank, end_file);
 				continue;
 			}
 			else if (position.piece_at(rank, end_file).is_opposing_color(color_to_move))
 			{
-				append_if_legal<color_to_move, check_type, rook, move_type::capture>(out_index, parent_idx, king_index, key, parent_idx, rank, file, rank, end_file);
+				append_if_legal<color_to_move, check_type, rook, move_type::capture>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, rank, end_file);
 				break;
 			}
 			else break;
@@ -467,12 +467,12 @@ namespace chess
 
 			if (position.piece_at(rank, end_file).is_empty())
 			{
-				append_if_legal<color_to_move, check_type, rook>(out_index, parent_idx, king_index, key, parent_idx, rank, file, rank, end_file);
+				append_if_legal<color_to_move, check_type, rook>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, rank, end_file);
 				continue;
 			}
 			else if (position.piece_at(rank, end_file).is_opposing_color(color_to_move))
 			{
-				append_if_legal<color_to_move, check_type, rook, move_type::capture>(out_index, parent_idx, king_index, key, parent_idx, rank, file, rank, end_file);
+				append_if_legal<color_to_move, check_type, rook, move_type::capture>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, rank, end_file);
 				break;
 			}
 			else break;
@@ -480,7 +480,7 @@ namespace chess
 	}
 	template<color_t color_to_move, check_type check_type>
 	force_inline_toggle void find_bishop_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
-											   const size_t king_index, const tt::key key)
+											   const size_t king_index, const bool started_in_check, const tt::key key)
 	{
 		const position& position = positions[parent_idx];
 
@@ -494,13 +494,13 @@ namespace chess
 			if (position.piece_at(rank - offset, file - offset).is_empty())
 			{
 				// the bishop can move here
-				append_if_legal<color_to_move, check_type>(out_index, parent_idx, king_index, key, parent_idx, rank, file, rank - offset, file - offset);
+				append_if_legal<color_to_move, check_type>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, rank - offset, file - offset);
 				continue; // keep searching in this direction
 			}
 			// if the square is occupied by an enemy piece, the bishop can capture it
 			else if (position.piece_at(rank - offset, file - offset).is_opposing_color(color_to_move))
 			{
-				append_if_legal<color_to_move, check_type, other_piece, move_type::capture>(out_index, parent_idx, king_index, key, parent_idx, rank, file, rank - offset, file - offset);
+				append_if_legal<color_to_move, check_type, other_piece, move_type::capture>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, rank - offset, file - offset);
 				// the bishop made a capture, stop searching in this direction
 				break;
 			}
@@ -515,12 +515,12 @@ namespace chess
 
 			if (position.piece_at(rank - offset, file + offset).is_empty())
 			{
-				append_if_legal<color_to_move, check_type>(out_index, parent_idx, king_index, key, parent_idx, rank, file, rank - offset, file + offset);
+				append_if_legal<color_to_move, check_type>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, rank - offset, file + offset);
 				continue;
 			}
 			else if (position.piece_at(rank - offset, file + offset).is_opposing_color(color_to_move))
 			{
-				append_if_legal<color_to_move, check_type, other_piece, move_type::capture>(out_index, parent_idx, king_index, key, parent_idx, rank, file, rank - offset, file + offset);
+				append_if_legal<color_to_move, check_type, other_piece, move_type::capture>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, rank - offset, file + offset);
 				break;
 			}
 			else break;
@@ -533,12 +533,12 @@ namespace chess
 
 			if (position.piece_at(rank + offset, file - offset).is_empty())
 			{
-				append_if_legal<color_to_move, check_type>(out_index, parent_idx, king_index, key, parent_idx, rank, file, rank + offset, file - offset);
+				append_if_legal<color_to_move, check_type>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, rank + offset, file - offset);
 				continue;
 			}
 			else if (position.piece_at(rank + offset, file - offset).is_opposing_color(color_to_move))
 			{
-				append_if_legal<color_to_move, check_type, other_piece, move_type::capture>(out_index, parent_idx, king_index, key, parent_idx, rank, file, rank + offset, file - offset);
+				append_if_legal<color_to_move, check_type, other_piece, move_type::capture>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, rank + offset, file - offset);
 				break;
 			}
 			else break;
@@ -551,12 +551,12 @@ namespace chess
 
 			if (position.piece_at(rank + offset, file + offset).is_empty())
 			{
-				append_if_legal<color_to_move, check_type>(out_index, parent_idx, king_index, key, parent_idx, rank, file, rank + offset, file + offset);
+				append_if_legal<color_to_move, check_type>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, rank + offset, file + offset);
 				continue;
 			}
 			else if (position.piece_at(rank + offset, file + offset).is_opposing_color(color_to_move))
 			{
-				append_if_legal<color_to_move, check_type, other_piece, move_type::capture>(out_index, parent_idx, king_index, key, parent_idx, rank, file, rank + offset, file + offset);
+				append_if_legal<color_to_move, check_type, other_piece, move_type::capture>(out_index, parent_idx, king_index, started_in_check, key, parent_idx, rank, file, rank + offset, file + offset);
 				break;
 			}
 			else break;
@@ -564,7 +564,7 @@ namespace chess
 	}
 	template<color_t color_to_move, check_type check_type>
 	force_inline_toggle void find_knight_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
-											   const size_t king_index, const tt::key key)
+											   const size_t king_index, const bool started_in_check, const tt::key key)
 	{
 		const bitboards bitboards = get_bitboards_for(positions[parent_idx]);
 		const bitboard opp_pieces = (color_to_move == white) ? bitboards.black : bitboards.white;
@@ -580,7 +580,7 @@ namespace chess
 			size_t target_square = get_next_bit(captures);
 			captures = clear_next_bit(captures);
 
-			append_if_legal<color_to_move, check_type, other_piece, move_type::capture>(out_index, parent_idx, king_index, key,
+			append_if_legal<color_to_move, check_type, other_piece, move_type::capture>(out_index, parent_idx, king_index, started_in_check, key,
 																						parent_idx, rank, file, target_square / 8, target_square % 8);
 		}
 
@@ -589,20 +589,20 @@ namespace chess
 			size_t target_square = get_next_bit(noncaptures);
 			noncaptures = clear_next_bit(noncaptures);
 
-			append_if_legal<color_to_move, check_type>(out_index, parent_idx, king_index, key,
+			append_if_legal<color_to_move, check_type>(out_index, parent_idx, king_index, started_in_check, key,
 													   parent_idx, rank, file, target_square / 8, target_square % 8);
 		}
 	}
 	template<color_t color_to_move, check_type check_type>
 	force_inline_toggle void find_queen_moves(size_t& out_index, const size_t parent_idx, const rank rank, const file file,
-											  const size_t king_index, const tt::key key)
+											  const size_t king_index, const bool started_in_check, const tt::key key)
 	{
-		find_rook_moves<color_to_move, check_type>(out_index, parent_idx, rank, file, king_index, key);
-		find_bishop_moves<color_to_move, check_type>(out_index, parent_idx, rank, file, king_index, key);
+		find_rook_moves<color_to_move, check_type>(out_index, parent_idx, rank, file, king_index, started_in_check, key);
+		find_bishop_moves<color_to_move, check_type>(out_index, parent_idx, rank, file, king_index, started_in_check, key);
 	}
 	template<color_t color_to_move, check_type check_type>
 	force_inline_toggle void find_king_moves(size_t& out_index, const size_t parent_idx,
-											 const size_t king_index, const tt::key key)
+											 const size_t king_index, const bool started_in_check, const tt::key key)
 	{
 		const position& position = positions[parent_idx];
 
@@ -621,13 +621,13 @@ namespace chess
 					if (position.piece_at(rank + rank_d, file + file_d).is_empty())
 					{
 						append_if_legal<color_to_move, check_type::do_all, king>(
-							out_index, parent_idx, to_index(rank + rank_d, file + file_d), incremental_key,
+							out_index, parent_idx, to_index(rank + rank_d, file + file_d), started_in_check, incremental_key,
 							parent_idx, rank, file, rank + rank_d, file + file_d);
 					}
 					else if (!position.piece_at(rank + rank_d, file + file_d).is_color(color_to_move))
 					{
 						append_if_legal<color_to_move, check_type::do_all, king, move_type::capture>(
-							out_index, parent_idx, to_index(rank + rank_d, file + file_d), incremental_key,
+							out_index, parent_idx, to_index(rank + rank_d, file + file_d), started_in_check, incremental_key,
 							parent_idx, rank, file, rank + rank_d, file + file_d);
 					}
 				}
@@ -652,7 +652,7 @@ namespace chess
 				if (!is_king_in_check<check_type::do_all>(temp, king_piece, rank, file + 1))
 				{
 					append_if_legal<color_to_move, check_type::do_all, king, move_type::castle_kingside>(
-						out_index, parent_idx, to_index(rank, file + 2), incremental_key,
+						out_index, parent_idx, to_index(rank, file + 2), started_in_check, incremental_key,
 						parent_idx, rank, file, rank, file + 2); // the board constructor detects a castle and moves both pieces
 				}
 			}
@@ -671,15 +671,31 @@ namespace chess
 				if (!is_king_in_check<check_type::do_all>(temp, king_piece, rank, file - 1))
 				{
 					append_if_legal<color_to_move, check_type::do_all, king, move_type::castle_queenside>(
-						out_index, parent_idx, to_index(rank, file - 2), incremental_key,
+						out_index, parent_idx, to_index(rank, file - 2), started_in_check, incremental_key,
 						parent_idx, rank, file, rank, file - 2);
 				}
 			}
 		}
 	}
 
+	force_inline_toggle bool moving_piece_might_have_been_pinned(const size_t king_index,
+																 const size_t, const rank start_rank, const file start_file,
+																 const rank, const file)
+	{
+		const bitboard king_check_mask = bishop_movemasks[king_index] | rook_movemasks[king_index];
+		const bitboard piece_mask = 1ull << to_index(start_rank, start_file);
+		// If a piece left a square that shared a rank, file, or diagonal with the king, it might have been pinned.
+		return (king_check_mask & piece_mask) != 0;
+	}
+	force_inline_toggle bool moving_piece_might_have_been_pinned(const size_t king_index,
+																 const size_t parent_idx, const rank start_rank, const file start_file,
+																 const rank end_rank, const file end_file, const piece)
+	{
+		return moving_piece_might_have_been_pinned(king_index, parent_idx, start_rank, start_file, end_rank, end_file);
+	}
+
 	template <color_t moving_color, check_type check_type, piece_t moving_piece_type = other_piece, move_type move_type = move_type::other, typename... board_args>
-	force_inline_toggle void append_if_legal(size_t& out_index, const size_t parent_idx, const size_t king_index, const tt::key key,
+	force_inline_toggle void append_if_legal(size_t& out_index, const size_t parent_idx, const size_t king_index, const bool started_in_check, const tt::key key,
 											 board_args&&... args)
 	{
 		static_assert(moving_piece_type == pawn ||
@@ -696,9 +712,25 @@ namespace chess
 		const position& parent_position = positions[parent_idx];
 		make_move<moving_color, moving_piece_type, move_type>(child_position, parent_position, child_board);
 
-		// if the king is in check, bail now
-		constexpr piece king_piece = king | moving_color;
-		if (is_king_in_check<check_type>(child_position, king_piece, king_index / 8, king_index % 8)) return;
+		// If the king is in check, return early. We could be in check if:
+		// - We are trying to move our king, or
+		// - the move is an en-passant capture, or
+		// - we started in check, or
+		// - the moving piece shared a rank, file, or diagonal with the king.
+		// If none of these are the case (most of the time), we cannot possibly be in check, and
+		// we can skip the expensive call to is_king_in_check().
+		if (moving_piece_type == king ||
+			move_type == move_type::en_passant_capture ||
+			started_in_check ||
+			moving_piece_might_have_been_pinned(king_index, std::forward<board_args>(args)...))
+		{
+			constexpr piece king_piece = king | moving_color;
+			if (is_king_in_check<check_type>(child_position, king_piece, king_index / 8, king_index % 8)) return;
+		}
+		else if constexpr (move_type == move_type::capture)
+		{
+			captured_piece = 0;
+		}
 
 		++out_index;
 
@@ -748,14 +780,15 @@ namespace chess
 
 	template<color_t color_to_move, check_type check_type>
 	force_inline_toggle void generate_child_boards(size_t& end_idx, const size_t parent_idx,
-												   const size_t king_index, const tt::key key)
+												   const size_t king_index, const bool started_in_check,
+												   const tt::key key)
 	{
-		find_pawn_moves<color_to_move, check_type>(end_idx, parent_idx, king_index, key);
-		find_moves_for<color_to_move | knight>(end_idx, parent_idx, king_index, key, &find_knight_moves<color_to_move, check_type>);
-		find_moves_for<color_to_move | bishop>(end_idx, parent_idx, king_index, key, &find_bishop_moves<color_to_move, check_type>);
-		find_moves_for<color_to_move | rook>(end_idx, parent_idx, king_index, key, &find_rook_moves<color_to_move, check_type>);
-		find_moves_for<color_to_move | queen>(end_idx, parent_idx, king_index, key, &find_queen_moves<color_to_move, check_type>);
-		find_king_moves<color_to_move, check_type>(end_idx, parent_idx, king_index, key);
+		find_pawn_moves<color_to_move, check_type>(end_idx, parent_idx, king_index, started_in_check, key);
+		find_moves_for<color_to_move | knight>(end_idx, parent_idx, king_index, started_in_check, key, &find_knight_moves<color_to_move, check_type>);
+		find_moves_for<color_to_move | bishop>(end_idx, parent_idx, king_index, started_in_check, key, &find_bishop_moves<color_to_move, check_type>);
+		find_moves_for<color_to_move | rook>(end_idx, parent_idx, king_index, started_in_check, key, &find_rook_moves<color_to_move, check_type>);
+		find_moves_for<color_to_move | queen>(end_idx, parent_idx, king_index, started_in_check, key, &find_queen_moves<color_to_move, check_type>);
+		find_king_moves<color_to_move, check_type>(end_idx, parent_idx, king_index, started_in_check, key);
 	}
 
 	template<color_t color_to_move, bool perft>
@@ -787,28 +820,33 @@ namespace chess
 
 		const size_t begin_idx = first_child_index(parent_idx);
 		size_t end_idx = begin_idx;
+		bool started_in_check = false;
 
 		if (last_moved_piece.is_pawn() &&
 			pawn_is_attacking<other_color(color_to_move)>(last_moved_end_rank, last_moved_end_file,
 														  king_index / 8, king_index % 8))
 		{
-			generate_child_boards<color_to_move, check_type::do_pawn_checks>(end_idx, parent_idx, king_index, key);
+			started_in_check = true;
+			generate_child_boards<color_to_move, check_type::do_pawn_checks>(end_idx, parent_idx, king_index, started_in_check, key);
 		}
 		else if (last_moved_piece.is_knight() &&
 				 knight_is_attacking(last_moved_end_rank, last_moved_end_file,
 									 king_index / 8, king_index % 8))
 		{
-			generate_child_boards<color_to_move, check_type::do_knight_checks>(end_idx, parent_idx, king_index, key);
+			started_in_check = true;
+			generate_child_boards<color_to_move, check_type::do_knight_checks>(end_idx, parent_idx, king_index, started_in_check, key);
 		}
 		else if (!last_moved_piece.is_empty()) // the nominal path
 		{
-			generate_child_boards<color_to_move, check_type::skip_pawn_and_knight_checks>(end_idx, parent_idx, king_index, key);
+			started_in_check = is_king_in_check<check_type::skip_pawn_and_knight_checks>(parent_position, color_to_move, king_index / 8, king_index % 8);
+			generate_child_boards<color_to_move, check_type::skip_pawn_and_knight_checks>(end_idx, parent_idx, king_index, started_in_check, key);
 		}
 		else
 		{
 			// Very occasionally (ie, at the original root), we do not know what the last move was.
 			// Fall back to unconstrained move generation.
-			generate_child_boards<color_to_move, check_type::opponent_move_unknown>(end_idx, parent_idx, king_index, key);
+			started_in_check = is_king_in_check<check_type::opponent_move_unknown>(parent_position, color_to_move, king_index / 8, king_index % 8);
+			generate_child_boards<color_to_move, check_type::opponent_move_unknown>(end_idx, parent_idx, king_index, started_in_check, key);
 		}
 
 		if constexpr (!perft)
@@ -816,7 +854,7 @@ namespace chess
 			// If there are no legal moves, record the result
 			if (end_idx == begin_idx)
 			{
-				if (is_king_in_check<check_type::opponent_move_unknown>(parent_position, parent_position.piece_at(king_index), king_index / 8, king_index % 8))
+				if (started_in_check)
 					boards[parent_idx].set_result((color_to_move == white) ? result::black_wins_by_checkmate : result::white_wins_by_checkmate);
 				else
 					boards[parent_idx].set_result(result::draw_by_stalemate);
