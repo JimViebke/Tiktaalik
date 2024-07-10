@@ -59,7 +59,7 @@ namespace chess
 
 		if (board.is_terminal())
 		{
-			const eval_t eval = board.terminal_eval();
+			const eval_t eval = board.get_eval(); // Either min, max, or 0.
 			tt.store(key, depth, eval_type::exact, eval);
 			return eval;
 		}

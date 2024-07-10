@@ -643,7 +643,7 @@ namespace chess
 		if ((king_piece.is_white() && board.white_can_castle_ks()) ||
 			(king_piece.is_black() && board.black_can_castle_ks()))
 		{
-			// If white can castle kingside, we already know the king and rook are in place.
+			// If a player can castle kingside, the king and rook must (still) be in place.
 			if (position.piece_at(rank, file + 1).is_empty() && // Check that the passed-through squares are empty.
 				position.piece_at(rank, file + 2).is_empty())
 			{
@@ -854,10 +854,12 @@ namespace chess
 			// If there are no legal moves, record the result
 			if (end_idx == begin_idx)
 			{
-				if (started_in_check)
-					boards[parent_idx].set_result((color_to_move == white) ? result::black_wins_by_checkmate : result::white_wins_by_checkmate);
-				else
-					boards[parent_idx].set_result(result::draw_by_stalemate);
+				boards[parent_idx].set_terminal();
+
+				if (started_in_check) // checkmate
+					boards[parent_idx].set_eval((color_to_move == white) ? eval::eval_min : eval::eval_max);
+				else // stalemate
+					boards[parent_idx].set_eval(0);
 			}
 		}
 

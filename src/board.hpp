@@ -34,10 +34,11 @@ namespace chess
 		// bitfield sizes
 		static constexpr size_t square_bits = 3;
 		static constexpr size_t moved_piece_bits = 3;
+		static constexpr size_t promotion_bits = 1;
 		static constexpr size_t en_passant_bits = 4;
 		static constexpr size_t castling_right_bits = 1;
 		static constexpr size_t fifty_move_counter_bits = std::bit_width(50u * 2);
-		static constexpr size_t result_bits = 2;
+		static constexpr size_t terminal_bits = 1;
 
 		// bitfield positions
 		static constexpr size_t start_file_offset = 0;
@@ -45,25 +46,27 @@ namespace chess
 		static constexpr size_t end_file_offset = start_rank_offset + square_bits;
 		static constexpr size_t end_rank_offset = end_file_offset + square_bits;
 		static constexpr size_t moved_piece_offset = end_rank_offset + square_bits;
-		static constexpr size_t en_passant_file_offset = moved_piece_offset + moved_piece_bits;
+		static constexpr size_t promotion_offset = moved_piece_offset + moved_piece_bits;
+		static constexpr size_t en_passant_file_offset = promotion_offset + promotion_bits;
 		static constexpr size_t white_can_castle_ks_offset = en_passant_file_offset + en_passant_bits;
 		static constexpr size_t white_can_castle_qs_offset = white_can_castle_ks_offset + castling_right_bits;
 		static constexpr size_t black_can_castle_ks_offset = white_can_castle_qs_offset + castling_right_bits;
 		static constexpr size_t black_can_castle_qs_offset = black_can_castle_ks_offset + castling_right_bits;
 		static constexpr size_t fifty_move_counter_offset = black_can_castle_qs_offset + castling_right_bits; // counts to 100 ply
-		static constexpr size_t result_offset = fifty_move_counter_offset + fifty_move_counter_bits;
+		static constexpr size_t terminal_offset = fifty_move_counter_offset + fifty_move_counter_bits;
 
-		// bitfield masks
+		// bitfield masks, not including offsets
 		static constexpr uint64_t square_mask = (1ull << square_bits) - 1;
 		static constexpr uint64_t index_mask = (square_mask << square_bits) | square_mask;
 		static constexpr uint64_t moved_piece_mask = (1ull << moved_piece_bits) - 1;
+		static constexpr uint64_t promotion_mask = (1ull << promotion_bits) - 1;
 		static constexpr uint64_t en_passant_mask = (1ull << en_passant_bits) - 1;
 		static constexpr uint64_t castling_right_mask = (1ull << castling_right_bits) - 1;
 		static constexpr uint64_t fifty_move_counter_mask = (1ull << fifty_move_counter_bits) - 1;
-		static constexpr uint64_t result_mask = (1ull << result_bits) - 1;
+		static constexpr uint64_t terminal_mask = (1ull << terminal_bits) - 1;
 
 		// make sure the required bitfield size is what we expect
-		static_assert(result_bits + result_offset == 32);
+		static_assert(terminal_bits + terminal_offset == 32);
 
 		uint8_t board_state[4]{};
 
@@ -107,6 +110,7 @@ namespace chess
 			: board(parent_idx, start_rank, start_file, end_rank, end_file)
 		{
 			set_moved_piece(promote_to);
+			set_promotion();
 		}
 
 		void set_en_passant_file(const size_t, const rank, const file start_file, const rank, const file)
@@ -235,13 +239,14 @@ namespace chess
 		file get_end_file() const { return (bitfield() >> end_file_offset) & square_mask; }
 		size_t get_start_index() const { return (bitfield() >> start_file_offset) & index_mask; }
 		size_t get_end_index() const { return (bitfield() >> end_file_offset) & index_mask; }
+		bool is_promotion() const { return (bitfield() >> promotion_offset) & promotion_bits; }
 		file get_en_passant_file() const { return (bitfield() >> en_passant_file_offset) & en_passant_mask; }
 		bool white_can_castle_ks() const { return (bitfield() >> white_can_castle_ks_offset) & castling_right_mask; }
 		bool white_can_castle_qs() const { return (bitfield() >> white_can_castle_qs_offset) & castling_right_mask; }
 		bool black_can_castle_ks() const { return (bitfield() >> black_can_castle_ks_offset) & castling_right_mask; }
 		bool black_can_castle_qs() const { return (bitfield() >> black_can_castle_qs_offset) & castling_right_mask; }
 		size_t get_fifty_move_counter() const { return (bitfield() >> fifty_move_counter_offset) & fifty_move_counter_mask; }
-		result get_result() const { return result((bitfield() >> result_offset) & result_mask); }
+		bool is_terminal() const { return (bitfield() >> terminal_offset) & terminal_mask; }
 
 		piece moved_piece_without_color() const
 		{
@@ -257,6 +262,7 @@ namespace chess
 		void set_start_file(file file) { bitfield() |= uint32_t(file.value()) << start_file_offset; }
 		void set_end_rank(rank rank) { bitfield() |= uint32_t(rank.value()) << end_rank_offset; }
 		void set_end_file(file file) { bitfield() |= uint32_t(file.value()) << end_file_offset; }
+		void set_promotion() { bitfield() |= uint32_t(1) << promotion_offset; }
 		void set_en_passant_file(file file) { bitfield() |= uint32_t(file.value()) << en_passant_file_offset; }
 		void set_white_can_castle_ks(uint32_t arg) { bitfield() |= arg << white_can_castle_ks_offset; }
 		void set_white_can_castle_qs(uint32_t arg) { bitfield() |= arg << white_can_castle_qs_offset; }
@@ -264,7 +270,7 @@ namespace chess
 		void set_black_can_castle_qs(uint32_t arg) { bitfield() |= arg << black_can_castle_qs_offset; }
 		void set_fifty_move_counter(uint32_t arg) { bitfield() |= arg << fifty_move_counter_offset; }
 	public:
-		void set_result(result result) { bitfield() |= uint32_t(result) << result_offset; }
+		void set_terminal() { bitfield() |= uint32_t(1) << terminal_offset; }
 
 		// todo: these could be narrowed to modify a single byte (determined at compile time)
 		void white_cant_castle_ks() { bitfield() &= ~(1 << white_can_castle_ks_offset); }
@@ -282,6 +288,13 @@ namespace chess
 			result += (get_start_rank().value() * -1) + 8 + '0';
 			result += get_end_file().value() + 'a';
 			result += (get_end_rank().value() * -1) + 8 + '0';
+
+			if (is_promotion())
+			{
+				// Append one of "qrbk".
+				result += moved_piece_without_color().to_promoted_char();
+			}
+
 			return result;
 		}
 
@@ -419,25 +432,6 @@ namespace chess
 
 		void set_eval(const eval_t set_eval) { eval = set_eval; }
 		eval_t get_eval() const { return eval; }
-
-		bool is_terminal() const
-		{
-			// Anything other than "unknown" is a terminal (end) state.
-			return get_result() != result::unknown;
-		}
-		eval_t terminal_eval()
-		{
-			const result result = get_result();
-			if (result == result::white_wins_by_checkmate)
-				eval = eval::eval_max;
-			else if (result == result::black_wins_by_checkmate)
-				eval = eval::eval_min;
-			else if (result == result::draw_by_stalemate)
-				eval = 0;
-			else
-				std::cout << "Unknown terminal state: [" << size_t(result) << "]\n";
-			return eval;
-		}
 	};
 
 	tt::key generate_key(const board& board, const position& position, const color_t color_to_move);

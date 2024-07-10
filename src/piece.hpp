@@ -44,6 +44,14 @@ namespace chess
 			else if (is_king()) return 'K';
 			else return '?';
 		}
+		char to_promoted_char() const
+		{
+			if (is_knight()) return 'n';
+			else if (is_bishop()) return 'b';
+			else if (is_rook()) return 'r';
+			else if (is_queen()) return 'q';
+			else return '?';
+		}
 
 	private:
 		color_t get_color() const { return value() & detail::color_mask; }
