@@ -1,2 +1,3 @@
-# Chess_Engine
- 
+# Tiktaalik
+
+A UCI chess engine written in C++.
