@@ -283,6 +283,7 @@ namespace chess
 
 		depth_t engine_depth = 0;
 		size_t n_of_evals = 0;
+		util::timepoint engine_start_time = 0;
 		util::timepoint engine_time = 0;
 
 		std::vector<board> moves;
