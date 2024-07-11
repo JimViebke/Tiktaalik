@@ -59,6 +59,12 @@ namespace chess
 
 	void Game::process_position_command(const std::vector<std::string>& args)
 	{
+		if (args.size() < 2)
+		{
+			util::log("Got a position command with no parameters (?).");
+			return;
+		}
+
 		util::log("Got position command, stopping any search...");
 		searching = false;
 		util::log("Locking mutex...");
@@ -228,7 +234,7 @@ namespace chess
 			{
 				send_command("uciok");
 			}
-			else if (args[0] == "position" && args.size() >= 2) // position (start_pos) | (fen fenstring) [moves ...]
+			else if (args[0] == "position") // position (start_pos | (fen fenstring)) [moves ...]
 			{
 				process_position_command(args);
 			}
