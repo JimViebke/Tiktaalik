@@ -16,6 +16,7 @@
 #include "notation.hpp"
 #include "perft.hpp"
 #include "search.hpp"
+#include "uci.hpp"
 #include "util/util.hpp"
 
 namespace chess
@@ -73,6 +74,9 @@ namespace chess
 
 	color_t load_fen(const std::string& fen, position& _position);
 
+	// Forward-declaring.
+	void send_command(const std::string& command);
+
 	class Game
 	{
 	public:
@@ -80,96 +84,15 @@ namespace chess
 		{
 			update_info_for_new_root_position();
 
-			sf::ContextSettings settings;
-			settings.antialiasingLevel = 8;
-
-			window = std::make_unique<sf::RenderWindow>(
-				sf::VideoMode((uint32_t)detail::window_width, (uint32_t)detail::window_height),
-				"Chess engine",
-				sf::Style::Close,
-				settings);
-
-			window->setFramerateLimit(60);
-
-			const std::string ARIAL_LOCATION = "C:/Windows/Fonts/Arial.ttf";
-			if (!arial.loadFromFile(ARIAL_LOCATION))
-			{
-				std::cout << "Could not load " << ARIAL_LOCATION << '\n';
-				abort();
-			}
-
-			legal_marker.setRadius(detail::legal_marker_radius_px);
-			legal_marker.setPointCount(15);
-			legal_marker.setFillColor({ 50, 50, 50, 255 / 2 });
-
-			overlay.setFont(arial);
-			overlay.setCharacterSize(detail::default_font_size);
-			overlay.setFillColor(detail::text_color);
-			overlay.setPosition({ 0.f, 0.f });
-
-			right_overlay.setFont(arial);
-			right_overlay.setCharacterSize(detail::right_overlay_font_size);
-			right_overlay.setFillColor(detail::text_color);
-			right_overlay.setPosition({ detail::right_overlay_x, detail::right_overlay_y });
-
-			if (!wk_texture.loadFromFile("../Chess_Engine/res/wk.png"))
-				std::cout << "wk failed to load";
-			if (!wq_texture.loadFromFile("../Chess_Engine/res/wq.png"))
-				std::cout << "wq failed to load";
-			if (!wb_texture.loadFromFile("../Chess_Engine/res/wb.png"))
-				std::cout << "wb failed to load";
-			if (!wn_texture.loadFromFile("../Chess_Engine/res/wn.png"))
-				std::cout << "wn failed to load";
-			if (!wr_texture.loadFromFile("../Chess_Engine/res/wr.png"))
-				std::cout << "wr failed to load";
-			if (!wp_texture.loadFromFile("../Chess_Engine/res/wp.png"))
-				std::cout << "wp failed to load";
-
-			if (!bk_texture.loadFromFile("../Chess_Engine/res/bk.png"))
-				std::cout << "bk failed to load";
-			if (!bq_texture.loadFromFile("../Chess_Engine/res/bq.png"))
-				std::cout << "bq failed to load";
-			if (!bb_texture.loadFromFile("../Chess_Engine/res/bb.png"))
-				std::cout << "bb failed to load";
-			if (!bn_texture.loadFromFile("../Chess_Engine/res/bn.png"))
-				std::cout << "bn failed to load";
-			if (!br_texture.loadFromFile("../Chess_Engine/res/br.png"))
-				std::cout << "br failed to load";
-			if (!bp_texture.loadFromFile("../Chess_Engine/res/bp.png"))
-				std::cout << "bp failed to load";
-
-			wk.setTexture(wk_texture);
-			wq.setTexture(wq_texture);
-			wb.setTexture(wb_texture);
-			wn.setTexture(wn_texture);
-			wr.setTexture(wr_texture);
-			wp.setTexture(wp_texture);
-
-			bk.setTexture(bk_texture);
-			bq.setTexture(bq_texture);
-			bb.setTexture(bb_texture);
-			bn.setTexture(bn_texture);
-			br.setTexture(br_texture);
-			bp.setTexture(bp_texture);
-
-			constexpr float scaling = (float)detail::tile_size_px / (float)detail::piece_resolution_px;
-
-			wk.setScale(scaling, scaling);
-			wq.setScale(scaling, scaling);
-			wb.setScale(scaling, scaling);
-			wn.setScale(scaling, scaling);
-			wr.setScale(scaling, scaling);
-			wp.setScale(scaling, scaling);
-
-			bk.setScale(scaling, scaling);
-			bq.setScale(scaling, scaling);
-			bb.setScale(scaling, scaling);
-			bn.setScale(scaling, scaling);
-			br.setScale(scaling, scaling);
-			bp.setScale(scaling, scaling);
-
-			searching.store(true);
+			searching.store(false);
+			std::thread([this] { worker_thread(); }).detach();
 		}
+
+		void send_info(const eval_t eval);
+		void apply_moves(const std::vector<std::string>& args, size_t move_idx);
+		void process_position_command(const std::vector<std::string>& args);
+		void process_go_command(const std::vector<std::string>& args);
+		void process_uci_commands();
 
 	private:
 		bool mouse_on_board() const
@@ -238,7 +161,6 @@ namespace chess
 		void update_info_for_new_root_position()
 		{
 			generate_child_boards_for_root();
-			generate_right_overlay();
 		}
 
 		bool get_ply_1_board_idx(size_t& result, const board& board)
@@ -257,39 +179,30 @@ namespace chess
 			return false;
 		}
 
-		void play_move_inner(const board& move)
+		// Index must be a ply-1 child of the root position.
+		// The calling thread must own the game mutex.
+		void apply_move(const size_t index)
 		{
-			size_t idx = 0;
-
-			if (!get_ply_1_board_idx(idx, move))
-			{
-				// should never happen
-				std::cout << "play_move_inner() recieved an illegal move: " << move.move_to_string() << std::endl;
-			}
-
 			// Update root color, position, and board.
 			color_to_move = other_color(color_to_move);
-			positions[0] = positions[idx];
-			boards[0] = boards[idx];
+			positions[0] = positions[index];
+			boards[0] = boards[index];
 
-			// Update PV.
+			// If the PV move was played, the rest of the PV is valid. Shift it up.
 			auto& pv = pv_moves[0];
 			auto& pv_length = pv_lengths[0];
-			if (same_move(move, pv[0]))
+			if (pv_length > 0 &&
+				pv[0].move_to_string() == boards[0].move_to_string())
 			{
-				// The played move, whether played manually or from the PV, matches the first move in the PV.
-				// Update the PV by shifting it up by one.
 				std::copy(pv.begin() + 1,
 						  pv.begin() + pv_length,
 						  pv.begin());
 				--pv_length;
-				std::cout << "Played the PV move.\n";
 			}
 			else
 			{
 				// The PV is no longer valid, mark it as length 0.
 				pv_length = 0;
-				std::cout << "Played a non-PV move.\n";
 			}
 
 			update_info_for_new_root_position();
@@ -299,35 +212,28 @@ namespace chess
 				--engine_depth;
 		}
 
-		// If a move is passed, is it legal. Play it.
-		// If no move is passed, play the PV move.
-		void play_move(std::optional<board> move = std::optional<board>())
+		// `move` is either in form of "e4f5" or "c7c8q" in the case of promotion.
+		// The calling thread must own the game mutex.
+		void apply_move(const std::string move)
 		{
-			if (moves.empty())
+			// Find and apply the move.
+			bool found_move = false;
+			for (size_t i = first_child_index(0); i < first_child_index(0) + moves.size(); ++i)
 			{
-				std::cout << "Tried to play a move from a terminal position.\n";
-				return;
+				if (boards[i].move_to_string() == move)
+				{
+					apply_move(i);
+					found_move = true;
+					break;
+				}
 			}
 
-			// Stop the worker thread.
-			searching.store(false);
-			const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
-
-			if (move)
+			if (!found_move)
 			{
-				play_move_inner(move.value());
+				std::stringstream ss;
+				ss << "Illegal move found in position command: [" << move << ']';
+				util::log(ss.str());
 			}
-			else if (pv_lengths[0] > 0)
-			{
-				play_move_inner(pv_moves[0][0]);
-			}
-			else
-			{
-				std::cout << "No move or pv move.\n";
-			}
-
-			searching.store(true);
-			searching.notify_one();
 		}
 
 		void on_release()
@@ -335,51 +241,6 @@ namespace chess
 			if (!dragging) return;
 
 			dragging = false;
-
-			if (!mouse_on_board())
-			{
-				std::cout << "(tried to drag a piece off of the board)\n";
-				return;
-			}
-
-			std::cout << "...and drop\n";
-
-			// Check that the x or y has changed, otherwise this was a non-move
-			if (dragging_from_x == mouse_square_x &&
-				dragging_from_y == mouse_square_y)
-			{
-				std::cout << "Dragged a piece without moving it\n";
-				return;
-			}
-			else
-			{
-				std::cout << "Dragged from "
-					<< dragging_from_x << ',' << dragging_from_y << " to "
-					<< mouse_square_x << ',' << mouse_square_y << '\n';
-			}
-
-			if (!mouse_on_board()) return;
-
-			// If [from_x, from_y, to_x, to_y] is a legal move, play it.
-			for (const board& move : moves)
-			{
-				const std::string legal_move = move.move_to_string();
-				const auto legal_start_x = char_to_file(legal_move[0]);
-				const auto legal_start_y = char_to_rank(legal_move[1]);
-				const auto legal_end_x = char_to_file(legal_move[2]);
-				const auto legal_end_y = char_to_rank(legal_move[3]);
-
-				if (dragging_from_x == legal_start_x &&
-					dragging_from_y == legal_start_y &&
-					mouse_square_x == legal_end_x &&
-					mouse_square_y == legal_end_y)
-				{
-					play_move(move);
-					return;
-				}
-			}
-
-			std::cout << "(illegal move)\n";
 		}
 
 		void handle_events()
@@ -415,8 +276,8 @@ namespace chess
 
 					case sf::Event::KeyPressed:
 						if (event.key.code == sf::Keyboard::Key::Space)
-							play_move();
-						break;
+							// play_move();
+							break;
 
 					case sf::Event::Closed:
 						window->close();
@@ -640,13 +501,15 @@ namespace chess
 		}
 
 		template<color_t color_to_move>
-		void search(const size_t end_idx, depth_t depth);
+		eval_t search(const size_t end_idx, depth_t depth);
 
 		void worker_thread()
 		{
 			// Sleep until the main thread sets searching to true.
 			searching.wait(false);
 			std::unique_lock<decltype(game_mutex)> lock(game_mutex); // constructs and locks
+
+			std::string best_move;
 
 			while (1)
 			{
@@ -656,47 +519,80 @@ namespace chess
 					lock.unlock();
 					searching.wait(false);
 					lock.lock();
+
+					// Since we've just woken up, assume we know nothing about the position until
+					// we learn otherwise.
+					best_move = "";
 				}
 
 				if (moves.size() == 0)
 				{
-					// Position is terminal; stop searching.
-					searching.store(false);
+					searching = false;
+					util::log("Position is terminal, search thread stopping.");
 					continue;
 				}
 
 				// Search until we complete another round of iterative deepening,
+				// we run out of planned time for this move,
 				// or until the main thread stops us.
 
-				const auto start_time = util::time_in_ms();
+				engine_start_time = util::time_in_ms();
 
 				const size_t end_idx = first_child_index(0) + moves.size();
+				eval_t eval{};
 				nodes = 0;
 				if (color_to_move == white)
-					search<white>(end_idx, engine_depth + 1);
+					eval = search<white>(end_idx, engine_depth + 1);
 				else
-					search<black>(end_idx, engine_depth + 1);
+					eval = search<black>(end_idx, engine_depth + 1);
 
-				engine_time = util::time_in_ms() - start_time;
+				engine_time = util::time_in_ms() - engine_start_time;
 
 				// If searching is still true, we finished another round of iterative deepening.
-				// Otherwise, we were stopped by the main thread.
 				if (searching)
 				{
-					++engine_depth;
-
-					std::cout << "depth " << engine_depth << ", " << nodes << " nodes, " << engine_time << " ms\n";
-					std::cout << "\ttt hit: " << detail::tt.hit << " tt miss: " << detail::tt.miss << '\n';
-					std::cout << "\toccupied: " << detail::tt.occupied_entries << " insertions: " << detail::tt.insertions << " updates: " << detail::tt.updates << '\n';
-					std::cout << "\tpv:";
-					for (size_t i = 0; i < pv_lengths[0]; ++i)
+					if (pv_lengths[0] > 0)
 					{
-						std::cout << ' ' << pv_moves[0][i].move_to_string();
+						best_move = pv_moves[0][0].move_to_string();
 					}
-					std::cout << '\n';
+					else // We stopped searching before finding any line.
+					{
+						best_move = "";
+					}
+
+					++engine_depth;
 
 					detail::tt.hit = 0;
 					detail::tt.miss = 0;
+				}
+				else if (util::time_in_ms() >= scheduled_turn_end)
+				{
+					// We stopped searching because we ran out of planned time.
+					// Send the best move if we have one.
+					if (best_move.size() != 0)
+					{
+						// En Croissant workaround: send the best move as a pv.
+						{
+							std::stringstream ss;
+							ss << "info pv " << best_move;
+							send_command(ss.str());
+						}
+
+						std::stringstream ss;
+						ss << "bestmove ";
+						ss << best_move;
+						send_command(ss.str());
+
+						best_move = ""; // Reset the best move.
+					}
+					else
+					{
+						util::log("Ran out of search time, but no PV move to send (?).");
+					}
+				}
+				else // We were stopped for any other reason.
+				{
+					best_move = ""; // Reset the best move.
 				}
 			}
 		}

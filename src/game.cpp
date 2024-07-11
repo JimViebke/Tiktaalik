@@ -100,7 +100,7 @@ namespace chess
 	}
 
 	template<color_t color_to_move>
-	void Game::search(const size_t end_idx, depth_t depth)
+	eval_t Game::search(const size_t end_idx, depth_t depth)
 	{
 		++nodes;
 
@@ -118,7 +118,7 @@ namespace chess
 
 			const eval_t ab = detail::alpha_beta<other_color(color_to_move)>(idx, 1, depth - 1, alpha, beta);
 
-			if (!searching) return;
+			if (!searching) return eval;
 
 			if constexpr (color_to_move == white)
 			{
@@ -127,7 +127,7 @@ namespace chess
 					eval = ab;
 					boards[idx].set_eval(eval);
 					update_pv(0, boards[idx]);
-					generate_right_overlay();
+					send_info(eval);
 				}
 				alpha = std::max(alpha, eval);
 			}
@@ -138,18 +138,15 @@ namespace chess
 					eval = ab;
 					boards[idx].set_eval(eval);
 					update_pv(0, boards[idx]);
-					generate_right_overlay();
+					send_info(eval);
 				}
 				beta = std::min(beta, eval);
 			}
 		}
 
-		if (pv_lengths[0] == 0)
-		{
-			std::cout << "No PV (position is likely terminal).\n";
-		}
+		return eval;
 	}
 
-	template void Game::search<white>(const size_t, depth_t);
-	template void Game::search<black>(const size_t, depth_t);
+	template eval_t Game::search<white>(const size_t, depth_t);
+	template eval_t Game::search<black>(const size_t, depth_t);
 }

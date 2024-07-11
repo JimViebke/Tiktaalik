@@ -1,8 +1,10 @@
 #include "search.hpp"
+#include "util/util.hpp"
 
 namespace chess
 {
 	std::atomic_bool searching{ false };
+	util::timepoint scheduled_turn_end{ 0 };
 	size_t nodes{ 0 };
 
 	namespace detail
@@ -30,6 +32,16 @@ namespace chess
 		using eval_type = tt::eval_type;
 
 		++nodes;
+		if (nodes % 1024 == 0)
+		{
+			// Stop searching if we're out of time.
+			if (util::time_in_ms() >= scheduled_turn_end)
+			{
+				searching = false;
+				return 0;
+			}
+		}
+
 		pv_lengths[ply] = ply;
 
 		board& board = boards[idx];

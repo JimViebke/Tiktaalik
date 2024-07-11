@@ -4,10 +4,12 @@
 
 #include "move.hpp"
 #include "transposition_table.hpp"
+#include "util/util.hpp"
 
 namespace chess
 {
 	extern std::atomic_bool searching;
+	extern util::timepoint scheduled_turn_end;
 	extern size_t nodes;
 
 	namespace detail
