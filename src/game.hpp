@@ -103,23 +103,19 @@ namespace chess
 		void apply_move(const std::string move)
 		{
 			// Find and apply the move.
-			bool found_move = false;
 			for (size_t i = first_child_index(0); i < first_child_index(0) + moves.size(); ++i)
 			{
 				if (boards[i].move_to_string() == move)
 				{
 					apply_move(i);
-					found_move = true;
-					break;
+					return;
 				}
 			}
 
-			if (!found_move)
-			{
-				std::stringstream ss;
-				ss << "Illegal move found in position command: [" << move << ']';
-				util::log(ss.str());
-			}
+			// If execution reaches here, we didn't find the move because it is not legal.
+			std::stringstream ss;
+			ss << "Illegal move: [" << move << ']';
+			util::log(ss.str());
 		}
 
 		template<color_t color_to_move>
