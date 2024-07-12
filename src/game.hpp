@@ -185,21 +185,22 @@ namespace chess
 				}
 				else if (util::time_in_ms() >= scheduled_turn_end)
 				{
-					// We stopped searching because we ran out of planned time.
+					// We stopped searching because we used up the planned time.
 					// Send the best move if we have one.
 					if (best_move.size() != 0)
 					{
-						// En Croissant workaround: send the best move as a pv.
-						{
-							std::stringstream ss;
-							ss << "info pv " << best_move;
-							send_command(ss.str());
-						}
+						// Play the move internally.
+						apply_move(best_move);
 
-						std::stringstream ss;
-						ss << "bestmove ";
-						ss << best_move;
-						send_command(ss.str());
+						// En Croissant workaround: send the best move as a pv.
+						send_command("info pv " + best_move);
+						// Play the move.
+						send_command("bestmove " + best_move);
+
+						// Set the search to resume.
+						searching = true;
+						scheduled_turn_end = util::time_in_ms() + 1'000'000'000;
+						util::log("pondering " + best_move);
 
 						best_move = ""; // Reset the best move.
 					}
