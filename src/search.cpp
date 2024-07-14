@@ -87,13 +87,17 @@ namespace chess
 			swap_best_to_front<color_to_move>(child_idx, end_idx);
 
 			eval_t ab = 0;
-			if (depth < 7 || child_idx == begin_idx)
+			if (depth < 4 || child_idx == begin_idx)
 			{
 				ab = alpha_beta<other_color(color_to_move)>(child_idx, ply + 1, depth - 1, alpha, beta);
 			}
-			else // We are at least 7 ply from a leaf node, and not on a first child; try a null window search.
+			else // We are at least 4 ply from a leaf node, and not on a first child; try a null window search.
 			{
-				ab = alpha_beta<other_color(color_to_move)>(child_idx, ply + 1, depth - 1, alpha, alpha + 1);
+				if constexpr (color_to_move == white)
+					ab = alpha_beta<other_color(color_to_move)>(child_idx, ply + 1, depth - 1, alpha, alpha + 1);
+				else
+					ab = alpha_beta<other_color(color_to_move)>(child_idx, ply + 1, depth - 1, beta - 1, beta);
+
 				if (alpha < ab && ab < beta) // If the null window failed, redo the search with the normal (alpha, beta) window.
 				{
 					ab = alpha_beta<other_color(color_to_move)>(child_idx, ply + 1, depth - 1, alpha, beta);
