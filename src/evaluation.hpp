@@ -14,8 +14,9 @@ namespace chess
 	{
 		using val_t = int8_t;
 
-		static constexpr eval_t eval_min = std::numeric_limits<eval_t>::min();
+		static constexpr eval_t eval_min = std::numeric_limits<eval_t>::min() + 1;
 		static constexpr eval_t eval_max = std::numeric_limits<eval_t>::max();
+		static_assert(eval_min * -1 == eval_max); // Make sure (eval * -1) and (0 - eval) are always safe.
 
 		// const eval_t king = 10'000;
 		constexpr eval_t queen = 975;
