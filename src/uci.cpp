@@ -30,11 +30,29 @@ namespace chess
 		ss << "info";
 
 		ss << " depth " << engine_depth;
-		ss << " score cp " << eval; // todo: Flip per UCI.
-		// ........................... todo: Add "score mate x" for mate in x.
+
+		// Print evaluation in the form "score cp 104" or "score mate -3"
+		// Flip eval to match engine's perspective per UCI.
+		if (eval > eval::eval_max - 100 ||
+			eval < eval::eval_min + 100)
+		{
+			eval_t plies_to_mate{};
+			if (eval > eval::eval_max - 100)
+				plies_to_mate = eval::eval_max - eval; // White has mate.
+			else
+				plies_to_mate = eval::eval_min - eval; // Black has mate.
+
+			const auto moves_to_mate = (plies_to_mate + 1) / 2;
+			ss << " score mate " << ((color_to_move == white) ? moves_to_mate : moves_to_mate * -1);
+		}
+		else
+		{
+			ss << " score cp " << ((color_to_move == white) ? eval : eval * -1);
+		}
+
 		ss << " nps " << nodes * 1'000 / std::max(decltype(engine_time)(1), engine_time);
-		ss << " nodes " << nodes; // todo: Don't reset nodes between ID rounds.
-		ss << " hashfull " << detail::tt.occupied_entries * 1'000 / tt::detail::tt_size_in_entries; // (per milli)
+		ss << " nodes " << nodes;
+		ss << " hashfull " << detail::tt.occupied_entries * 1'000 / tt::detail::tt_size_in_entries; // Occupancy is per mille.
 		ss << " tbhits " << detail::tt.hit;
 		ss << " time " << engine_time;
 

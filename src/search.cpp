@@ -106,10 +106,12 @@ namespace chess
 
 			if (!searching) return 0;
 
+			// If either side has an approaching mate, increment/decrement the eval to add a ply.
+			if (ab > eval::eval_max - 100) --ab;
+			else if (ab < eval::eval_min + 100) ++ab;
+
 			if constexpr (color_to_move == white)
 			{
-				if (ab > eval::eval_max - 100) --ab;
-
 				eval = std::max(eval, ab);
 				if (eval >= beta)
 				{
@@ -125,8 +127,6 @@ namespace chess
 			}
 			else
 			{
-				if (ab < eval::eval_min + 100) ++ab;
-
 				eval = std::min(eval, ab);
 				if (eval <= alpha)
 				{

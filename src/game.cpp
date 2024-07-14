@@ -116,9 +116,12 @@ namespace chess
 		{
 			detail::swap_best_to_front<color_to_move>(idx, end_idx);
 
-			const eval_t ab = detail::alpha_beta<other_color(color_to_move)>(idx, 1, depth - 1, alpha, beta);
+			eval_t ab = detail::alpha_beta<other_color(color_to_move)>(idx, 1, depth - 1, alpha, beta);
 
 			if (!searching) return eval;
+
+			if (ab > eval::eval_max - 100) --ab;
+			else if (ab < eval::eval_min + 100) ++ab;
 
 			if constexpr (color_to_move == white)
 			{
