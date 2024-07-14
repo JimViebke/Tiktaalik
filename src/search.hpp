@@ -9,6 +9,7 @@
 namespace chess
 {
 	extern std::atomic_bool searching;
+	extern bool pondering;
 	extern util::timepoint scheduled_turn_end;
 	extern size_t nodes;
 

@@ -4,6 +4,7 @@
 namespace chess
 {
 	std::atomic_bool searching{ false };
+	bool pondering{ false };
 	util::timepoint scheduled_turn_end{ 0 };
 	size_t nodes{ 0 };
 

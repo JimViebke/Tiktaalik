@@ -197,8 +197,9 @@ namespace chess
 						// Play the move.
 						send_command("bestmove " + best_move);
 
-						// Set the search to resume.
+						// Ponder after playing the move.
 						searching = true;
+						pondering = true;
 						scheduled_turn_end = util::time_in_ms() + 1'000'000'000;
 						util::log("pondering " + best_move);
 

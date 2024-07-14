@@ -22,7 +22,8 @@ namespace chess
 
 	void Game::send_info(const eval_t eval)
 	{
-		// todo: Reset engine_start_time at "go" command.
+		if (pondering) return; // Don't emit info while pondering.
+
 		engine_time = util::time_in_ms() - engine_start_time;
 
 		std::stringstream ss;
@@ -67,6 +68,7 @@ namespace chess
 
 		util::log("Got position command, stopping any search...");
 		searching = false;
+		pondering = false;
 		util::log("Locking mutex...");
 		const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
 		util::log("Setting up new position.");
@@ -115,6 +117,7 @@ namespace chess
 
 		util::log("Got a go command, stopping any search...");
 		searching = false;
+		pondering = false;
 		util::log("Locking mutex...");
 		const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
 		util::log("Processing go command.");
@@ -245,6 +248,7 @@ namespace chess
 			else if (args[0] == "stop")
 			{
 				searching = false;
+				pondering = false;
 			}
 			else if (args[0] == "quit")
 			{
