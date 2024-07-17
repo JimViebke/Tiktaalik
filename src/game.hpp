@@ -276,8 +276,6 @@ namespace chess
 		// Used to regulate reading and modification of the game state between the GUI and worker threads.
 		std::mutex game_mutex;
 
-		size_t tick_counter = 0;
-
 		color_t color_to_move;
 
 		depth_t engine_depth = 0;
