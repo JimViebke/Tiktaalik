@@ -3,6 +3,7 @@
 
 namespace chess
 {
+	size_t root_ply{ 0 };
 	std::atomic_bool searching{ false };
 	bool pondering{ false };
 	util::timepoint scheduled_turn_end{ 0 };
@@ -72,7 +73,16 @@ namespace chess
 
 		if (board.is_terminal())
 		{
-			const eval_t eval = board.get_eval(); // Either min, max, or 0.
+			eval_t eval = board.get_eval(); // Either min, max, or 0.
+
+			if (eval != 0) // If the position is a checkmate, apply a distance penalty.
+			{
+				if constexpr (color_to_move == white)
+					eval += ply + root_ply;
+				else
+					eval -= ply + root_ply;
+			}
+
 			tt.store(key, depth, eval_type::exact, eval);
 			return eval;
 		}
@@ -105,10 +115,6 @@ namespace chess
 			}
 
 			if (!searching) return 0;
-
-			// If either side has an approaching mate, increment/decrement the eval to add a ply.
-			if (ab > eval::eval_max - 100) --ab;
-			else if (ab < eval::eval_min + 100) ++ab;
 
 			if constexpr (color_to_move == white)
 			{

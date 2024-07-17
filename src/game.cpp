@@ -120,9 +120,6 @@ namespace chess
 
 			if (!searching) return eval;
 
-			if (ab > eval::eval_max - 100) --ab;
-			else if (ab < eval::eval_min + 100) ++ab;
-
 			if constexpr (color_to_move == white)
 			{
 				if (ab > eval)

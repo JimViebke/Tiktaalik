@@ -8,6 +8,7 @@
 
 namespace chess
 {
+	extern size_t root_ply;
 	extern std::atomic_bool searching;
 	extern bool pondering;
 	extern util::timepoint scheduled_turn_end;

@@ -31,18 +31,23 @@ namespace chess
 
 		ss << " depth " << engine_depth;
 
+		// For white (flip for black):
+		// If we have an upcoming mate, eval is calculated as MATE - root_ply - ply.
+		// If eval == (MATE - root_ply), the current root is checkmate.
+		// If eval > (MATE - root_ply - 100), we have a checkmate within the next 100 ply.
+
 		// Print evaluation in the form "score cp 104" or "score mate -3"
 		// Flip eval to match engine's perspective per UCI.
-		if (eval > eval::eval_max - 100 ||
-			eval < eval::eval_min + 100)
+		if (eval > eval::eval_max - root_ply - 100 ||
+			eval < eval::eval_min + root_ply + 100)
 		{
 			eval_t plies_to_mate{};
-			if (eval > eval::eval_max - 100)
-				plies_to_mate = eval::eval_max - eval; // White has mate.
+			if (eval > eval::eval_max - root_ply - 100)
+				plies_to_mate = eval::eval_max - root_ply - eval + 1; // White has mate.
 			else
-				plies_to_mate = eval::eval_min - eval; // Black has mate.
+				plies_to_mate = eval::eval_min + root_ply - eval - 1; // Black has mate.
 
-			const auto moves_to_mate = (plies_to_mate + 1) / 2;
+			const auto moves_to_mate = plies_to_mate / 2;
 			ss << " score mate " << ((color_to_move == white) ? moves_to_mate : moves_to_mate * -1);
 		}
 		else
@@ -95,6 +100,7 @@ namespace chess
 		n_of_evals = 0;
 		engine_time = 0;
 		pv_lengths[0] = 0;
+		root_ply = 0;
 
 		std::string fen;
 		size_t move_token_idx{};
