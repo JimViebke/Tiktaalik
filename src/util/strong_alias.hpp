@@ -59,11 +59,16 @@ namespace util
 			requires std::is_arithmetic<other_t>::value
 		constexpr strong_alias operator%(const other_t& rhs) const { return value() % rhs; }
 
-		constexpr strong_alias& operator+=(const auto& rhs) { value() += rhs.value(); return *this; }
-		constexpr strong_alias& operator-=(const auto& rhs) { value() -= rhs.value(); return *this; }
-		constexpr strong_alias& operator*=(const auto& rhs) { value() *= rhs.value(); return *this; }
-		constexpr strong_alias& operator/=(const auto& rhs) { value() /= rhs.value(); return *this; }
-		constexpr strong_alias& operator%=(const auto& rhs) { value() %= rhs.value(); return *this; }
+		template <typename other_t> requires (std::is_arithmetic<other_t>::value)
+			constexpr strong_alias& operator+=(const other_t& rhs) { value() += rhs; return *this; }
+		template <typename other_t> requires (std::is_arithmetic<other_t>::value)
+			constexpr strong_alias& operator-=(const other_t& rhs) { value() -= rhs; return *this; }
+		template <typename other_t> requires (std::is_arithmetic<other_t>::value)
+			constexpr strong_alias& operator*=(const other_t& rhs) { value() *= rhs; return *this; }
+		template <typename other_t> requires (std::is_arithmetic<other_t>::value)
+			constexpr strong_alias& operator/=(const other_t& rhs) { value() /= rhs; return *this; }
+		template <typename other_t> requires (std::is_arithmetic<other_t>::value)
+			constexpr strong_alias& operator%=(const other_t& rhs) { value() %= rhs; return *this; }
 
 		template <typename other_t> requires (std::is_arithmetic<other_t>::value)
 			constexpr strong_alias operator&(const other_t& rhs) const { return value() & rhs; }
@@ -93,6 +98,17 @@ namespace util
 	constexpr static other operator/(const other& lhs, const strong_alias<T, tag>& rhs) { return lhs / rhs.value(); }
 	template<typename other, typename T, typename tag>
 	constexpr static other operator%(const other& lhs, const strong_alias<T, tag>& rhs) { return lhs % rhs.value(); }
+
+	template<typename other, typename T, typename tag>
+	constexpr static other& operator+=(other& lhs, const strong_alias<T, tag>& rhs) { lhs += rhs.value(); return lhs; }
+	template<typename other, typename T, typename tag>
+	constexpr static other& operator-=(other& lhs, const strong_alias<T, tag>& rhs) { lhs -= rhs.value(); return lhs; }
+	template<typename other, typename T, typename tag>
+	constexpr static other& operator*=(other& lhs, const strong_alias<T, tag>& rhs) { lhs *= rhs.value(); return lhs; }
+	template<typename other, typename T, typename tag>
+	constexpr static other& operator/=(other& lhs, const strong_alias<T, tag>& rhs) { lhs /= rhs.value(); return lhs; }
+	template<typename other, typename T, typename tag>
+	constexpr static other& operator%=(other& lhs, const strong_alias<T, tag>& rhs) { lhs %= rhs.value(); return lhs; }
 
 	template<typename T, typename tag>
 	constexpr static strong_alias<T, tag> operator&(const auto& lhs, const strong_alias<T, tag>& rhs) { return lhs & rhs.value(); }
