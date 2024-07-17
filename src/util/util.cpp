@@ -19,8 +19,11 @@ namespace chess::util
 
 		const zoned_time zoned_time{ current_zone(), system_clock::now() };
 
+		std::stringstream ss;
+		ss << std::format("{:%T} ", zoned_time) << output << '\n';
+
 		std::ofstream logfile("tiktaalik.log", std::ios_base::app);
-		logfile << std::format("{:%T} ", zoned_time) << output << '\n';
+		logfile << ss.str();
 		logfile.flush();
 	}
 
