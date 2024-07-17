@@ -29,7 +29,7 @@ namespace chess
 		pv_lengths[ply] = pv_lengths[ply + 1];
 	}
 
-	template<color_t color_to_move>
+	template<color_t color_to_move, bool full_window>
 	eval_t detail::alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta)
 	{
 		using eval_type = tt::eval_type;
@@ -136,14 +136,16 @@ namespace chess
 				eval = std::max(eval, ab);
 				if (eval >= beta)
 				{
-					tt.store(key, depth, eval_type::beta, beta);
+					if constexpr (full_window)
+						tt.store(key, depth, eval_type::beta, beta);
 					return beta;
 				}
 				if (eval > alpha)
 				{
 					alpha = eval;
 					node_eval_type = eval_type::exact;
-					update_pv(ply, boards[child_idx]);
+					if constexpr (full_window)
+						update_pv(ply, boards[child_idx]);
 				}
 			}
 			else
@@ -151,14 +153,16 @@ namespace chess
 				eval = std::min(eval, ab);
 				if (eval <= alpha)
 				{
-					tt.store(key, depth, eval_type::alpha, alpha);
+					if constexpr (full_window)
+						tt.store(key, depth, eval_type::alpha, alpha);
 					return alpha;
 				}
 				if (eval < beta)
 				{
 					beta = eval;
 					node_eval_type = eval_type::exact;
-					update_pv(ply, boards[child_idx]);
+					if constexpr (full_window)
+						update_pv(ply, boards[child_idx]);
 				}
 			}
 
@@ -166,10 +170,13 @@ namespace chess
 			if (depth == 1) break;
 		}
 
-		tt.store(key, depth, node_eval_type, eval);
+		if constexpr (full_window)
+			tt.store(key, depth, node_eval_type, eval);
 		return eval;
 	}
 
 	template eval_t detail::alpha_beta<white>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta);
+	template eval_t detail::alpha_beta<white, false>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta);
 	template eval_t detail::alpha_beta<black>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta);
+	template eval_t detail::alpha_beta<black, false>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta);
 }
