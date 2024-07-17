@@ -102,10 +102,13 @@ namespace chess::tt
 			else
 				++updates;
 
-			entry.key = key;
-			entry.eval_depth = eval_depth;
-			entry.eval_type = eval_type;
-			entry.eval = eval;
+			//if (key != entry.key || eval_type == eval_type::exact)
+			{
+				entry.key = key;
+				entry.eval_depth = eval_depth;
+				entry.eval_type = eval_type;
+				entry.eval = eval;
+			}
 		}
 
 		inline_toggle_member bool probe(eval_t& eval, const key key, const depth_t eval_depth, const eval_t alpha, const eval_t beta) const
