@@ -70,17 +70,15 @@ namespace chess
 			return board.get_static_eval();
 		}
 
+		eval_t tt_eval = 0;
+		if (tt.probe(tt_eval, key, depth, alpha, beta))
 		{
-			eval_t eval = 0;
-			if (tt.probe(eval, key, depth, alpha, beta))
-			{
-				++tt.hit;
-				return eval;
-			}
-			else
-			{
-				++tt.miss;
-			}
+			++tt.hit;
+			return tt_eval;
+		}
+		else
+		{
+			++tt.miss;
 		}
 
 		const size_t begin_idx = first_child_index(idx);
