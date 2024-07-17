@@ -29,7 +29,7 @@ namespace chess
 		std::stringstream ss;
 		ss << "info";
 
-		ss << " depth " << engine_depth;
+		ss << " depth " << engine_depth + 1;
 
 		// For white (flip for black):
 		// If we have an upcoming mate, eval is calculated as MATE - root_ply - ply.
