@@ -126,8 +126,11 @@ namespace chess
 		void worker_thread()
 		{
 			// Sleep until the main thread sets searching to true.
+			util::log("Worker started, waiting for search to start.");
 			searching.wait(false);
+			util::log("Worker starting search, getting initial mutex lock...");
 			std::unique_lock<decltype(game_mutex)> lock(game_mutex); // constructs and locks
+			util::log("Worker ready.");
 
 			std::string best_move;
 
@@ -136,9 +139,13 @@ namespace chess
 				if (!searching)
 				{
 					// Stop searching and release the mutex until the main thread tells us to resume.
+					util::log("Worker stopped searching, releasing mutex...");
 					lock.unlock();
+					util::log("Worker released mutex, sleeping.");
 					searching.wait(false);
+					util::log("Worker awakened, locking mutex...");
 					lock.lock();
+					util::log("Worker locked mutex.");
 
 					// Since we've just woken up, assume we know nothing about the position until
 					// we learn otherwise.
