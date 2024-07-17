@@ -9,6 +9,7 @@
 namespace chess
 {
 	extern size_t root_ply;
+	extern std::array<tt::key, max_ply * 2> history;
 	extern std::atomic_bool searching;
 	extern bool pondering;
 	extern util::timepoint scheduled_turn_end;

@@ -74,6 +74,7 @@ namespace chess
 			positions[0] = positions[index];
 			boards[0] = boards[index];
 			++root_ply;
+			history[root_ply] = boards[0].get_key();
 
 			// If the PV move was played, the rest of the PV is valid. Shift it up.
 			auto& pv = pv_moves[0];

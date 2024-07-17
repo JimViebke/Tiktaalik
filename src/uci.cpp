@@ -124,6 +124,8 @@ namespace chess
 		color_to_move = load_fen(fen, positions[0]);
 		update_info_for_new_root_position();
 
+		history[0] = boards[0].get_key();
+
 		if (move_token_idx < args.size() &&
 			args[move_token_idx] == "moves")
 		{

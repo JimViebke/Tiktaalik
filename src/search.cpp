@@ -4,6 +4,7 @@
 namespace chess
 {
 	size_t root_ply{ 0 };
+	std::array<tt::key, max_ply * 2> history{};
 	std::atomic_bool searching{ false };
 	bool pondering{ false };
 	util::timepoint scheduled_turn_end{ 0 };
@@ -47,13 +48,27 @@ namespace chess
 		pv_lengths[ply] = ply;
 
 		board& board = boards[idx];
+		const tt::key key = board.get_key();
+
+		// If this position is a repetition, evaluate it as an (unfavorable) draw.
+		// Todo: Scale contempt from large to small, so we don't try to draw over small disadvantages early in the game.
+		const size_t fifty_move_counter = board.get_fifty_move_counter();
+		auto history_end = history.data() + root_ply + ply;
+		if (fifty_move_counter >= 4)
+		{
+			const auto earliest_possible_repetition = std::max(history_end - fifty_move_counter, history.data());
+
+			for (auto history_ptr = history_end - 4; history_ptr >= earliest_possible_repetition; history_ptr -= 2)
+				if (*history_ptr == key)
+					return (color_to_move == white) ? -100 : 100;
+		}
+
+		*history_end = key; // This position is not a repetition; add it to history. Todo: move this later.
 
 		if (depth == 0)
 		{
 			return board.get_static_eval();
 		}
-
-		const tt::key key = board.get_key();
 
 		{
 			eval_t eval = 0;
