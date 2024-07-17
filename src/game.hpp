@@ -119,7 +119,7 @@ namespace chess
 		}
 
 		template<color_t color_to_move>
-		eval_t search(const size_t end_idx, depth_t depth);
+		eval_t search(const size_t end_idx, const depth_t depth);
 
 		void worker_thread()
 		{
