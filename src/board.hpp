@@ -91,18 +91,21 @@ namespace chess
 			const piece moved_piece = positions[parent_idx].piece_at(start_rank, start_file);
 			set_moved_piece(moved_piece);
 
-			// record the move that resulted in this position
+			// Record the move that resulted in this position.
 			set_start_rank(start_rank);
 			set_start_file(start_file);
 			set_end_rank(end_rank);
 			set_end_file(end_file);
 
-			// copy castling rights
+			// Copy castling rights.
 			const board& parent_board = boards[parent_idx];
 			set_white_can_castle_ks(parent_board.white_can_castle_ks());
 			set_white_can_castle_qs(parent_board.white_can_castle_qs());
 			set_black_can_castle_ks(parent_board.black_can_castle_ks());
 			set_black_can_castle_qs(parent_board.black_can_castle_qs());
+
+			// Copy the 50-move counter.
+			set_fifty_move_counter(parent_board.get_fifty_move_counter());
 		}
 		explicit board(const size_t parent_idx,
 					   const rank start_rank, const file start_file, const rank end_rank, const file end_file,
