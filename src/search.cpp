@@ -71,14 +71,10 @@ namespace chess
 		}
 
 		eval_t tt_eval = 0;
-		if (tt.probe(tt_eval, key, depth, alpha, beta))
+		packed_move best_move = 0;
+		if (tt.probe(tt_eval, best_move, key, depth, alpha, beta))
 		{
-			++tt.hit;
 			return tt_eval;
-		}
-		else
-		{
-			++tt.miss;
 		}
 
 		const size_t begin_idx = first_child_index(idx);
@@ -100,15 +96,16 @@ namespace chess
 			return eval;
 		}
 
-		get_evals_for_children(begin_idx, end_idx, depth);
+		if (best_move != 0)
+			swap_tt_move_to_front(best_move, begin_idx, end_idx);
+		else
+			swap_best_to_front<color_to_move>(begin_idx, end_idx);
 
 		eval_t eval = (color_to_move == white ? eval::eval_min : eval::eval_max);
 		eval_type node_eval_type = (color_to_move == white ? eval_type::alpha : eval_type::beta);
 
 		for (size_t child_idx = begin_idx; child_idx < end_idx; ++child_idx)
 		{
-			swap_best_to_front<color_to_move>(child_idx, end_idx);
-
 			eval_t ab = 0;
 			//if (depth < 4 || child_idx == begin_idx)
 			//{
@@ -135,13 +132,14 @@ namespace chess
 				if (eval >= beta)
 				{
 					if constexpr (full_window)
-						tt.store(key, depth, eval_type::beta, beta);
+						tt.store(key, depth, eval_type::beta, beta, boards[child_idx].get_packed_move());
 					return beta;
 				}
 				if (eval > alpha)
 				{
 					alpha = eval;
 					node_eval_type = eval_type::exact;
+					best_move = boards[child_idx].get_packed_move();
 					if constexpr (full_window)
 						update_pv(ply, boards[child_idx]);
 				}
@@ -152,24 +150,31 @@ namespace chess
 				if (eval <= alpha)
 				{
 					if constexpr (full_window)
-						tt.store(key, depth, eval_type::alpha, alpha);
+						tt.store(key, depth, eval_type::alpha, alpha, boards[child_idx].get_packed_move());
 					return alpha;
 				}
 				if (eval < beta)
 				{
 					beta = eval;
 					node_eval_type = eval_type::exact;
+					best_move = boards[child_idx].get_packed_move();
 					if constexpr (full_window)
 						update_pv(ply, boards[child_idx]);
 				}
 			}
 
-			// If our immediate children are leaf nodes, sibling nodes cannot be an improvement (futility pruning).
-			if (depth == 1) break;
+			// If our immediate children are leaf nodes,
+			// and we've looked at the highest statically evaluated child node,
+			// sibling nodes cannot be an improvement.
+			if (depth == 1 && child_idx > begin_idx) break;
+
+			swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
 		}
 
+		// If no move was an improvement, best_move stays as whatever we previously read from the TT.
 		if constexpr (full_window)
-			tt.store(key, depth, node_eval_type, eval);
+			tt.store(key, depth, node_eval_type, eval, best_move);
+
 		return eval;
 	}
 

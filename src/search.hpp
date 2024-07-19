@@ -29,39 +29,18 @@ namespace chess
 
 	namespace detail
 	{
-		inline_toggle void get_evals_for_children(const size_t begin_idx, const size_t end_idx)
+		inline_toggle void swap_tt_move_to_front(const packed_move tt_move,
+												 const size_t begin_idx, const size_t end_idx)
 		{
-			size_t hits = 0;
+			if (tt_move == 0) return;
 
-			for (size_t idx = begin_idx; idx != end_idx; ++idx)
+			for (size_t idx = begin_idx; idx < end_idx; ++idx)
 			{
-				board& board = boards[idx];
-
-				eval_t cached_eval = 0;
-				const bool hit = detail::tt.simple_exact_probe(cached_eval, board.get_key());
-				hits += hit;
-
-				const eval_t static_eval = board.get_static_eval();
-
-				board.set_eval(hit ? cached_eval : static_eval);
-			}
-
-			detail::tt.hit += hits;
-			detail::tt.miss += (end_idx - begin_idx) - hits;
-		}
-
-		inline_toggle void get_evals_for_children(const size_t begin_idx, const size_t end_idx, const depth_t depth)
-		{
-			if (tt::config::use_tt_move_ordering && depth > 5)
-			{
-				get_evals_for_children(begin_idx, end_idx);
-			}
-			else // don't probe the TT for nodes that are leaves or close to leaves.
-			{
-				for (size_t idx = begin_idx; idx != end_idx; ++idx)
+				if (boards[idx].move_is(tt_move))
 				{
-					board& board = boards[idx];
-					board.set_eval(board.get_static_eval());
+					std::swap(boards[begin_idx], boards[idx]);
+					std::swap(positions[begin_idx], positions[idx]);
+					return;
 				}
 			}
 		}
@@ -70,7 +49,7 @@ namespace chess
 		inline_toggle void swap_best_to_front(const size_t begin_idx, const size_t end_idx)
 		{
 			size_t best_index = begin_idx;
-			eval_t best_eval = boards[begin_idx].get_eval();
+			eval_t best_eval = boards[begin_idx].get_static_eval();
 
 			for (size_t idx = begin_idx + 1; idx < end_idx; ++idx)
 			{
@@ -78,18 +57,18 @@ namespace chess
 
 				if constexpr (color_to_move == white)
 				{
-					if (board.get_eval() > best_eval)
+					if (board.get_static_eval() > best_eval)
 					{
 						best_index = idx;
-						best_eval = board.get_eval();
+						best_eval = board.get_static_eval();
 					}
 				}
 				else
 				{
-					if (board.get_eval() < best_eval)
+					if (board.get_static_eval() < best_eval)
 					{
 						best_index = idx;
-						best_eval = board.get_eval();
+						best_eval = board.get_static_eval();
 					}
 				}
 			}

@@ -108,14 +108,16 @@ namespace chess
 		eval_t beta = eval::eval_max;
 		eval_t eval = (color_to_move == white ? eval::eval_min : eval::eval_max);
 
+		eval_t tt_eval = 0; // ignored
+		packed_move best_move = 0;
+		detail::tt.probe(tt_eval, best_move, boards[0].get_key(), depth, alpha, beta);
+
 		const size_t begin_idx = first_child_index(0);
 
-		detail::get_evals_for_children(begin_idx, end_idx, depth);
+		detail::swap_tt_move_to_front(best_move, begin_idx, end_idx);
 
 		for (size_t idx = begin_idx; idx != end_idx; ++idx)
 		{
-			detail::swap_best_to_front<color_to_move>(idx, end_idx);
-
 			eval_t ab = detail::alpha_beta<other_color(color_to_move)>(idx, 1, depth - 1, alpha, beta);
 
 			if (!searching) return eval;
@@ -125,9 +127,9 @@ namespace chess
 				if (ab > eval)
 				{
 					eval = ab;
-					boards[idx].set_eval(eval);
 					update_pv(0, boards[idx]);
 					send_info(eval);
+					best_move = boards[idx].get_packed_move();
 				}
 				alpha = std::max(alpha, eval);
 			}
@@ -136,13 +138,18 @@ namespace chess
 				if (ab < eval)
 				{
 					eval = ab;
-					boards[idx].set_eval(eval);
 					update_pv(0, boards[idx]);
 					send_info(eval);
+					best_move = boards[idx].get_packed_move();
 				}
 				beta = std::min(beta, eval);
 			}
+
+			detail::swap_best_to_front<color_to_move>(idx + 1, end_idx);
 		}
+
+		// Store the best move in the TT.
+		detail::tt.store(boards[0].get_key(), depth, tt::eval_type::exact, eval, best_move);
 
 		return eval;
 	}

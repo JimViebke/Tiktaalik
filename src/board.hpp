@@ -435,6 +435,9 @@ namespace chess
 
 		void set_eval(const eval_t set_eval) { eval = set_eval; }
 		eval_t get_eval() const { return eval; }
+
+		packed_move get_packed_move() const { return bitfield() & packed_move(-1); }
+		bool move_is(const packed_move best_move) const { return best_move == get_packed_move(); }
 	};
 
 	tt::key generate_key(const board& board, const position& position, const color_t color_to_move);

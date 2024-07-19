@@ -29,6 +29,7 @@ namespace chess::tt
 		depth_t eval_depth{ invalid_depth };
 		eval_type eval_type{};
 		eval_t eval{};
+		packed_move best_move{};
 
 		bool is_valid() const { return eval_depth != invalid_depth; }
 	};
@@ -90,7 +91,7 @@ namespace chess::tt
 
 		transposition_table() : table{ detail::tt_size_in_entries, entry{} } {}
 
-		inline_toggle_member void store(const key key, const depth_t eval_depth, const eval_type eval_type, const eval_t eval)
+		inline_toggle_member void store(const key key, const depth_t eval_depth, const eval_type eval_type, const eval_t eval, const packed_move best_move = 0)
 		{
 			entry& entry = get_entry(key);
 
@@ -108,51 +109,64 @@ namespace chess::tt
 				entry.eval_depth = eval_depth;
 				entry.eval_type = eval_type;
 				entry.eval = eval;
+				entry.best_move = best_move;
 			}
 		}
 
-		inline_toggle_member bool probe(eval_t& eval, const key key, const depth_t eval_depth, const eval_t alpha, const eval_t beta) const
+		inline_toggle_member bool probe(eval_t& eval, packed_move& best_move,
+										const key key, const depth_t eval_depth, const eval_t alpha, const eval_t beta)
 		{
 			const entry& entry = get_entry(key);
 
-			if (entry.key != key) return false; // no hit
+			if (entry.key != key)
+			{
+				++miss;
+				return false; // no hit
+			}
+
+			best_move = entry.best_move; // either a move, or 0
 
 			if constexpr (config::require_exact_depth_match)
 			{
-				if (entry.eval_depth != eval_depth) return false;
+				if (entry.eval_depth != eval_depth)
+				{
+					++miss;
+					return false;
+				}
 			}
 			else // nominal case
 			{
-				if (entry.eval_depth < eval_depth) return false; // hit was too shallow
+				if (entry.eval_depth < eval_depth)
+				{
+					++miss;
+					return false; // hit was too shallow
+				}
 			}
 
 			if (entry.eval_type == eval_type::exact)
 			{
 				eval = entry.eval;
+				++hit;
 				return true;
 			}
 			else if (entry.eval_type == eval_type::alpha &&
 					 entry.eval <= alpha)
 			{
 				eval = alpha;
+				++hit;
 				return true;
 			}
 			else if (entry.eval_type == eval_type::beta &&
 					 entry.eval >= beta)
 			{
 				eval = beta;
+				++hit;
 				return true;
 			}
 
 			// found an alpha or beta eval, but it was out of bounds, return no hit
+			++miss;
 			return false;
-		}
-
-		inline_toggle_member bool simple_exact_probe(eval_t& eval, const key key) const
-		{
-			const entry& entry = get_entry(key);
-			eval = entry.eval;
-			return entry.key == key && entry.eval_type == eval_type::exact;
 		}
 
 	private:
