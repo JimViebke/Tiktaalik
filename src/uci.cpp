@@ -225,6 +225,10 @@ namespace chess
 			scheduled_turn_end = util::time_in_ms() + search_ms;
 		}
 
+		// Currently, we only update the PV when we finish a round of Iterative Deepening.
+		// Reset the engine's depth to make sure we update this.
+		engine_depth = 0;
+
 		// Awaken the search thread.
 		searching = true;
 		searching.notify_one();
