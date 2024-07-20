@@ -91,7 +91,10 @@ namespace chess::tt
 
 		transposition_table() : table{ detail::tt_size_in_entries, entry{} } {}
 
-		inline_toggle_member void store(const key key, const depth_t eval_depth, const eval_type eval_type, const eval_t eval, const packed_move best_move = 0)
+		template<bool terminal = false>
+		inline_toggle_member void store(const key key, const depth_t eval_depth,
+										const eval_type eval_type, eval_t eval,
+										const size_t ply, const packed_move best_move)
 		{
 			entry& entry = get_entry(key);
 
@@ -105,6 +108,12 @@ namespace chess::tt
 
 			//if (key != entry.key || eval_type == eval_type::exact)
 			{
+				if constexpr (!terminal)
+				{
+					if (eval >= eval::mate_threshold) eval += ply;
+					else if (eval <= -eval::mate_threshold) eval -= ply;
+				}
+
 				entry.key = key;
 				entry.eval_depth = eval_depth;
 				entry.eval_type = eval_type;
@@ -113,8 +122,15 @@ namespace chess::tt
 			}
 		}
 
+		inline_toggle_member void store(const key key, const depth_t eval_depth,
+										const eval_type eval_type, const eval_t eval)
+		{
+			store<true>(key, eval_depth, eval_type, eval, 0, 0);
+		}
+
 		inline_toggle_member bool probe(eval_t& eval, packed_move& best_move,
-										const key key, const depth_t eval_depth, const eval_t alpha, const eval_t beta)
+										const key key, const depth_t eval_depth, const eval_t alpha, const eval_t beta,
+										const size_t ply)
 		{
 			const entry& entry = get_entry(key);
 
@@ -143,21 +159,26 @@ namespace chess::tt
 				}
 			}
 
+			auto cached_eval = entry.eval;
+
+			if (cached_eval >= eval::mate_threshold) cached_eval -= ply;
+			else if (cached_eval <= -eval::mate_threshold) cached_eval += ply;
+
 			if (entry.eval_type == eval_type::exact)
 			{
-				eval = entry.eval;
+				eval = cached_eval;
 				++hit;
 				return true;
 			}
 			else if (entry.eval_type == eval_type::alpha &&
-					 entry.eval <= alpha)
+					 cached_eval <= alpha)
 			{
 				eval = alpha;
 				++hit;
 				return true;
 			}
 			else if (entry.eval_type == eval_type::beta &&
-					 entry.eval >= beta)
+					 cached_eval >= beta)
 			{
 				eval = beta;
 				++hit;

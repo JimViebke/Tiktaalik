@@ -13,9 +13,13 @@ namespace chess
 	namespace eval
 	{
 
-		static constexpr eval_t eval_min = std::numeric_limits<eval_t>::min() + 1;
-		static constexpr eval_t eval_max = std::numeric_limits<eval_t>::max();
-		static_assert(eval_min * -1 == eval_max); // Make sure (eval * -1) and (0 - eval) are always safe.
+		static constexpr size_t max_ply = 256;
+
+		static constexpr eval_t eval_min = std::numeric_limits<eval_t>::min() + max_ply + 1;
+		static constexpr eval_t eval_max = std::numeric_limits<eval_t>::max() - max_ply;
+		static_assert(eval_min * -1 == eval_max);
+
+		static constexpr eval_t mate_threshold = eval_max - max_ply;
 
 		constexpr eval_t queen = 975;
 		constexpr eval_t rook = 500;

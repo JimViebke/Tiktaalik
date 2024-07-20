@@ -110,7 +110,7 @@ namespace chess
 
 		eval_t tt_eval = 0; // ignored
 		packed_move best_move = 0;
-		detail::tt.probe(tt_eval, best_move, boards[0].get_key(), depth, alpha, beta);
+		detail::tt.probe(tt_eval, best_move, boards[0].get_key(), depth, alpha, beta, 0);
 
 		const size_t begin_idx = first_child_index(0);
 
@@ -149,7 +149,7 @@ namespace chess
 		}
 
 		// Store the best move in the TT.
-		detail::tt.store(boards[0].get_key(), depth, tt::eval_type::exact, eval, best_move);
+		detail::tt.store(boards[0].get_key(), depth, tt::eval_type::exact, eval, 0, best_move);
 
 		return eval;
 	}

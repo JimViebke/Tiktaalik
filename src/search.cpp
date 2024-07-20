@@ -4,7 +4,7 @@
 namespace chess
 {
 	size_t root_ply{ 0 };
-	std::array<tt::key, max_ply * 2> history{};
+	std::array<tt::key, eval::max_ply * 2> history{};
 	std::atomic_bool searching{ false };
 	bool pondering{ false };
 	util::timepoint scheduled_turn_end{ 0 };
@@ -72,7 +72,7 @@ namespace chess
 
 		eval_t tt_eval = 0;
 		packed_move best_move = 0;
-		if (tt.probe(tt_eval, best_move, key, depth, alpha, beta))
+		if (tt.probe(tt_eval, best_move, key, depth, alpha, beta, ply))
 		{
 			return tt_eval;
 		}
@@ -82,18 +82,13 @@ namespace chess
 
 		if (board.is_terminal())
 		{
-			eval_t eval = board.get_eval(); // Either min, max, or 0.
-
-			if (eval != 0) // If the position is a checkmate, apply a distance penalty.
-			{
-				if constexpr (color_to_move == white)
-					eval += ply + root_ply;
-				else
-					eval -= ply + root_ply;
-			}
+			const eval_t eval = board.get_eval(); // Either min, max, or 0.
 
 			tt.store(key, depth, eval_type::exact, eval);
-			return eval;
+
+			// If the position is a checkmate, apply a distance penalty.
+			return (eval == 0) ? eval : ((color_to_move == white)
+										 ? eval::eval_min + ply : eval::eval_max - ply);
 		}
 
 		if (best_move != 0)
@@ -132,7 +127,7 @@ namespace chess
 				if (eval >= beta)
 				{
 					if constexpr (full_window)
-						tt.store(key, depth, eval_type::beta, beta, boards[child_idx].get_packed_move());
+						tt.store(key, depth, eval_type::beta, beta, ply, boards[child_idx].get_packed_move());
 					return beta;
 				}
 				if (eval > alpha)
@@ -150,7 +145,7 @@ namespace chess
 				if (eval <= alpha)
 				{
 					if constexpr (full_window)
-						tt.store(key, depth, eval_type::alpha, alpha, boards[child_idx].get_packed_move());
+						tt.store(key, depth, eval_type::alpha, alpha, ply, boards[child_idx].get_packed_move());
 					return alpha;
 				}
 				if (eval < beta)
@@ -173,7 +168,7 @@ namespace chess
 
 		// If no move was an improvement, best_move stays as whatever we previously read from the TT.
 		if constexpr (full_window)
-			tt.store(key, depth, node_eval_type, eval, best_move);
+			tt.store(key, depth, node_eval_type, eval, ply, best_move);
 
 		return eval;
 	}
