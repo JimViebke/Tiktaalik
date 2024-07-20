@@ -7,6 +7,7 @@
 
 namespace chess
 {
+	// Only used in castling checks.
 	inline void make_move(position& child, const position& parent,
 						  const rank start_rank, const file start_file, const rank end_rank, const file end_file)
 	{
@@ -39,16 +40,16 @@ namespace chess
 			// attacks for it when searching for a check.
 			captured_piece = (1ull << end_idx);
 		}
-		else if (move_type == move_type::en_passant_capture)
+		else if constexpr (move_type == move_type::en_passant_capture)
 		{
 			child.piece_at(start_rank, end_file) = empty; // the captured pawn will have the moving pawn's start rank and end file
 		}
-		else if (move_type == move_type::castle_kingside)
+		else if constexpr (move_type == move_type::castle_kingside)
 		{
 			child.piece_at(start_rank, 5) = moving_color + rook;
 			child.piece_at(start_rank, 7) = empty;
 		}
-		else if (move_type == move_type::castle_queenside)
+		else if constexpr (move_type == move_type::castle_queenside)
 		{
 			child.piece_at(start_rank, 3) = moving_color + rook;
 			child.piece_at(start_rank, 0) = empty;
@@ -65,64 +66,6 @@ namespace chess
 
 		child.piece_at(start_idx) = empty;
 	}
-
-	// This is only used by the GUI.
-	template<color_t child_color>
-	void make_move(position& child, const position& parent, const board& child_board)
-	{
-		// copy the parent position
-		child = parent;
-
-		const rank start_rank = child_board.get_start_rank();
-		const file start_file = child_board.get_start_file();
-		const rank end_rank = child_board.get_end_rank();
-		const file end_file = child_board.get_end_file();
-
-		const size_t start_idx = to_index(start_rank, start_file);
-		const size_t end_idx = to_index(end_rank, end_file);
-
-		// check for en passant captures
-		if (parent.piece_at(start_idx).is_pawn() &&
-			start_file != end_file && // if a pawn captures...
-			parent.piece_at(end_rank, end_file).is_empty()) // ...into an empty square, it must be an en passant capture
-		{
-			child.piece_at(start_rank, end_file) = empty; // the captured pawn will have the moving pawn's start rank and end file
-		}
-		// if a king is moving...
-		else if (parent.piece_at(start_idx).is_king())
-		{
-			// ...and it is castling
-			if (diff(start_file, end_file) > 1)
-			{
-				if (start_file < end_file) // kingside castle
-				{
-					child.piece_at(start_rank, 5) = parent.piece_at(start_rank, 7);
-					child.piece_at(start_rank, 7) = empty;
-				}
-				else // queenside castle
-				{
-					child.piece_at(start_rank, 3) = parent.piece_at(start_rank, 0);
-					child.piece_at(start_rank, 0) = empty;
-				}
-			}
-		}
-
-		// handle the move, using child_board.moved_piece to handle promotion at the same time
-		const piece moved_piece = child_board.moved_piece<other_color(child_color)>();
-		if (!moved_piece.is_empty())
-		{
-			child.piece_at(end_idx) = moved_piece;
-		}
-		else
-		{
-			child.piece_at(end_idx) = parent.piece_at(start_idx);
-		}
-
-		child.piece_at(start_idx) = empty;
-	}
-
-	template void make_move<white>(position&, const position&, const board&);
-	template void make_move<black>(position&, const position&, const board&);
 
 	template<color_t attacking_pawn_color>
 	inline_toggle bool square_is_attacked_by_pawn(const position& position,
@@ -224,13 +167,6 @@ namespace chess
 		return false;
 	}
 	using is_king_in_check_fn = bool(*)(const position&, const piece, const rank, const file);
-
-	// This is only used by the GUI.
-	bool is_king_in_check(const position& position, const color_t king_color)
-	{
-		const size_t index = find_king_index(king_color | king, position);
-		return is_king_in_check<check_type::do_all>(position, position.piece_at(index), index / 8, index % 8);
-	}
 
 	template<color_t color_to_move, check_type check_type>
 	force_inline_toggle void find_pawn_moves(size_t& out_index, const size_t parent_idx,
@@ -694,8 +630,10 @@ namespace chess
 		return moving_piece_might_have_been_pinned(king_index, parent_idx, start_rank, start_file, end_rank, end_file);
 	}
 
-	template <color_t moving_color, check_type check_type, piece_t moving_piece_type = other_piece, move_type move_type = move_type::other, typename... board_args>
-	force_inline_toggle void append_if_legal(size_t& out_index, const size_t parent_idx, const size_t king_index, const bool started_in_check, const tt::key key,
+	template <color_t moving_color, check_type check_type, piece_t moving_piece_type = other_piece,
+		move_type move_type = move_type::other, typename... board_args>
+	force_inline_toggle void append_if_legal(size_t& out_index, const size_t parent_idx,
+											 const size_t king_index, const bool started_in_check, const tt::key key,
 											 board_args&&... args)
 	{
 		static_assert(moving_piece_type == pawn ||

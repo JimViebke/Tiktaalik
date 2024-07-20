@@ -18,7 +18,6 @@
     <ClInclude Include="src\evaluation.hpp" />
     <ClInclude Include="src\game.hpp" />
     <ClInclude Include="src\move.hpp" />
-    <ClInclude Include="src\notation.hpp" />
     <ClInclude Include="src\perft.hpp" />
     <ClInclude Include="src\piece.hpp" />
     <ClInclude Include="src\piece_defines.hpp" />
@@ -37,7 +36,6 @@
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\move.cpp" />
-    <ClCompile Include="src\notation.cpp" />
     <ClCompile Include="src\perft.cpp" />
     <ClCompile Include="src\position.cpp" />
     <ClCompile Include="src\search.cpp" />

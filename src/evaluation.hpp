@@ -12,20 +12,18 @@ namespace chess
 {
 	namespace eval
 	{
-		using val_t = int8_t;
 
 		static constexpr eval_t eval_min = std::numeric_limits<eval_t>::min() + 1;
 		static constexpr eval_t eval_max = std::numeric_limits<eval_t>::max();
 		static_assert(eval_min * -1 == eval_max); // Make sure (eval * -1) and (0 - eval) are always safe.
 
-		// const eval_t king = 10'000;
 		constexpr eval_t queen = 975;
 		constexpr eval_t rook = 500;
 		constexpr eval_t bishop = 325;
 		constexpr eval_t knight = 320;
 		constexpr eval_t pawn = 100;
 
-		using piece_square_array = std::array<val_t, 64>;
+		using piece_square_array = std::array<int8_t, 64>;
 
 		// via: https://www.chessprogramming.org/Simplified_Evaluation_Function
 		static constexpr piece_square_array pawn_squares = {

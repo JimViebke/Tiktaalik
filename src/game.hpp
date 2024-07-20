@@ -8,7 +8,6 @@
 #include <variant>
 
 #include "move.hpp"
-#include "notation.hpp"
 #include "perft.hpp"
 #include "search.hpp"
 #include "uci.hpp"
@@ -17,19 +16,15 @@
 namespace chess
 {
 	const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-	const std::string kiwipete = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 0";
-
-	const std::string start_fen = start_pos;
 
 	color_t load_fen(const std::string& fen, position& _position);
 
-	// Forward-declaring.
-	void send_command(const std::string& command);
+	void send_command(const std::string& command); // Forward-declare.
 
 	class Game
 	{
 	public:
-		Game() : color_to_move{ load_fen(start_fen, positions[0]) }
+		Game() : color_to_move{ load_fen(start_pos, positions[0]) }
 		{
 			update_info_for_new_root_position();
 
@@ -281,7 +276,6 @@ namespace chess
 		}
 
 	private:
-		// Used to regulate reading and modification of the game state between the GUI and worker threads.
 		std::mutex game_mutex;
 
 		color_t color_to_move;
