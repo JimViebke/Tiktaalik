@@ -29,7 +29,9 @@ namespace util
 		template<typename other_t>
 			requires (std::is_arithmetic<other_t>::value)
 		constexpr bool operator<(const other_t& rhs) const { return value() < T(rhs); }
-		constexpr bool operator>(const auto& rhs) const { return rhs < value(); }
+		template<typename other_t>
+			requires (std::is_arithmetic<other_t>::value)
+		constexpr bool operator>(const other_t& rhs) const { return value() > T(rhs); }
 		constexpr bool operator<=(const auto& rhs) const { return !(*this > rhs); }
 		constexpr bool operator>=(const auto& rhs) const { return !(*this < rhs); }
 
@@ -87,6 +89,9 @@ namespace util
 	private:
 		T _value;
 	};
+
+	template<typename other, typename T, typename tag>
+	constexpr static bool operator>(const other& lhs, const strong_alias<T, tag>& rhs) { return lhs > rhs.value(); }
 
 	template<typename other, typename T, typename tag>
 	constexpr static other operator+(const other& lhs, const strong_alias<T, tag>& rhs) { return lhs + rhs.value(); }
