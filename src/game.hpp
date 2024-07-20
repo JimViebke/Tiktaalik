@@ -116,7 +116,7 @@ namespace chess
 		}
 
 		template<color_t color_to_move>
-		eval_t search(const size_t end_idx, const depth_t depth);
+		void search(const size_t end_idx, const depth_t depth);
 
 		void worker_thread()
 		{
@@ -161,12 +161,11 @@ namespace chess
 				engine_start_time = util::time_in_ms();
 
 				const size_t end_idx = first_child_index(0) + moves.size();
-				eval_t eval{};
 				nodes = 0;
 				if (color_to_move == white)
-					eval = search<white>(end_idx, engine_depth + 1);
+					search<white>(end_idx, engine_depth + 1);
 				else
-					eval = search<black>(end_idx, engine_depth + 1);
+					search<black>(end_idx, engine_depth + 1);
 
 				engine_time = util::time_in_ms() - engine_start_time;
 
@@ -281,7 +280,6 @@ namespace chess
 		color_t color_to_move;
 
 		depth_t engine_depth = 0;
-		size_t n_of_evals = 0;
 		util::timepoint engine_start_time = 0;
 		util::timepoint engine_time = 0;
 

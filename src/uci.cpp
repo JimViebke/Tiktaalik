@@ -91,7 +91,6 @@ namespace chess
 		util::log("Setting up new position.");
 
 		engine_depth = 0;
-		n_of_evals = 0;
 		engine_time = 0;
 		pv_lengths[0] = 0;
 		root_ply = 0;

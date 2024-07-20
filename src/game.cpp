@@ -100,7 +100,7 @@ namespace chess
 	}
 
 	template<color_t color_to_move>
-	eval_t Game::search(const size_t end_idx, const depth_t depth)
+	void Game::search(const size_t end_idx, const depth_t depth)
 	{
 		++nodes;
 
@@ -120,7 +120,7 @@ namespace chess
 		{
 			eval_t ab = detail::alpha_beta<other_color(color_to_move)>(idx, 1, depth - 1, alpha, beta);
 
-			if (!searching) return eval;
+			if (!searching) return;
 
 			if constexpr (color_to_move == white)
 			{
@@ -150,10 +150,8 @@ namespace chess
 
 		// Store the best move in the TT.
 		detail::tt.store(boards[0].get_key(), depth, tt::eval_type::exact, eval, 0, best_move);
-
-		return eval;
 	}
 
-	template eval_t Game::search<white>(const size_t, depth_t);
-	template eval_t Game::search<black>(const size_t, depth_t);
+	template void Game::search<white>(const size_t, depth_t);
+	template void Game::search<black>(const size_t, depth_t);
 }
