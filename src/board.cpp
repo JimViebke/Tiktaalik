@@ -51,11 +51,4 @@ namespace chess
 
 		return key;
 	}
-
-	bool same_move(const board& move_a, const board& move_b)
-	{
-		return move_a.get_start_index() == move_b.get_start_index() &&
-			move_a.get_end_index() == move_b.get_end_index() &&
-			move_a.moved_piece_without_color().is(move_b.moved_piece_without_color());
-	}
 }
