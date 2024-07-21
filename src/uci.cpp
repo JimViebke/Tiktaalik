@@ -36,9 +36,9 @@ namespace chess
 		{
 			eval_t plies_to_mate{};
 			if (eval >= eval::mate_threshold)
-				plies_to_mate = eval::eval_max - eval + 1; // Count positive plies if white has mate.
+				plies_to_mate = eval::mate - eval + 1; // Count positive plies if white has mate.
 			else
-				plies_to_mate = eval::eval_min - eval - 1; // Count negative plies if black has mate.
+				plies_to_mate = -eval::mate - eval - 1; // Count negative plies if black has mate.
 
 			const auto moves_to_mate = plies_to_mate / 2;
 

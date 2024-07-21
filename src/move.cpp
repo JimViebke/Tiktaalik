@@ -795,7 +795,7 @@ namespace chess
 				boards[parent_idx].set_terminal();
 
 				if (started_in_check) // checkmate
-					boards[parent_idx].set_eval((color_to_move == white) ? eval::eval_min : eval::eval_max);
+					boards[parent_idx].set_eval((color_to_move == white) ? -eval::mate : eval::mate);
 				else // stalemate
 					boards[parent_idx].set_eval(0);
 			}

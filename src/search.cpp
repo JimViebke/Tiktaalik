@@ -88,7 +88,7 @@ namespace chess
 
 			// If the position is a checkmate, apply a distance penalty.
 			return (eval == 0) ? eval : ((color_to_move == white)
-										 ? eval::eval_min + ply : eval::eval_max - ply);
+										 ? -eval::mate + ply : eval::mate - ply);
 		}
 
 		if (best_move != 0)
@@ -96,7 +96,7 @@ namespace chess
 		else
 			swap_best_to_front<color_to_move>(begin_idx, end_idx);
 
-		eval_t eval = (color_to_move == white ? eval::eval_min : eval::eval_max);
+		eval_t eval = (color_to_move == white ? -eval::mate : eval::mate);
 		eval_type node_eval_type = (color_to_move == white ? eval_type::alpha : eval_type::beta);
 
 		for (size_t child_idx = begin_idx; child_idx < end_idx; ++child_idx)

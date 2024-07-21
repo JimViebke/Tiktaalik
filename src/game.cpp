@@ -104,9 +104,9 @@ namespace chess
 	{
 		++nodes;
 
-		eval_t alpha = eval::eval_min;
-		eval_t beta = eval::eval_max;
-		eval_t eval = (color_to_move == white ? eval::eval_min : eval::eval_max);
+		eval_t alpha = -eval::mate;
+		eval_t beta = eval::mate;
+		eval_t eval = (color_to_move == white ? -eval::mate : eval::mate);
 
 		eval_t tt_eval = 0; // ignored
 		packed_move best_move = 0;
