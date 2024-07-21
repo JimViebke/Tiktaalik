@@ -67,7 +67,7 @@ namespace chess
 
 		if (depth == 0)
 		{
-			return board.get_static_eval();
+			return board.get_eval();
 		}
 
 		eval_t tt_eval = 0;

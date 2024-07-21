@@ -15,7 +15,7 @@ namespace chess
 
 		key = generate_key(*this, loaded_position, color_to_move);
 
-		static_eval = loaded_position.evaluate_position();
+		eval = loaded_position.evaluate_position();
 	}
 
 	std::array<board, positions_size> boards{};

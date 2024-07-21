@@ -672,15 +672,15 @@ namespace chess
 
 		++out_index;
 
-		child_board.update_key_and_static_eval<moving_color, moving_piece_type, move_type>(parent_position, boards[parent_idx], key);
+		child_board.update_key_and_eval<moving_color, moving_piece_type, move_type>(parent_position, boards[parent_idx], key);
 
-		if constexpr (config::verify_incremental_zobrist_key)
+		if constexpr (config::verify_incremental_key)
 			if (child_board.get_key() != generate_key(child_board, child_position, child_color))
-				std::cout << "Incremental and generated zobrist key mismatch in append_if_legal\n";
+				std::cout << "Incremental and generated keys mismatch in append_if_legal\n";
 
-		if constexpr (config::verify_incremental_static_eval)
-			if (child_board.get_static_eval() != child_position.evaluate_position())
-				std::cout << "Incremental and generated static evals mismatch in append_if_legal\n";
+		if constexpr (config::verify_incremental_eval)
+			if (child_board.get_eval() != child_position.evaluate_position())
+				std::cout << "Incremental and generated evals mismatch in append_if_legal\n";
 	}
 
 	template<color_t color_to_move>

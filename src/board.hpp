@@ -74,8 +74,6 @@ namespace chess
 		const uint32_t& bitfield() const { return *(uint32_t*)&board_state[0]; }
 
 		eval_t eval = 0;
-		eval_t static_eval = 0;
-
 		tt::key key;
 
 	public:
@@ -328,7 +326,7 @@ namespace chess
 		}
 
 		template <color_t moving_color, piece_t moving_piece_type, move_type move_type>
-		inline_toggle_member void update_key_and_static_eval(const position& parent_position, const board& parent_board, tt::key incremental_key)
+		inline_toggle_member void update_key_and_eval(const position& parent_position, const board& parent_board, tt::key incremental_key)
 		{
 			// The incremental_key has already had the leaving piece removed, and the color to move toggled.
 			// We receive it by copy so we can modify it before writing it.
@@ -341,7 +339,7 @@ namespace chess
 			const size_t start_idx = to_index(start_rank, start_file);
 			const size_t end_idx = to_index(end_rank, end_file);
 
-			eval_t incremental_eval = parent_board.get_static_eval();
+			eval_t incremental_eval = parent_board.get_eval();
 
 			piece piece_before{};
 			if constexpr (moving_piece_type == pawn || moving_piece_type == king)
@@ -427,11 +425,9 @@ namespace chess
 				update_key_castling_rights_for<moving_color>(incremental_key, parent_board);
 			}
 
+			eval = incremental_eval;
 			key = incremental_key;
-			static_eval = incremental_eval;
 		}
-
-		eval_t get_static_eval() const { return static_eval; }
 
 		void set_eval(const eval_t set_eval) { eval = set_eval; }
 		eval_t get_eval() const { return eval; }

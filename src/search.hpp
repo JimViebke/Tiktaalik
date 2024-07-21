@@ -49,7 +49,7 @@ namespace chess
 		inline_toggle void swap_best_to_front(const size_t begin_idx, const size_t end_idx)
 		{
 			size_t best_index = begin_idx;
-			eval_t best_eval = boards[begin_idx].get_static_eval();
+			eval_t best_eval = boards[begin_idx].get_eval();
 
 			for (size_t idx = begin_idx + 1; idx < end_idx; ++idx)
 			{
@@ -57,18 +57,18 @@ namespace chess
 
 				if constexpr (color_to_move == white)
 				{
-					if (board.get_static_eval() > best_eval)
+					if (board.get_eval() > best_eval)
 					{
 						best_index = idx;
-						best_eval = board.get_static_eval();
+						best_eval = board.get_eval();
 					}
 				}
 				else
 				{
-					if (board.get_static_eval() < best_eval)
+					if (board.get_eval() < best_eval)
 					{
 						best_index = idx;
-						best_eval = board.get_static_eval();
+						best_eval = board.get_eval();
 					}
 				}
 			}
