@@ -32,16 +32,17 @@ namespace chess
 		ss << " depth " << engine_depth + 1;
 
 		// Print evaluation in the form "score cp 104" or "score mate -3".
-		// Flip eval to match engine's perspective per UCI.
 		if (eval >= eval::mate_threshold || eval <= -eval::mate_threshold)
 		{
 			eval_t plies_to_mate{};
 			if (eval >= eval::mate_threshold)
-				plies_to_mate = eval::eval_max - eval + 1; // White has mate.
+				plies_to_mate = eval::eval_max - eval + 1; // Count positive plies if white has mate.
 			else
-				plies_to_mate = eval::eval_min + eval - 1; // Black has mate.
+				plies_to_mate = eval::eval_min - eval - 1; // Count negative plies if black has mate.
 
 			const auto moves_to_mate = plies_to_mate / 2;
+
+			// Flip eval to match engine's perspective per UCI.
 			ss << " score mate " << ((color_to_move == white) ? moves_to_mate : moves_to_mate * -1);
 		}
 		else
