@@ -53,7 +53,8 @@ namespace chess
 		bitboard empty;
 	};
 
-	__forceinline bitboard get_bitboard_for(const piece piece, const position& position)
+	template<piece_t piece>
+	__forceinline bitboard get_bitboard_for(const position& position)
 	{
 		static_assert(sizeof(chess::position) == 64);
 		static_assert(alignof(chess::position) == 64);
@@ -62,8 +63,8 @@ namespace chess
 		uint256_t ymm0 = _mm256_loadu_si256((uint256_t*)(position._position.data() + 0));
 		uint256_t ymm1 = _mm256_loadu_si256((uint256_t*)(position._position.data() + 32));
 
-		// broadcast the target piece (type | color) to all positions of a register
-		const uint256_t piece_mask = _mm256_set1_epi8(piece.value());
+		// broadcast the target piece to all positions of a register
+		const uint256_t piece_mask = _mm256_set1_epi8(piece);
 
 		// find the matching bytes
 		ymm1 = _mm256_cmpeq_epi8(ymm1, piece_mask); // high half first
@@ -108,7 +109,7 @@ namespace chess
 		bitboards bitboards;
 		bitboards.white = (white_hi << 32) | white_lo;
 		bitboards.black = (black_hi << 32) | black_lo;
-		bitboards.empty = get_bitboard_for(empty, position);
+		bitboards.empty = get_bitboard_for<empty>(position);
 
 		return bitboards;
 	}
@@ -133,14 +134,13 @@ namespace chess
 	// to remove any captured piece from qb_and_qr_bitboards before performing sliding piece checks.
 	extern bitboard captured_piece;
 
-	force_inline_toggle void set_up_opponent_qb_and_qr_bitboards(const position& position, const piece king_piece)
+	template<color_t color>
+	force_inline_toggle void set_up_qb_and_qr_bitboards_for(const position& position)
 	{
-		const color_t opponent_color = king_piece.other_color();
-
-		// broadcast the target piece (type | color) to all positions of a register
-		const uint256_t piece_mask_q = _mm256_set1_epi8(opponent_color | queen);
-		const uint256_t piece_mask_r = _mm256_set1_epi8(opponent_color | rook);
-		const uint256_t piece_mask_b = _mm256_set1_epi8(opponent_color | bishop);
+		// broadcast the target piece to all positions of a register
+		const uint256_t piece_mask_q = _mm256_set1_epi8(color | queen);
+		const uint256_t piece_mask_r = _mm256_set1_epi8(color | rook);
+		const uint256_t piece_mask_b = _mm256_set1_epi8(color | bishop);
 
 		// load the 64 bytes of the board into two ymm registers
 		const uint256_t ymm0 = _mm256_loadu_si256((uint256_t*)(position._position.data() + 0));
@@ -185,18 +185,19 @@ namespace chess
 		qbr_attack_masks = attack_mask;
 	}
 
-	force_inline_toggle bool is_attacked_by_sliding_piece(const position& position, const piece king_piece,
+	template<color_t king_color>
+	force_inline_toggle bool is_attacked_by_sliding_piece(const position& position,
 														  const bitboard king_position)
 	{
 		if constexpr (config::verify_cached_sliding_piece_bitboards)
 		{
 			// Generate the qb and qr bitboards from scratch, and see if they ever mismatch the cached version
 
-			const color_t opponent_color = king_piece.other_color();
+			constexpr color_t opp_color = other_color(king_color);
 
-			const bitboard queens = get_bitboard_for(opponent_color | queen, position);
-			const bitboard bishops = get_bitboard_for(opponent_color | bishop, position);
-			const bitboard rooks = get_bitboard_for(opponent_color | rook, position);
+			const bitboard queens = get_bitboard_for<opp_color | queen>(position);
+			const bitboard bishops = get_bitboard_for<opp_color | bishop>(position);
+			const bitboard rooks = get_bitboard_for<opp_color | rook>(position);
 
 			const bitboard queens_and_bishops = queens | bishops;
 			const bitboard queens_and_rooks = queens | rooks;
@@ -258,7 +259,7 @@ namespace chess
 		if ((king_position & qbr_attack_masks) == 0) return false;
 
 		// broadcast empty bitboard to all four positions
-		const uint256_t empty_squares = _mm256_set1_epi64x(get_bitboard_for(empty, position));
+		const uint256_t empty_squares = _mm256_set1_epi64x(get_bitboard_for<empty>(position));
 
 		constexpr uint64_t move_se = 0xFE'FE'FE'FE'FE'FE'FE'00;
 		constexpr uint64_t move__s = 0xFF'FF'FF'FF'FF'FF'FF'00;
@@ -352,7 +353,7 @@ namespace chess
 											const tt::key key, generate_moves_fn_t generate_moves_fn)
 	{
 		const position& parent_position = positions[parent_idx];
-		bitboard pieces = get_bitboard_for(piece_type, parent_position);
+		bitboard pieces = get_bitboard_for<piece_type>(parent_position);
 
 		while (pieces)
 		{

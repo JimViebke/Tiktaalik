@@ -67,58 +67,61 @@ namespace chess
 		child.piece_at(start_idx) = empty;
 	}
 
-	template<color_t attacking_pawn_color>
+	template<color_t attacker_color>
 	inline_toggle bool square_is_attacked_by_pawn(const position& position,
 												  const rank rank, const file file)
 	{
-		if constexpr (attacking_pawn_color == white)
+		if constexpr (attacker_color == white)
 		{
-			if ((bounds_check(rank + 1, file + 1) && position.piece_at(rank + 1, file + 1).is(white_pawn)) ||
-				(bounds_check(rank + 1, file - 1) && position.piece_at(rank + 1, file - 1).is(white_pawn))) return true;
+			if ((bounds_check(rank + 1, file + 1) && position.piece_at(rank + 1, file + 1).is(attacker_color | pawn)) ||
+				(bounds_check(rank + 1, file - 1) && position.piece_at(rank + 1, file - 1).is(attacker_color | pawn))) return true;
 		}
 		else
 		{
-			if ((bounds_check(rank - 1, file + 1) && position.piece_at(rank - 1, file + 1).is(black_pawn)) ||
-				(bounds_check(rank - 1, file - 1) && position.piece_at(rank - 1, file - 1).is(black_pawn))) return true;
+			if ((bounds_check(rank - 1, file + 1) && position.piece_at(rank - 1, file + 1).is(attacker_color | pawn)) ||
+				(bounds_check(rank - 1, file - 1) && position.piece_at(rank - 1, file - 1).is(attacker_color | pawn))) return true;
 		}
 
 		return false;
 	}
-	inline_toggle bool square_is_attacked_by_knight(const position& position, const piece attacking_knight,
-													const rank rank, const file file)
+	template<color_t attacker_color>
+	inline_toggle bool square_is_attacked_by_knight(const position& position, const rank rank, const file file)
 	{
-		return knight_attacks[to_index(rank, file)](position, attacking_knight);
+		return knight_attacks[to_index(rank, file)](position, attacker_color | knight);
 	}
-	inline_toggle bool square_is_attacked_by_king(const position& position, const piece attacking_king,
-												  const rank rank, const file file)
+	template<color_t attacker_color>
+	inline_toggle bool square_is_attacked_by_king(const position& position, const rank rank, const file file)
 	{
+		constexpr piece_t opp_king = attacker_color | king;
+
 		// Check adjacent squares for a king.
 		// Check rank first, because a king is likely on a top or bottom rank.
 		if (bounds_check(rank - 1))
 		{
-			if (bounds_check(file - 1) && position.piece_at(rank - 1, file - 1).is(attacking_king)) return true;
-			if (position.piece_at(rank - 1, file).is(attacking_king)) return true;
-			if (bounds_check(file + 1) && position.piece_at(rank - 1, file + 1).is(attacking_king)) return true;
+			if (bounds_check(file - 1) && position.piece_at(rank - 1, file - 1).is(opp_king)) return true;
+			if (position.piece_at(rank - 1, file).is(opp_king)) return true;
+			if (bounds_check(file + 1) && position.piece_at(rank - 1, file + 1).is(opp_king)) return true;
 		}
 
-		if (bounds_check(file - 1) && position.piece_at(rank, file - 1).is(attacking_king)) return true;
-		if (bounds_check(file + 1) && position.piece_at(rank, file + 1).is(attacking_king)) return true;
+		if (bounds_check(file - 1) && position.piece_at(rank, file - 1).is(opp_king)) return true;
+		if (bounds_check(file + 1) && position.piece_at(rank, file + 1).is(opp_king)) return true;
 
 		if (bounds_check(rank + 1))
 		{
-			if (bounds_check(file - 1) && position.piece_at(rank + 1, file - 1).is(attacking_king)) return true;
-			if (position.piece_at(rank + 1, file).is(attacking_king)) return true;
-			if (bounds_check(file + 1) && position.piece_at(rank + 1, file + 1).is(attacking_king)) return true;
+			if (bounds_check(file - 1) && position.piece_at(rank + 1, file - 1).is(opp_king)) return true;
+			if (position.piece_at(rank + 1, file).is(opp_king)) return true;
+			if (bounds_check(file + 1) && position.piece_at(rank + 1, file + 1).is(opp_king)) return true;
 		}
 
 		return false;
 	}
 
-	inline size_t find_king_index(const piece king_piece, const position& position)
+	template<color_t king_color>
+	inline size_t find_king_index(const position& position)
 	{
 		// Scan for the position of the first set bit in the mask.
 		// Assume that the board will always have a king of a given color.
-		return get_next_bit(get_bitboard_for(king_piece, position));
+		return get_next_bit(get_bitboard_for<king_color | king>(position));
 	}
 
 	// If the opponent isn't checking with a pawn, skip pawn checks.
@@ -138,18 +141,18 @@ namespace chess
 	{
 		constexpr color_t opp_color = other_color(king_color);
 
-		if (is_attacked_by_sliding_piece(position, king_color, 1ull << to_index(rank, file))) return true;
+		if (is_attacked_by_sliding_piece<king_color>(position, 1ull << to_index(rank, file))) return true;
 
 		if constexpr (check_type == check_type::do_all)
 		{
-			if (square_is_attacked_by_king(position, opp_color | king, rank, file)) return true;
+			if (square_is_attacked_by_king<opp_color>(position, rank, file)) return true;
 		}
 
 		if constexpr (check_type == check_type::do_knight_checks ||
 					  check_type == check_type::opponent_move_unknown ||
 					  check_type == check_type::do_all)
 		{
-			if (square_is_attacked_by_knight(position, opp_color | knight, rank, file)) return true;
+			if (square_is_attacked_by_knight<opp_color>(position, rank, file)) return true;
 		}
 
 		if constexpr (check_type == check_type::do_pawn_checks ||
@@ -174,7 +177,7 @@ namespace chess
 
 		const position& position = positions[parent_idx];
 
-		const bitboard pawns = get_bitboard_for(color_to_move | pawn, position);
+		const bitboard pawns = get_bitboard_for<color_to_move | pawn>(position);
 
 		const bitboards bitboards = get_bitboards_for(position);
 		const bitboard opp_pieces = (color_to_move == white) ? bitboards.black : bitboards.white;
@@ -713,12 +716,18 @@ namespace chess
 												   const size_t king_index, const bool started_in_check,
 												   const tt::key key)
 	{
-		find_pawn_moves<color_to_move, check_type>(end_idx, parent_idx, king_index, started_in_check, key);
-		find_moves_for<color_to_move | knight>(end_idx, parent_idx, king_index, started_in_check, key, &find_knight_moves<color_to_move, check_type>);
-		find_moves_for<color_to_move | bishop>(end_idx, parent_idx, king_index, started_in_check, key, &find_bishop_moves<color_to_move, check_type>);
-		find_moves_for<color_to_move | rook>(end_idx, parent_idx, king_index, started_in_check, key, &find_rook_moves<color_to_move, check_type>);
-		find_moves_for<color_to_move | queen>(end_idx, parent_idx, king_index, started_in_check, key, &find_queen_moves<color_to_move, check_type>);
-		find_king_moves<color_to_move, check_type>(end_idx, parent_idx, king_index, started_in_check, key);
+		find_pawn_moves<color_to_move, check_type>(
+			end_idx, parent_idx, king_index, started_in_check, key);
+		find_moves_for<color_to_move | knight>(
+			end_idx, parent_idx, king_index, started_in_check, key, &find_knight_moves<color_to_move, check_type>);
+		find_moves_for<color_to_move | bishop>(
+			end_idx, parent_idx, king_index, started_in_check, key, &find_bishop_moves<color_to_move, check_type>);
+		find_moves_for<color_to_move | rook>(
+			end_idx, parent_idx, king_index, started_in_check, key, &find_rook_moves<color_to_move, check_type>);
+		find_moves_for<color_to_move | queen>(
+			end_idx, parent_idx, king_index, started_in_check, key, &find_queen_moves<color_to_move, check_type>);
+		find_king_moves<color_to_move, check_type>(
+			end_idx, parent_idx, king_index, started_in_check, key);
 	}
 
 	template<color_t color_to_move, bool perft>
@@ -735,13 +744,13 @@ namespace chess
 
 		const position& parent_position = positions[parent_idx];
 
-		constexpr piece king_piece = color_to_move | king;
-		set_up_opponent_qb_and_qr_bitboards(parent_position, king_piece);
+		constexpr color_t opp_color = other_color(color_to_move);
+		set_up_qb_and_qr_bitboards_for<opp_color>(parent_position);
 
 		rank last_moved_end_rank{};
 		file last_moved_end_file{};
 		const piece last_moved_piece = get_last_moved_info<color_to_move>(parent_board, last_moved_end_rank, last_moved_end_file);
-		const size_t king_index = find_king_index(king_piece, parent_position);
+		const size_t king_index = find_king_index<color_to_move>(parent_position);
 
 		// Filter which types of checks we need to look for during move generation,
 		// based on which piece (if any) is known to be attacking the king.
@@ -752,7 +761,7 @@ namespace chess
 		size_t end_idx = begin_idx;
 		bool started_in_check = false;
 
-		if (last_moved_piece.is_pawn() && pawn_is_attacking<other_color(color_to_move)>(
+		if (last_moved_piece.is_pawn() && pawn_is_attacking<opp_color>(
 			last_moved_end_rank, last_moved_end_file, king_index / 8, king_index % 8))
 		{
 			started_in_check = true;
