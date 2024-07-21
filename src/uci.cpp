@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "game.hpp"
+#include "perft.hpp"
 #include "uci.hpp"
 #include "util/util.hpp"
 
@@ -153,7 +154,7 @@ namespace chess
 			{
 				infinite = true;
 			}
-			// If there is at least one more token after arg_it, check for wtime/winc/btime/binc.
+			// If there is at least one more token after arg_it, check for tokens that expect an argument.
 			else if (arg_it + 1 != args.cend())
 			{
 				if (*arg_it == "movetime")
@@ -161,6 +162,22 @@ namespace chess
 					exact = true;
 					time_left = atoi((arg_it + 1)->c_str());
 					continue;
+				}
+				else if (*arg_it == "perft" || *arg_it == "divide")
+				{
+					size_t depth = atoi((arg_it + 1)->c_str());
+					if (depth > 10)
+					{
+						depth = 10;
+						std::cout << "Capping perft depth to 10.\n";
+					}
+
+					if (color_to_move == white)
+						divide<white>(depth);
+					else
+						divide<black>(depth);
+
+					return;
 				}
 
 				if (color_to_move == white)
