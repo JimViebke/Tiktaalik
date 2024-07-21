@@ -1,5 +1,6 @@
 #pragma once
 
+#include <format>
 #include <iostream>
 #include <mutex>
 #include <sstream>
@@ -162,6 +163,7 @@ namespace chess
 
 				const size_t end_idx = first_child_index(0) + moves.size();
 				nodes = 0;
+				util::log(std::format("Engine depth {}, searching depth {}.", engine_depth.value(), engine_depth.value() + 1));
 				if (color_to_move == white)
 					search<white>(end_idx, engine_depth + 1);
 				else
