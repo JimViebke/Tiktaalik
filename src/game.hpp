@@ -48,12 +48,7 @@ namespace chess
 			else
 				end_idx = generate_child_boards<black>(0);
 
-			moves.clear();
-
-			for (size_t idx = first_child_index(0); idx < end_idx; ++idx)
-			{
-				moves.push_back(boards[idx]);
-			}
+			n_legal_moves = end_idx - first_child_index(0);
 		}
 
 		void update_info_for_new_root_position()
@@ -101,7 +96,7 @@ namespace chess
 		void apply_move(const std::string move)
 		{
 			// Find and apply the move.
-			for (size_t i = first_child_index(0); i < first_child_index(0) + moves.size(); ++i)
+			for (size_t i = first_child_index(0); i < first_child_index(0) + n_legal_moves; ++i)
 			{
 				if (boards[i].move_to_string() == move)
 				{
@@ -148,7 +143,7 @@ namespace chess
 					best_move = "";
 				}
 
-				if (moves.size() == 0)
+				if (n_legal_moves == 0)
 				{
 					searching = false;
 					util::log("Position is terminal, search thread stopping.");
@@ -161,7 +156,7 @@ namespace chess
 
 				engine_start_time = util::time_in_ms();
 
-				const size_t end_idx = first_child_index(0) + moves.size();
+				const size_t end_idx = first_child_index(0) + n_legal_moves;
 				nodes = 0;
 				util::log(std::format("Engine depth {}, searching depth {}.", engine_depth.value(), engine_depth.value() + 1));
 				if (color_to_move == white)
@@ -285,6 +280,6 @@ namespace chess
 		util::timepoint engine_start_time = 0;
 		util::timepoint engine_time = 0;
 
-		std::vector<board> moves;
+		size_t n_legal_moves = 0;
 	};
 }
