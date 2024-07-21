@@ -217,61 +217,6 @@ namespace chess
 			}
 		}
 
-	public:
-		void menu()
-		{
-			while (true)
-			{
-				std::cout << "\nEnter a command:\n"
-					"\tperft [n]\n"
-					"\tdivide [n]\n"
-					"\tquit\n";
-
-				std::string input;
-				std::getline(std::cin, input);
-				std::stringstream ss(input);
-
-				std::string command;
-				ss >> command;
-
-				if (command == "perft" || command == "divide")
-				{
-					depth_t depth = 0;
-					ss >> depth;
-					if (depth < 1)
-					{
-						depth = 1;
-						std::cout << "depth adjusted to " << depth << '\n';
-					}
-					else if (depth > 10)
-					{
-						depth = 10;
-						std::cout << "depth adjusted to " << depth << '\n';
-					}
-
-					if (command == "perft")
-					{
-						if (color_to_move == white)
-							perft<white>(depth);
-						else
-							perft<black>(depth);
-					}
-					else if (command == "divide")
-					{
-						if (color_to_move == white)
-							divide<white>(depth);
-						else
-							divide<black>(depth);
-					}
-				}
-				else if (command == "quit" || command == "q")
-				{
-					return;
-				}
-			}
-		}
-
-	private:
 		std::mutex game_mutex;
 
 		color_t color_to_move;
