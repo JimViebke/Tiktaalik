@@ -29,7 +29,7 @@ namespace chess
 		pv_lengths[ply] = pv_lengths[ply + 1];
 	}
 
-	template<color_t color_to_move, bool full_window>
+	template<color_t color_to_move, bool quiescing, bool full_window>
 	eval_t detail::alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta)
 	{
 		using eval_type = tt::eval_type;
@@ -45,53 +45,81 @@ namespace chess
 			}
 		}
 
-		pv_lengths[ply] = ply;
+		if constexpr (!quiescing && full_window)
+			pv_lengths[ply] = ply;
 
 		board& board = boards[idx];
 		const tt::key key = board.get_key();
 
-		// If this position is a repetition, evaluate it as an (unfavorable) draw.
-		// Todo: Scale contempt from large to small, so we don't try to draw over small disadvantages early in the game.
-		const size_t fifty_move_counter = board.get_fifty_move_counter();
-		auto history_end = history.data() + root_ply + ply;
-		if (fifty_move_counter >= 4)
+		if constexpr (!quiescing)
 		{
-			const auto earliest_possible_repetition = std::max(history_end - fifty_move_counter, history.data());
+			// If this position is a repetition, evaluate it as an (unfavorable) draw.
+			// Todo: Scale contempt from large to small, so we don't try to draw over small disadvantages early in the game.
+			const size_t fifty_move_counter = board.get_fifty_move_counter();
+			auto history_end = history.data() + root_ply + ply;
+			if (fifty_move_counter >= 4)
+			{
+				const auto earliest_possible_repetition = std::max(history_end - fifty_move_counter, history.data());
 
-			for (auto history_ptr = history_end - 4; history_ptr >= earliest_possible_repetition; history_ptr -= 2)
-				if (*history_ptr == key)
-					return (color_to_move == white) ? -100 : 100;
+				for (auto history_ptr = history_end - 4; history_ptr >= earliest_possible_repetition; history_ptr -= 2)
+					if (*history_ptr == key)
+						return (color_to_move == white) ? -100 : 100;
+			}
+
+			*history_end = key; // This position is not a repetition; add it to history.
+
+			if (depth == 0)
+			{
+				// Repeat the recursive call, with quiescing.
+				return alpha_beta<color_to_move, true, full_window>(idx, ply, 0, alpha, beta);
+			}
+		}
+		else
+		{
+			const eval_t stand_pat = board.get_eval();
+
+			if constexpr (color_to_move == white)
+			{
+				if (stand_pat >= beta)
+					return beta;
+				alpha = std::max(alpha, stand_pat);
+			}
+			else
+			{
+				if (stand_pat <= alpha)
+					return alpha;
+				beta = std::min(beta, stand_pat);
+			}
 		}
 
-		*history_end = key; // This position is not a repetition; add it to history. Todo: move this later.
-
-		if (depth == 0)
-		{
-			return board.get_eval();
-		}
-
-		eval_t tt_eval = 0;
 		packed_move best_move = 0;
-		if (tt.probe(tt_eval, best_move, key, depth, alpha, beta, ply))
+		if constexpr (!quiescing)
 		{
-			return tt_eval;
+			eval_t tt_eval = 0;
+			if (tt.probe(tt_eval, best_move, key, depth, alpha, beta, ply))
+			{
+				return tt_eval;
+			}
 		}
 
 		const size_t begin_idx = first_child_index(idx);
-		const size_t end_idx = generate_child_boards<color_to_move>(idx);
+		const size_t end_idx = generate_child_boards<color_to_move, quiescing ? gen_moves::captures : gen_moves::all>(idx);
 
-		if (board.is_terminal())
+		if (begin_idx == end_idx)
 		{
-			const eval_t eval = board.get_eval(); // Either min, max, or 0.
+			// The position is either terminal (eval is min, max, or 0) or quiescent.
+			const eval_t eval = board.get_eval();
 
-			tt.store(key, depth, eval_type::exact, eval);
+			if constexpr (!quiescing)
+				tt.store(key, depth, eval_type::exact, eval);
 
-			// If the position is a checkmate, apply a distance penalty.
-			return (eval == 0) ? eval : ((color_to_move == white)
-										 ? -eval::mate + ply : eval::mate - ply);
+			// If we are quiescing or in stalemate (eval == 0), return eval.
+			// Otherwise, the position is a checkmate; apply a distance penalty.
+			return (quiescing || eval == 0) ? eval :
+				((color_to_move == white) ? -eval::mate + ply : eval::mate - ply);
 		}
 
-		if (best_move != 0)
+		if (!quiescing && best_move != 0)
 			swap_tt_move_to_front(best_move, begin_idx, end_idx);
 		else
 			swap_best_to_front<color_to_move>(begin_idx, end_idx);
@@ -104,7 +132,7 @@ namespace chess
 			eval_t ab = 0;
 			//if (depth < 4 || child_idx == begin_idx)
 			//{
-			ab = alpha_beta<other_color(color_to_move), full_window>(child_idx, ply + 1, depth - 1, alpha, beta);
+			ab = alpha_beta<other_color(color_to_move), quiescing, full_window>(child_idx, ply + !quiescing, depth - !quiescing, alpha, beta);
 			//}
 			//else // We are at least 4 ply from a leaf node, and not on a first child; try a null window search.
 			//{
@@ -126,7 +154,7 @@ namespace chess
 				eval = std::max(eval, ab);
 				if (eval >= beta)
 				{
-					if constexpr (full_window)
+					if constexpr (!quiescing && full_window)
 						tt.store(key, depth, eval_type::beta, beta, ply, boards[child_idx].get_packed_move());
 					return beta;
 				}
@@ -135,7 +163,7 @@ namespace chess
 					alpha = eval;
 					node_eval_type = eval_type::exact;
 					best_move = boards[child_idx].get_packed_move();
-					if constexpr (full_window)
+					if constexpr (!quiescing && full_window)
 						update_pv(ply, boards[child_idx]);
 				}
 			}
@@ -144,7 +172,7 @@ namespace chess
 				eval = std::min(eval, ab);
 				if (eval <= alpha)
 				{
-					if constexpr (full_window)
+					if constexpr (!quiescing && full_window)
 						tt.store(key, depth, eval_type::alpha, alpha, ply, boards[child_idx].get_packed_move());
 					return alpha;
 				}
@@ -153,28 +181,23 @@ namespace chess
 					beta = eval;
 					node_eval_type = eval_type::exact;
 					best_move = boards[child_idx].get_packed_move();
-					if constexpr (full_window)
+					if constexpr (!quiescing && full_window)
 						update_pv(ply, boards[child_idx]);
 				}
 			}
-
-			// If our immediate children are leaf nodes,
-			// and we've looked at the highest statically evaluated child node,
-			// sibling nodes cannot be an improvement.
-			if (depth == 1 && child_idx > begin_idx) break;
 
 			swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
 		}
 
 		// If no move was an improvement, best_move stays as whatever we previously read from the TT.
-		if constexpr (full_window)
+		if constexpr (!quiescing && full_window)
 			tt.store(key, depth, node_eval_type, eval, ply, best_move);
 
 		return eval;
 	}
 
-	template eval_t detail::alpha_beta<white>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta);
-	template eval_t detail::alpha_beta<white, false>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta);
-	template eval_t detail::alpha_beta<black>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta);
-	template eval_t detail::alpha_beta<black, false>(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta);
+	template eval_t detail::alpha_beta<white, true>(const size_t, const size_t, const depth_t, eval_t, eval_t);
+	template eval_t detail::alpha_beta<white, false>(const size_t, const size_t, const depth_t, eval_t, eval_t);
+	template eval_t detail::alpha_beta<black, true>(const size_t, const size_t, const depth_t, eval_t, eval_t);
+	template eval_t detail::alpha_beta<black, false>(const size_t, const size_t, const depth_t, eval_t, eval_t);
 }

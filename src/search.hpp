@@ -32,8 +32,6 @@ namespace chess
 		inline_toggle void swap_tt_move_to_front(const packed_move tt_move,
 												 const size_t begin_idx, const size_t end_idx)
 		{
-			if (tt_move == 0) return;
-
 			for (size_t idx = begin_idx; idx < end_idx; ++idx)
 			{
 				if (boards[idx].move_is(tt_move))
@@ -77,7 +75,7 @@ namespace chess
 			std::swap(positions[begin_idx], positions[best_index]);
 		}
 
-		template<color_t color_to_move, bool full_window = true>
+		template<color_t color_to_move, bool quiescing = false, bool full_window = true>
 		eval_t alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta);
 	}
 }
