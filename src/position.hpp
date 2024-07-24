@@ -77,11 +77,4 @@ namespace chess
 
 		return (parent_index + max_n_of_moves) & ply_mask;
 	}
-	inline size_t first_sibling_index(const size_t index)
-	{
-		static_assert(std::popcount(max_n_of_moves) == 1);
-		constexpr size_t ply_mask = ~(max_n_of_moves - 1);
-
-		return index & ply_mask;
-	}
 }

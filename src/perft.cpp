@@ -41,7 +41,7 @@ namespace chess
 		size_t total_nodes = 0;
 		const size_t end_idx = generate_child_boards<color_to_move, gen_moves::all, true>(0);
 
-		for (size_t idx = first_sibling_index(end_idx); idx != end_idx; ++idx)
+		for (size_t idx = first_child_index(0); idx != end_idx; ++idx)
 		{
 			size_t count = 1;
 
