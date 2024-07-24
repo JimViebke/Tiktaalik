@@ -38,7 +38,6 @@ namespace chess
 		static constexpr size_t en_passant_bits = 4;
 		static constexpr size_t castling_right_bits = 1;
 		static constexpr size_t fifty_move_counter_bits = std::bit_width(50u * 2);
-		static constexpr size_t terminal_bits = 1;
 
 		// bitfield positions
 		static constexpr size_t start_file_offset = 0;
@@ -52,8 +51,7 @@ namespace chess
 		static constexpr size_t white_can_castle_qs_offset = white_can_castle_ks_offset + castling_right_bits;
 		static constexpr size_t black_can_castle_ks_offset = white_can_castle_qs_offset + castling_right_bits;
 		static constexpr size_t black_can_castle_qs_offset = black_can_castle_ks_offset + castling_right_bits;
-		static constexpr size_t fifty_move_counter_offset = black_can_castle_qs_offset + castling_right_bits; // counts to 100 ply
-		static constexpr size_t terminal_offset = fifty_move_counter_offset + fifty_move_counter_bits;
+		static constexpr size_t fifty_move_counter_offset = black_can_castle_qs_offset + castling_right_bits; // counts ply
 
 		// bitfield masks, not including offsets
 		static constexpr uint64_t square_mask = (1ull << square_bits) - 1;
@@ -63,10 +61,9 @@ namespace chess
 		static constexpr uint64_t en_passant_mask = (1ull << en_passant_bits) - 1;
 		static constexpr uint64_t castling_right_mask = (1ull << castling_right_bits) - 1;
 		static constexpr uint64_t fifty_move_counter_mask = (1ull << fifty_move_counter_bits) - 1;
-		static constexpr uint64_t terminal_mask = (1ull << terminal_bits) - 1;
 
-		// make sure the required bitfield size is what we expect
-		static_assert(terminal_bits + terminal_offset == 32);
+		// Check that we're using the expected number of bits.
+		static_assert(fifty_move_counter_bits + fifty_move_counter_offset + 1 == 32);
 
 		uint8_t board_state[4]{};
 
@@ -247,7 +244,6 @@ namespace chess
 		bool black_can_castle_ks() const { return (bitfield() >> black_can_castle_ks_offset) & castling_right_mask; }
 		bool black_can_castle_qs() const { return (bitfield() >> black_can_castle_qs_offset) & castling_right_mask; }
 		size_t get_fifty_move_counter() const { return (bitfield() >> fifty_move_counter_offset) & fifty_move_counter_mask; }
-		bool is_terminal() const { return (bitfield() >> terminal_offset) & terminal_mask; }
 
 		piece moved_piece_without_color() const
 		{
@@ -271,7 +267,6 @@ namespace chess
 		void set_black_can_castle_qs(uint32_t arg) { bitfield() |= arg << black_can_castle_qs_offset; }
 		void set_fifty_move_counter(uint32_t arg) { bitfield() |= arg << fifty_move_counter_offset; }
 	public:
-		void set_terminal() { bitfield() |= uint32_t(1) << terminal_offset; }
 
 		// todo: these could be narrowed to modify a single byte (determined at compile time)
 		void white_cant_castle_ks() { bitfield() &= ~(1 << white_can_castle_ks_offset); }
@@ -437,6 +432,4 @@ namespace chess
 	};
 
 	tt::key generate_key(const board& board, const position& position, const color_t color_to_move);
-
-	bool same_move(const board& move_a, const board& move_b);
 }
