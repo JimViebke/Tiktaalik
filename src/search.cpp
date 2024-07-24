@@ -63,7 +63,10 @@ namespace chess
 
 				for (auto history_ptr = history_end - 4; history_ptr >= earliest_possible_repetition; history_ptr -= 2)
 					if (*history_ptr == key)
-						return (color_to_move == white) ? -100 : 100;
+						// Evaluate a repeated position as unfavorable (-100 centipawns). These evals look
+						// reversed because we are considering the position itself rather than its moves/children.
+						// That is, if color_to_move == white, this evaluation is from black's perspective.
+						return (color_to_move == white) ? 100 : -100;
 			}
 
 			*history_end = key; // This position is not a repetition; add it to history.
