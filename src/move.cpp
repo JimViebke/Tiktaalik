@@ -68,28 +68,6 @@ namespace chess
 	}
 
 	template<color_t attacker_color>
-	inline_toggle bool square_is_attacked_by_pawn(const position& position,
-												  const rank rank, const file file)
-	{
-		if constexpr (attacker_color == white)
-		{
-			if ((bounds_check(rank + 1, file + 1) && position.piece_at(rank + 1, file + 1).is(attacker_color | pawn)) ||
-				(bounds_check(rank + 1, file - 1) && position.piece_at(rank + 1, file - 1).is(attacker_color | pawn))) return true;
-		}
-		else
-		{
-			if ((bounds_check(rank - 1, file + 1) && position.piece_at(rank - 1, file + 1).is(attacker_color | pawn)) ||
-				(bounds_check(rank - 1, file - 1) && position.piece_at(rank - 1, file - 1).is(attacker_color | pawn))) return true;
-		}
-
-		return false;
-	}
-	template<color_t attacker_color>
-	inline_toggle bool square_is_attacked_by_knight(const position& position, const rank rank, const file file)
-	{
-		return knight_attacks[to_index(rank, file)](position, attacker_color | knight);
-	}
-	template<color_t attacker_color>
 	inline_toggle bool square_is_attacked_by_king(const position& position, const rank rank, const file file)
 	{
 		constexpr piece_t opp_king = attacker_color | king;
@@ -116,14 +94,6 @@ namespace chess
 		return false;
 	}
 
-	template<color_t king_color>
-	inline size_t find_king_index(const position& position)
-	{
-		// Scan for the position of the first set bit in the mask.
-		// Assume that the board will always have a king of a given color.
-		return get_next_bit(get_bitboard_for<king_color | king>(position));
-	}
-
 	// If the opponent isn't checking with a pawn, skip pawn checks.
 	// If the opponent isn't checking with a knight, skip knight checks.
 	enum class check_type
@@ -132,7 +102,6 @@ namespace chess
 		do_knight_checks, // implies skipping pawn and king checks
 		skip_pawn_and_knight_checks, // nominal case (only do sliding piece checks)
 
-		opponent_move_unknown, // do all checks except king checks
 		do_all // do all checks
 	};
 
@@ -149,14 +118,12 @@ namespace chess
 		}
 
 		if constexpr (check_type == check_type::do_knight_checks ||
-					  check_type == check_type::opponent_move_unknown ||
 					  check_type == check_type::do_all)
 		{
 			if (square_is_attacked_by_knight<opp_color>(position, rank, file)) return true;
 		}
 
 		if constexpr (check_type == check_type::do_pawn_checks ||
-					  check_type == check_type::opponent_move_unknown ||
 					  check_type == check_type::do_all)
 		{
 			if (square_is_attacked_by_pawn<opp_color>(position, rank, file)) return true;
@@ -754,26 +721,16 @@ namespace chess
 				std::cout << "Incremental and generated evals mismatch in append_if_legal\n";
 	}
 
-	template<color_t color_to_move>
-	piece get_last_moved_info(const board& board, rank& last_moved_end_rank, file& last_moved_end_file)
-	{
-		if (!board.has_move()) return empty; // todo: remove me
-
-		last_moved_end_rank = board.get_end_rank();
-		last_moved_end_file = board.get_end_file();
-		return board.moved_piece<other_color(color_to_move)>();
-	}
-
-	template<color_t attacking_color>
-	inline_toggle bool pawn_is_attacking(const rank attack_rank, const file attack_file,
+	template<color_t attacker_color>
+	inline_toggle bool pawn_is_attacking(const rank attacker_rank, const file attacker_file,
 										 const rank target_rank, const file target_file)
 	{
-		if (diff(attack_file, target_file) != 1) return false;
+		if (diff(attacker_file, target_file) != 1) return false;
 
-		if constexpr (attacking_color == white)
-			return target_rank == attack_rank - 1;
+		if constexpr (attacker_color == white)
+			return target_rank == attacker_rank - 1;
 		else
-			return target_rank == attack_rank + 1;
+			return target_rank == attacker_rank + 1;
 	}
 
 	inline_toggle bool knight_is_attacking(const rank attack_rank, const file attack_file,
@@ -823,15 +780,16 @@ namespace chess
 		constexpr color_t opp_color = other_color(color_to_move);
 		set_up_qb_and_qr_bitboards_for<opp_color>(parent_position);
 
-		rank last_moved_end_rank{};
-		file last_moved_end_file{};
-		const piece last_moved_piece = get_last_moved_info<color_to_move>(parent_board, last_moved_end_rank, last_moved_end_file);
-		const size_t king_index = find_king_index<color_to_move>(parent_position);
-
 		// Filter which types of checks we need to look for during move generation,
 		// based on which piece (if any) is known to be attacking the king.
 		// - When generating non-king moves, never check for a king.
 		// - When generating king moves, do all checks.
+
+		const size_t king_index = find_king_index<color_to_move>(parent_position);
+
+		const piece last_moved_piece = parent_board.moved_piece_without_color();
+		const rank last_moved_end_rank = parent_board.get_end_rank();
+		const file last_moved_end_file = parent_board.get_end_file();
 
 		const size_t begin_idx = first_child_index(parent_idx);
 		size_t end_idx = begin_idx;
@@ -851,20 +809,11 @@ namespace chess
 			generate_child_boards<color_to_move, gen_moves, check_type::do_knight_checks>(
 				end_idx, parent_idx, king_index, started_in_check, key);
 		}
-		else if (!last_moved_piece.is_empty()) // the nominal path
+		else // the nominal path
 		{
 			started_in_check = is_king_in_check<color_to_move, check_type::skip_pawn_and_knight_checks>(
 				parent_position, king_index / 8, king_index % 8);
 			generate_child_boards<color_to_move, gen_moves, check_type::skip_pawn_and_knight_checks>(
-				end_idx, parent_idx, king_index, started_in_check, key);
-		}
-		else
-		{
-			// Very occasionally (ie, at the original root), we do not know what the last move was.
-			// Fall back to unconstrained move generation.
-			started_in_check = is_king_in_check<color_to_move, check_type::opponent_move_unknown>(
-				parent_position, king_index / 8, king_index % 8);
-			generate_child_boards<color_to_move, gen_moves, check_type::opponent_move_unknown>(
 				end_idx, parent_idx, king_index, started_in_check, key);
 		}
 

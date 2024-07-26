@@ -252,13 +252,14 @@ namespace chess
 			return type << 1;
 		}
 
-		// these can only set a field high
-	private:
+		// "set_" functions that modify the bitfield can only set bits high.
 		void set_moved_piece(piece piece) { bitfield() |= uint32_t(piece.value() >> 1) << moved_piece_offset; }
-		void set_start_rank(rank rank) { bitfield() |= uint32_t(rank.value()) << start_rank_offset; }
-		void set_start_file(file file) { bitfield() |= uint32_t(file.value()) << start_file_offset; }
+		void set_end_index(size_t idx) { bitfield() |= uint32_t(idx) << end_file_offset; }
+	private:
 		void set_end_rank(rank rank) { bitfield() |= uint32_t(rank.value()) << end_rank_offset; }
 		void set_end_file(file file) { bitfield() |= uint32_t(file.value()) << end_file_offset; }
+		void set_start_rank(rank rank) { bitfield() |= uint32_t(rank.value()) << start_rank_offset; }
+		void set_start_file(file file) { bitfield() |= uint32_t(file.value()) << start_file_offset; }
 		void set_promotion() { bitfield() |= uint32_t(1) << promotion_offset; }
 		void set_en_passant_file(file file) { bitfield() |= uint32_t(file.value()) << en_passant_file_offset; }
 		void set_white_can_castle_ks(uint32_t arg) { bitfield() |= arg << white_can_castle_ks_offset; }
@@ -266,9 +267,8 @@ namespace chess
 		void set_black_can_castle_ks(uint32_t arg) { bitfield() |= arg << black_can_castle_ks_offset; }
 		void set_black_can_castle_qs(uint32_t arg) { bitfield() |= arg << black_can_castle_qs_offset; }
 		void set_fifty_move_counter(uint32_t arg) { bitfield() |= arg << fifty_move_counter_offset; }
-	public:
 
-		// todo: these could be narrowed to modify a single byte (determined at compile time)
+	public:
 		void white_cant_castle_ks() { bitfield() &= ~(1 << white_can_castle_ks_offset); }
 		void white_cant_castle_qs() { bitfield() &= ~(1 << white_can_castle_qs_offset); }
 		void black_cant_castle_ks() { bitfield() &= ~(1 << black_can_castle_ks_offset); }
@@ -293,8 +293,6 @@ namespace chess
 
 			return result;
 		}
-
-		bool has_move() const { return moved_piece_without_color().is_occupied(); }
 
 		const piece& last_moved_piece(const position& position) const
 		{

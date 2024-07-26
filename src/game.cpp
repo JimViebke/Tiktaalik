@@ -1,11 +1,73 @@
 /* 2021 December 16 */
 
+#include "bitboard.hpp"
 #include "game.hpp"
+#include "move.hpp"
 #include "position.hpp"
 #include "search.hpp"
 
 namespace chess
 {
+	template<color_t color_to_move>
+	void set_last_moved_info()
+	{
+		// During move generation, we optimize by noting that the only way a player can
+		// start their turn in check from a knight or pawn is if the opponent moved a
+		// knight or pawn, putting us into check. This is determined during move generation
+		// by reading the type and position of the last moved piece from `board`.
+		// However, this information is absent at the original root. Generate it here so
+		// that generate_child_boards() doesn't need to handle the root edge case.
+
+		constexpr color_t opp_color = other_color(color_to_move);
+		constexpr piece_t opp_pawn = opp_color | pawn;
+		constexpr piece_t opp_knight = opp_color | knight;
+
+		const size_t king_idx = find_king_index<color_to_move>(positions[0]);
+		const rank king_rank = king_idx / 8;
+		const file king_file = king_idx % 8;
+
+		board& board = boards[0];
+		position& position = positions[0];
+
+		const rank attacking_pawn_rank = king_rank + ((color_to_move == white) ? -1 : 1);
+		if (bounds_check(attacking_pawn_rank))
+		{
+			if (bounds_check(king_file - 1) &&
+				position.piece_at(attacking_pawn_rank, king_file - 1).is(opp_pawn))
+			{
+				board.set_moved_piece(opp_pawn);
+				board.set_end_index(to_index(attacking_pawn_rank, king_file - 1));
+				return;
+			}
+			else if (bounds_check(king_file + 1) &&
+					 position.piece_at(attacking_pawn_rank, king_file + 1).is(opp_pawn))
+			{
+				board.set_moved_piece(opp_pawn);
+				board.set_end_index(to_index(attacking_pawn_rank, king_file + 1));
+				return;
+			}
+		}
+
+		const bitboard attacking_knights = get_bitboard_for<opp_knight>(position) & knight_movemasks[king_idx];
+
+		if (attacking_knights != 0)
+		{
+			board.set_moved_piece(opp_knight);
+			board.set_end_index(get_next_bit(attacking_knights));
+			return;
+		}
+
+		board.set_moved_piece(empty);
+	}
+
+	void set_last_moved_info(const color_t color_to_move)
+	{
+		if (color_to_move == white)
+			set_last_moved_info<white>();
+		else
+			set_last_moved_info<black>();
+	}
+
 	// Simple, nonvalidating FEN parser
 	color_t load_fen(const std::string& fen, position& _position)
 	{
@@ -95,6 +157,8 @@ namespace chess
 		boards[0] = board{ positions[0], color_to_move,
 			white_can_castle_ks, white_can_castle_qs, black_can_castle_ks, black_can_castle_qs,
 			en_passant_file, fifty_move_counter };
+
+		set_last_moved_info(color_to_move);
 
 		return color_to_move;
 	}
