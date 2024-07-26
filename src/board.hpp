@@ -142,6 +142,26 @@ namespace chess
 			}
 		}
 
+		template<color_t update_color>
+		inline_toggle_member void update_key_castling_rights_for(tt::key& incremental_key, const board& parent_board)
+		{
+			if constexpr (update_color == white)
+			{
+				if (white_can_castle_ks() != parent_board.white_can_castle_ks())
+					incremental_key ^= tt::z_keys.w_castle_ks;
+				if (white_can_castle_qs() != parent_board.white_can_castle_qs())
+					incremental_key ^= tt::z_keys.w_castle_qs;
+			}
+			else
+			{
+				if (black_can_castle_ks() != parent_board.black_can_castle_ks())
+					incremental_key ^= tt::z_keys.b_castle_ks;
+				if (black_can_castle_qs() != parent_board.black_can_castle_qs())
+					incremental_key ^= tt::z_keys.b_castle_qs;
+			}
+		}
+
+
 		template<color_t moving_color>
 		inline_toggle_member void update_castling_rights_for_moving_player(const size_t, const rank start_rank, const file start_file, const rank, const file)
 		{
@@ -268,14 +288,14 @@ namespace chess
 		void set_black_can_castle_qs(uint32_t arg) { bitfield() |= arg << black_can_castle_qs_offset; }
 		void set_fifty_move_counter(uint32_t arg) { bitfield() |= arg << fifty_move_counter_offset; }
 
+		void increment_50_move_counter() { bitfield() += 1 << fifty_move_counter_offset; }
+		void clear_50_move_counter() { bitfield() &= ~(fifty_move_counter_mask << fifty_move_counter_offset); }
+
 	public:
 		void white_cant_castle_ks() { bitfield() &= ~(1 << white_can_castle_ks_offset); }
 		void white_cant_castle_qs() { bitfield() &= ~(1 << white_can_castle_qs_offset); }
 		void black_cant_castle_ks() { bitfield() &= ~(1 << black_can_castle_ks_offset); }
 		void black_cant_castle_qs() { bitfield() &= ~(1 << black_can_castle_qs_offset); }
-
-		void increment_50_move_counter() { bitfield() += 1 << fifty_move_counter_offset; }
-		void clear_50_move_counter() { bitfield() &= ~(fifty_move_counter_mask << fifty_move_counter_offset); }
 
 		const std::string move_to_string() const
 		{
@@ -292,30 +312,6 @@ namespace chess
 			}
 
 			return result;
-		}
-
-		const piece& last_moved_piece(const position& position) const
-		{
-			return position.piece_at(get_end_rank(), get_end_file());
-		}
-
-		template<color_t update_color>
-		inline_toggle_member void update_key_castling_rights_for(tt::key& incremental_key, const board& parent_board)
-		{
-			if constexpr (update_color == white)
-			{
-				if (white_can_castle_ks() != parent_board.white_can_castle_ks())
-					incremental_key ^= tt::z_keys.w_castle_ks;
-				if (white_can_castle_qs() != parent_board.white_can_castle_qs())
-					incremental_key ^= tt::z_keys.w_castle_qs;
-			}
-			else
-			{
-				if (black_can_castle_ks() != parent_board.black_can_castle_ks())
-					incremental_key ^= tt::z_keys.b_castle_ks;
-				if (black_can_castle_qs() != parent_board.black_can_castle_qs())
-					incremental_key ^= tt::z_keys.b_castle_qs;
-			}
 		}
 
 		template <color_t moving_color, piece_t moving_piece_type, move_type move_type>
