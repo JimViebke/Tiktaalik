@@ -15,8 +15,8 @@ namespace chess
 		chess::tt::transposition_table tt;
 	}
 
-	std::array<size_t, max_depth> pv_lengths;
-	std::array<std::array<board, max_depth>, max_depth> pv_moves;
+	std::array<size_t, eval::max_ply> pv_lengths;
+	std::array<std::array<board, eval::max_ply>, eval::max_ply> pv_moves;
 
 	void update_pv(const size_t ply, const board& board)
 	{
