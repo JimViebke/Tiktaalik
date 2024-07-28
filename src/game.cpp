@@ -180,9 +180,9 @@ namespace chess
 
 		detail::swap_tt_move_to_front(best_move, begin_idx, end_idx);
 
-		for (size_t idx = begin_idx; idx != end_idx; ++idx)
+		for (size_t child_idx = begin_idx; child_idx != end_idx; ++child_idx)
 		{
-			eval_t ab = detail::alpha_beta<other_color(color_to_move)>(idx, 1, depth - 1, alpha, beta);
+			eval_t ab = detail::alpha_beta<other_color(color_to_move)>(child_idx, 1, depth - 1, alpha, beta);
 
 			if (!searching) return;
 
@@ -191,9 +191,9 @@ namespace chess
 				if (ab > eval)
 				{
 					eval = ab;
-					update_pv(0, boards[idx]);
+					update_pv(0, boards[child_idx]);
 					send_info(eval);
-					best_move = boards[idx].get_packed_move();
+					best_move = boards[child_idx].get_packed_move();
 				}
 				alpha = std::max(alpha, eval);
 			}
@@ -202,14 +202,14 @@ namespace chess
 				if (ab < eval)
 				{
 					eval = ab;
-					update_pv(0, boards[idx]);
+					update_pv(0, boards[child_idx]);
 					send_info(eval);
-					best_move = boards[idx].get_packed_move();
+					best_move = boards[child_idx].get_packed_move();
 				}
 				beta = std::min(beta, eval);
 			}
 
-			detail::swap_best_to_front<color_to_move>(idx + 1, end_idx);
+			detail::swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
 		}
 
 		// Store the best move in the TT.
