@@ -116,7 +116,7 @@ namespace chess
 		}
 
 		template<color_t color>
-		void update_castling_rights_for(const rank rank, const file file)
+		inline_toggle_member void update_castling_rights_for(const rank rank, const file file)
 		{
 			// rank and file might be start or end idx.
 			if constexpr (color == white)
@@ -141,6 +141,36 @@ namespace chess
 			}
 		}
 
+		template<color_t moving_color>
+		inline_toggle_member void update_castling_rights_for_moving_player(
+			const size_t, const rank start_rank, const file start_file,
+			const rank, const file)
+		{
+			update_castling_rights_for<moving_color>(start_rank, start_file);
+		}
+		template<color_t moving_color>
+		inline_toggle_member void update_castling_rights_for_moving_player(
+			const size_t, const rank start_rank, const file start_file,
+			const rank, const file, const piece)
+		{
+			update_castling_rights_for<moving_color>(start_rank, start_file);
+		}
+
+		template<color_t nonmoving_color>
+		inline_toggle_member void update_castling_rights_for_nonmoving_player(
+			const size_t, const rank, const file,
+			const rank end_rank, const file end_file)
+		{
+			update_castling_rights_for<nonmoving_color>(end_rank, end_file);
+		}
+		template<color_t nonmoving_color>
+		inline_toggle_member void update_castling_rights_for_nonmoving_player(
+			const size_t, const rank, const file,
+			const rank end_rank, const file end_file, const piece)
+		{
+			update_castling_rights_for<nonmoving_color>(end_rank, end_file);
+		}
+
 		template<color_t update_color>
 		inline_toggle_member void update_key_castling_rights_for(tt::key& incremental_key, const board& parent_board)
 		{
@@ -158,36 +188,6 @@ namespace chess
 				if (black_can_castle_qs() != parent_board.black_can_castle_qs())
 					incremental_key ^= tt::z_keys.b_castle_qs;
 			}
-		}
-
-
-		template<color_t moving_color>
-		inline_toggle_member void update_castling_rights_for_moving_player(const size_t, const rank start_rank, const file start_file, const rank, const file)
-		{
-			// if a rook moves, it cannot be used to castle
-			update_castling_rights_for<moving_color>(start_rank, start_file);
-		}
-		template<color_t moving_color>
-		void update_castling_rights_for_moving_player(const size_t parent_idx,
-													  const rank start_rank, const file start_file, const rank end_rank, const file end_file,
-													  const piece)
-		{
-			update_castling_rights_for_moving_player<moving_color>(parent_idx, start_rank, start_file, end_rank, end_file);
-		}
-
-		template<color_t nonmoving_color>
-		inline_toggle_member void update_castling_rights_for_nonmoving_player(const size_t,
-																			  const rank, const file, const rank end_rank, const file end_file)
-		{
-			// if a rook is captured, it cannot be used to castle
-			update_castling_rights_for<nonmoving_color>(end_rank, end_file);
-		}
-		template<color_t nonmoving_color>
-		void update_castling_rights_for_nonmoving_player(const size_t parent_idx,
-														 const rank start_rank, const file start_file, const rank end_rank, const file end_file,
-														 const piece)
-		{
-			update_castling_rights_for_nonmoving_player<nonmoving_color>(parent_idx, start_rank, start_file, end_rank, end_file);
 		}
 
 	public:
@@ -230,11 +230,13 @@ namespace chess
 			}
 			else if constexpr (moving_piece_type == rook)
 			{
+				// If a rook moves, it cannot be used to castle.
 				board.update_castling_rights_for_moving_player<other_color(color_to_move)>(std::forward<board_args>(args)...);
 			}
 
 			if constexpr (move_type == move_type::capture)
 			{
+				// If a rook is captured, it cannot be used to castle.
 				board.update_castling_rights_for_nonmoving_player<color_to_move>(std::forward<board_args>(args)...);
 			}
 
