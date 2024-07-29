@@ -5,7 +5,6 @@ namespace chess
 {
 	size_t root_ply{ 0 };
 	std::array<tt::key, eval::max_ply * 2> history{};
-	std::array<packed_move, eval::max_ply> killer_moves{};
 	std::atomic_bool searching{ false };
 	bool pondering{ false };
 	util::timepoint scheduled_turn_end{ 0 };
@@ -123,26 +122,10 @@ namespace chess
 				((color_to_move == white) ? -eval::mate + ply : eval::mate - ply);
 		}
 
-		size_t may_still_have_captures = true;
 		if (!quiescing && best_move != 0)
-		{
 			swap_tt_move_to_front(best_move, begin_idx, end_idx);
-		}
-		else if (!quiescing)
-		{
-			if (!swap_best_good_capture_to_front<color_to_move>(idx, begin_idx, end_idx))
-			{
-				may_still_have_captures = false;
-				if (!swap_killer_move_to_front(ply, begin_idx, end_idx))
-				{
-					swap_best_to_front<color_to_move>(begin_idx, end_idx);
-				}
-			}
-		}
 		else
-		{
 			swap_best_to_front<color_to_move>(begin_idx, end_idx);
-		}
 
 		eval_t eval = (color_to_move == white ? -eval::mate : eval::mate);
 		eval_type node_eval_type = (color_to_move == white ? eval_type::alpha : eval_type::beta);
@@ -176,11 +159,6 @@ namespace chess
 				{
 					if constexpr (!quiescing && full_window)
 						tt.store(key, depth, eval_type::beta, beta, ply, boards[child_idx].get_packed_move());
-					if (!quiescing &&
-						positions[idx].is_empty(boards[child_idx].get_end_index()) && // Only store non-captures as killer moves.
-						(best_move == 0 || child_idx != begin_idx)) // Only store non-pv moves as killer moves.
-						killer_moves[ply] = boards[child_idx].get_packed_move();
-
 					return beta;
 				}
 				if (eval > alpha)
@@ -199,11 +177,6 @@ namespace chess
 				{
 					if constexpr (!quiescing && full_window)
 						tt.store(key, depth, eval_type::alpha, alpha, ply, boards[child_idx].get_packed_move());
-					if (!quiescing &&
-						positions[idx].is_empty(boards[child_idx].get_end_index()) && // Only store non-captures as killer moves.
-						(best_move == 0 || child_idx != begin_idx)) // Only store non-pv moves as killer moves.
-						killer_moves[ply] = boards[child_idx].get_packed_move();
-
 					return alpha;
 				}
 				if (eval < beta)
@@ -216,26 +189,7 @@ namespace chess
 				}
 			}
 
-			if (may_still_have_captures)
-			{
-				may_still_have_captures = swap_best_good_capture_to_front<color_to_move>(idx, child_idx + 1, end_idx);
-				if (may_still_have_captures)
-				{
-					continue;
-				}
-				else if (swap_killer_move_to_front(ply, child_idx + 1, end_idx))
-				{
-					continue;
-				}
-				else
-				{
-					swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
-				}
-			}
-			else
-			{
-				swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
-			}
+			swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
 		}
 
 		// If no move was an improvement, best_move stays as whatever we previously read from the TT.
