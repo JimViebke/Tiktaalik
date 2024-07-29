@@ -30,6 +30,9 @@ namespace chess
 			return _position[index];
 		}
 
+		piece& operator[](const size_t index) { return _position[index]; }
+		const piece& operator[](const size_t index) const { return _position[index]; }
+
 		bool is_empty(const rank rank, const file file) const
 		{
 			return piece_at(rank, file).is_empty();
