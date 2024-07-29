@@ -362,7 +362,7 @@ namespace chess
 			pieces = clear_next_bit(pieces);
 
 			// XOR the key for the leaving piece once for all of its moves
-			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[piece_idx][piece_type];
+			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[piece_type][piece_idx];
 
 			generate_moves_fn(out_index, parent_idx, piece_idx / 8, piece_idx % 8, king_index, started_in_check, incremental_key);
 		}

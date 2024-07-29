@@ -359,7 +359,7 @@ namespace chess
 				piece_after = piece_before;
 			}
 			// add the key for the arriving piece
-			incremental_key ^= tt::z_keys.piece_square_keys[end_idx][piece_after.value()];
+			incremental_key ^= tt::z_keys.piece_square_keys[piece_after.value()][end_idx];
 			// update square eval for the piece
 			incremental_eval -= eval::piece_square_eval(piece_before, start_idx);
 			incremental_eval += eval::piece_square_eval(piece_after, end_idx);
@@ -374,7 +374,7 @@ namespace chess
 				const size_t captured_pawn_idx = to_index(start_rank, end_file); // the captured pawn is at the start rank and end file
 				constexpr piece_t captured_pawn = other_color(moving_color) | pawn;
 				// remove key for the captured pawn
-				incremental_key ^= tt::z_keys.piece_square_keys[captured_pawn_idx][captured_pawn];
+				incremental_key ^= tt::z_keys.piece_square_keys[captured_pawn][captured_pawn_idx];
 				// udpate eval for the captured pawn
 				incremental_eval -= eval::piece_eval(captured_pawn);
 				incremental_eval -= eval::piece_square_eval(captured_pawn, captured_pawn_idx);
@@ -390,8 +390,8 @@ namespace chess
 
 				constexpr piece_t moving_rook = moving_color | rook;
 				// update keys for the moving rook
-				incremental_key ^= tt::z_keys.piece_square_keys[rook_start_index][moving_rook];
-				incremental_key ^= tt::z_keys.piece_square_keys[rook_end_index][moving_rook];
+				incremental_key ^= tt::z_keys.piece_square_keys[moving_rook][rook_start_index];
+				incremental_key ^= tt::z_keys.piece_square_keys[moving_rook][rook_end_index];
 				// update eval for the moving rook
 				incremental_eval -= eval::piece_square_eval(moving_rook, rook_start_index); // todo: determine at compile time
 				incremental_eval += eval::piece_square_eval(moving_rook, rook_end_index); // todo: determine at compile time
@@ -400,7 +400,7 @@ namespace chess
 			{
 				const piece_t captured_piece = parent_position.piece_at(end_idx).value();
 				// remove the key for the captured piece
-				incremental_key ^= tt::z_keys.piece_square_keys[end_idx][captured_piece];
+				incremental_key ^= tt::z_keys.piece_square_keys[captured_piece][end_idx];
 				// update our opponent's castling rights
 				update_key_castling_rights_for<other_color(moving_color)>(incremental_key, parent_board);
 				// update eval for the captured piece

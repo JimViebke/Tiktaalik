@@ -36,9 +36,9 @@ namespace chess::tt
 
 	struct z_keys_t
 	{
-		std::array<std::array<key, 12>, 64> piece_square_keys;
-		key black_to_move;
+		std::array<std::array<key, 64>, 12> piece_square_keys;
 		std::array<key, 8> en_passant_keys;
+		key black_to_move;
 		key w_castle_ks;
 		key w_castle_qs;
 		key b_castle_ks;
@@ -51,13 +51,13 @@ namespace chess::tt
 		z_keys_t keys{};
 
 		for (auto& piece_square_keys : keys.piece_square_keys)
-			for (auto& piece_square_key : piece_square_keys)
-				piece_square_key = rng();
-
-		keys.black_to_move = rng();
+			for (auto& square_key : piece_square_keys)
+				square_key = rng();
 
 		for (auto& ep_key : keys.en_passant_keys)
 			ep_key = rng();
+
+		keys.black_to_move = rng();
 
 		keys.w_castle_ks = rng();
 		keys.w_castle_qs = rng();

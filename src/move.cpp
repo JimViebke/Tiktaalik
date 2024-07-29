@@ -173,7 +173,7 @@ namespace chess
 				size_t start_idx = get_next_bit(noncapture_promotions);
 				noncapture_promotions = clear_next_bit(noncapture_promotions);
 
-				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[start_idx][color_to_move | pawn];
+				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 				const rank rank = start_idx / 8;
 				const file file = start_idx % 8;
@@ -200,7 +200,7 @@ namespace chess
 				size_t start_idx = get_next_bit(move_two_squares);
 				move_two_squares = clear_next_bit(move_two_squares);
 
-				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[start_idx][color_to_move | pawn];
+				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 				const rank rank = start_idx / 8;
 				const file file = start_idx % 8;
@@ -214,7 +214,7 @@ namespace chess
 				size_t start_idx = get_next_bit(move_one_square);
 				move_one_square = clear_next_bit(move_one_square);
 
-				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[start_idx][color_to_move | pawn];
+				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 				const rank rank = start_idx / 8;
 				const file file = start_idx % 8;
@@ -234,7 +234,7 @@ namespace chess
 			size_t start_idx = get_next_bit(capture_to_lower_file_promotion);
 			capture_to_lower_file_promotion = clear_next_bit(capture_to_lower_file_promotion);
 
-			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[start_idx][color_to_move | pawn];
+			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 			const rank rank = start_idx / 8;
 			const file file = start_idx % 8;
@@ -257,7 +257,7 @@ namespace chess
 			size_t start_idx = get_next_bit(capture_to_lower_file);
 			capture_to_lower_file = clear_next_bit(capture_to_lower_file);
 
-			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[start_idx][color_to_move | pawn];
+			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 			const rank rank = start_idx / 8;
 			const file file = start_idx % 8;
@@ -276,7 +276,7 @@ namespace chess
 			size_t start_idx = get_next_bit(capture_to_higher_file_promotion);
 			capture_to_higher_file_promotion = clear_next_bit(capture_to_higher_file_promotion);
 
-			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[start_idx][color_to_move | pawn];
+			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 			const rank rank = start_idx / 8;
 			const file file = start_idx % 8;
@@ -299,7 +299,7 @@ namespace chess
 			size_t start_idx = get_next_bit(capture_to_higher_file);
 			capture_to_higher_file = clear_next_bit(capture_to_higher_file);
 
-			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[start_idx][color_to_move | pawn];
+			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 			const rank rank = start_idx / 8;
 			const file file = start_idx % 8;
@@ -319,7 +319,7 @@ namespace chess
 				size_t start_idx = get_next_bit(ep_capturers);
 				ep_capturers = clear_next_bit(ep_capturers);
 
-				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[start_idx][color_to_move | pawn];
+				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 				const rank rank = start_idx / 8;
 				const file file = start_idx % 8;
@@ -589,7 +589,7 @@ namespace chess
 		const rank rank = king_index / 8;
 		const file file = king_index % 8;
 
-		const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[to_index(rank, file)][color_to_move | king];
+		const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | king][to_index(rank, file)];
 
 		const position& position = positions[parent_idx];
 		const bitboards bitboards = get_bitboards_for(position);

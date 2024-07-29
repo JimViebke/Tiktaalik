@@ -29,19 +29,19 @@ namespace chess
 			const piece piece = position.piece_at(i);
 			if (piece.is_occupied())
 			{
-				key ^= tt::z_keys.piece_square_keys[i][piece.value()];
+				key ^= tt::z_keys.piece_square_keys[piece.value()][i];
 			}
-		}
-
-		if (color_to_move == black)
-		{
-			key ^= tt::z_keys.black_to_move;
 		}
 
 		const file en_passant_file = board.get_en_passant_file();
 		if (en_passant_file != empty)
 		{
 			key ^= tt::z_keys.en_passant_keys[en_passant_file];
+		}
+
+		if (color_to_move == black)
+		{
+			key ^= tt::z_keys.black_to_move;
 		}
 
 		key ^= (tt::z_keys.w_castle_ks * board.white_can_castle_ks());
