@@ -81,15 +81,14 @@ namespace chess
 	[[clang::always_inline]] bool square_is_attacked_by_pawn(const position& position, const size_t king_idx)
 	{
 		const bitboard opp_pawns = get_bitboard_for<attacker_color | pawn>(position);
+		const bitboard king_bb = 1ull << king_idx;
 
-		const bitboard attacks_to_lower_file = pawn_capture_lower_file &
-			((attacker_color == white) ? opp_pawns >> 7 : opp_pawns << 9);
-		const bitboard attacks_to_higher_file = pawn_capture_higher_file &
-			((attacker_color == white) ? opp_pawns >> 9 : opp_pawns << 7);
+		const bitboard checkers_to_lower_file = opp_pawns & pawn_capture_lower_file
+			& ((attacker_color == white) ? king_bb << 9 : king_bb >> 7);
+		const bitboard checkers_to_higher_file = opp_pawns & pawn_capture_higher_file
+			& ((attacker_color == white) ? king_bb << 7 : king_bb >> 9);
 
-		const bitboard opp_pawn_attacks = attacks_to_lower_file | attacks_to_higher_file;
-
-		return opp_pawn_attacks & (1ull << king_idx);
+		return checkers_to_lower_file | checkers_to_higher_file;
 	}
 	template<color_t attacker_color>
 	[[clang::always_inline]] bool square_is_attacked_by_knight(const position& position, const size_t index)
