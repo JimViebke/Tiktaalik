@@ -20,6 +20,7 @@ namespace chess
 	extern const movemasks knight_movemasks;
 	extern const movemasks bishop_movemasks;
 	extern const movemasks rook_movemasks;
+	extern const movemasks king_movemasks;
 
 	constexpr bitboard rank_8 = 0xFF;
 	constexpr bitboard rank_7 = rank_8 << 8;

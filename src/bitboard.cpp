@@ -105,7 +105,36 @@ namespace chess
 		return movemasks;
 	}
 
+	static movemasks make_king_movemasks()
+	{
+		movemasks movemasks{};
+
+		for (rank rank = 0; rank < 8; ++rank)
+		{
+			for (file file = 0; file < 8; ++file)
+			{
+				bitboard mask{};
+
+				set_bit_if_in_bounds(mask, rank - 1, file - 1);
+				set_bit_if_in_bounds(mask, rank - 1, file);
+				set_bit_if_in_bounds(mask, rank - 1, file + 1);
+
+				set_bit_if_in_bounds(mask, rank, file - 1);
+				set_bit_if_in_bounds(mask, rank, file + 1);
+
+				set_bit_if_in_bounds(mask, rank + 1, file - 1);
+				set_bit_if_in_bounds(mask, rank + 1, file);
+				set_bit_if_in_bounds(mask, rank + 1, file + 1);
+
+				movemasks[to_index(rank, file)] = mask;
+			}
+		}
+
+		return movemasks;
+	}
+
 	const movemasks knight_movemasks = make_knight_movemasks();
 	const movemasks bishop_movemasks = make_bishop_movemasks();
 	const movemasks rook_movemasks = make_rook_movemasks();
+	const movemasks king_movemasks = make_king_movemasks();
 }

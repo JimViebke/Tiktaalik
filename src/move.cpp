@@ -576,79 +576,79 @@ namespace chess
 	force_inline_toggle void find_king_moves(size_t& out_index, const size_t parent_idx,
 											 const size_t king_index, const bool started_in_check, const tt::key key)
 	{
-		const position& position = positions[parent_idx];
-
 		const rank rank = king_index / 8;
 		const file file = king_index % 8;
 
 		const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[to_index(rank, file)][color_to_move | king];
 
-		// iterate over all adjacent squares
-		for (int rank_d = -1; rank_d <= 1; ++rank_d)
+		const position& position = positions[parent_idx];
+		const bitboards bitboards = get_bitboards_for(position);
+		const bitboard opp_pieces = (color_to_move == white) ? bitboards.black : bitboards.white;
+
+		const bitboard king_movemask = king_movemasks[king_index];
+
+		bitboard captures = king_movemask & opp_pieces;
+		while (captures)
 		{
-			for (int file_d = -1; file_d <= 1; ++file_d)
-			{
-				if (bounds_check(rank + rank_d, file + file_d))
-				{
-					if (position.piece_at(rank + rank_d, file + file_d).is_empty())
-					{
-						if constexpr (gen_moves == gen_moves::all)
-						{
-							append_if_legal<color_to_move, check_type::do_all, king>(
-								out_index, parent_idx, to_index(rank + rank_d, file + file_d), started_in_check, incremental_key,
-								parent_idx, rank, file, rank + rank_d, file + file_d);
-						}
-					}
-					else if (position.piece_at(rank + rank_d, file + file_d).is_opposing_color(color_to_move))
-					{
-						append_if_legal<color_to_move, check_type::do_all, king, move_type::capture>(
-							out_index, parent_idx, to_index(rank + rank_d, file + file_d), started_in_check, incremental_key,
-							parent_idx, rank, file, rank + rank_d, file + file_d);
-					}
-				}
-			}
+			size_t end_idx = get_next_bit(captures);
+			captures = clear_next_bit(captures);
+
+			append_if_legal<color_to_move, check_type::do_all, king, move_type::capture>(
+				out_index, parent_idx, end_idx, started_in_check, incremental_key,
+				parent_idx, rank, file, end_idx / 8, end_idx % 8);
 		}
 
 		if constexpr (gen_moves != gen_moves::all) return;
+
+		bitboard non_captures = king_movemask & bitboards.empty;
+		while (non_captures)
+		{
+			size_t end_idx = get_next_bit(non_captures);
+			non_captures = clear_next_bit(non_captures);
+
+			append_if_legal<color_to_move, check_type::do_all, king>(
+				out_index, parent_idx, end_idx, started_in_check, incremental_key,
+				parent_idx, rank, file, end_idx / 8, end_idx % 8);
+		}
 
 		if (started_in_check) return; // A king cannot castle out of check.
 
 		const board& board = boards[parent_idx];
 
-		if ((color_to_move == white && board.white_can_castle_ks()) ||
-			(color_to_move == black && board.black_can_castle_ks()))
+		const bool can_castle_ks = (color_to_move == white) ? board.white_can_castle_ks() : board.black_can_castle_ks();
+
+		constexpr uint32_t ks_pieces_mask = ((color_to_move | rook) << 24) + (empty << 16) + (empty << 8) + (color_to_move | king);
+		constexpr size_t king_start_idx = (color_to_move == white) ? 60 : 4;
+		const uint32_t ks_pieces = *(uint32_t*)(&position[king_start_idx]);
+
+		if (can_castle_ks && ks_pieces == ks_pieces_mask)
 		{
-			// If a player can castle kingside, the king and rook must (still) be in place.
-			if (position.piece_at(rank, file + 1).is_empty() && // Check that the passed-through squares are empty.
-				position.piece_at(rank, file + 2).is_empty())
+			chess::position temp{};
+			make_move(temp, position, rank, file, rank, file + 1);
+			// Check that the king would not be moving through check.
+			if (!is_king_in_check<color_to_move, check_type::do_all>(temp, rank, file + 1))
 			{
-				chess::position temp{};
-				make_move(temp, position, rank, file, rank, file + 1);
-				// Check that the king would not be moving through check.
-				if (!is_king_in_check<color_to_move, check_type::do_all>(temp, rank, file + 1))
-				{
-					append_if_legal<color_to_move, check_type::do_all, king, move_type::castle_kingside>(
-						out_index, parent_idx, to_index(rank, file + 2), started_in_check, incremental_key,
-						parent_idx, rank, file, rank, file + 2); // the board constructor detects a castle and moves both pieces
-				}
+				append_if_legal<color_to_move, check_type::do_all, king, move_type::castle_kingside>(
+					out_index, parent_idx, to_index(rank, file + 2), started_in_check, incremental_key,
+					parent_idx, rank, file, rank, file + 2); // the board constructor detects a castle and moves both pieces
 			}
 		}
 
-		if ((color_to_move == white && board.white_can_castle_qs()) || // (same logic as above)
-			(color_to_move == black && board.black_can_castle_qs()))
+		const bool can_castle_qs = (color_to_move == white) ? board.white_can_castle_qs() : board.black_can_castle_qs();
+
+		constexpr uint32_t qs_pieces_mask = (empty << 24) + (empty << 16) + (empty << 8) + (color_to_move | rook);
+		constexpr size_t qs_rook_start_index = (color_to_move == white) ? 56 : 0;
+		const uint32_t qs_pieces = *(uint32_t*)(&position[qs_rook_start_index]);
+
+		if (can_castle_qs && qs_pieces == qs_pieces_mask)
 		{
-			if (position.piece_at(rank, file - 1).is_empty() &&
-				position.piece_at(rank, file - 2).is_empty() &&
-				position.piece_at(rank, file - 3).is_empty())
+			chess::position temp{};
+			make_move(temp, position, rank, file, rank, file - 1);
+			if (!is_king_in_check<color_to_move, check_type::do_all>(temp, rank, file - 1))
 			{
-				chess::position temp{};
-				make_move(temp, position, rank, file, rank, file - 1);
-				if (!is_king_in_check<color_to_move, check_type::do_all>(temp, rank, file - 1))
-				{
-					append_if_legal<color_to_move, check_type::do_all, king, move_type::castle_queenside>(
-						out_index, parent_idx, to_index(rank, file - 2), started_in_check, incremental_key,
-						parent_idx, rank, file, rank, file - 2);
-				}
+				append_if_legal<color_to_move, check_type::do_all, king, move_type::castle_queenside>(
+					out_index, parent_idx, to_index(rank, file - 2), started_in_check, incremental_key,
+					parent_idx, rank, file, rank, file - 2);
 			}
 		}
 	}
