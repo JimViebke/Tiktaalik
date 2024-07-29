@@ -1,6 +1,5 @@
 
 #include "bitboard.hpp"
-#include "capture.hpp"
 #include "config.hpp"
 #include "move.hpp"
 #include "transposition_table.hpp"
@@ -68,30 +67,30 @@ namespace chess
 	}
 
 	template<color_t attacker_color>
-	inline_toggle bool square_is_attacked_by_king(const position& position, const rank rank, const file file)
+	[[clang::always_inline]] bool square_is_attacked_by_pawn(const position& position, const size_t king_idx)
 	{
-		constexpr piece_t opp_king = attacker_color | king;
+		const bitboard opp_pawns = get_bitboard_for<attacker_color | pawn>(position);
 
-		// Check adjacent squares for a king.
-		// Check rank first, because a king is likely on a top or bottom rank.
-		if (bounds_check(rank - 1))
-		{
-			if (bounds_check(file - 1) && position.piece_at(rank - 1, file - 1).is(opp_king)) return true;
-			if (position.piece_at(rank - 1, file).is(opp_king)) return true;
-			if (bounds_check(file + 1) && position.piece_at(rank - 1, file + 1).is(opp_king)) return true;
-		}
+		const bitboard attacks_to_lower_file = pawn_capture_lower_file &
+			((attacker_color == white) ? opp_pawns >> 7 : opp_pawns << 9);
+		const bitboard attacks_to_higher_file = pawn_capture_higher_file &
+			((attacker_color == white) ? opp_pawns >> 9 : opp_pawns << 7);
 
-		if (bounds_check(file - 1) && position.piece_at(rank, file - 1).is(opp_king)) return true;
-		if (bounds_check(file + 1) && position.piece_at(rank, file + 1).is(opp_king)) return true;
+		const bitboard opp_pawn_attacks = attacks_to_lower_file | attacks_to_higher_file;
 
-		if (bounds_check(rank + 1))
-		{
-			if (bounds_check(file - 1) && position.piece_at(rank + 1, file - 1).is(opp_king)) return true;
-			if (position.piece_at(rank + 1, file).is(opp_king)) return true;
-			if (bounds_check(file + 1) && position.piece_at(rank + 1, file + 1).is(opp_king)) return true;
-		}
-
-		return false;
+		return opp_pawn_attacks & (1ull << king_idx);
+	}
+	template<color_t attacker_color>
+	[[clang::always_inline]] bool square_is_attacked_by_knight(const position& position, const size_t index)
+	{
+		const bitboard opp_knights = get_bitboard_for<attacker_color | knight>(position);
+		return opp_knights & knight_movemasks[index];
+	}
+	template<color_t attacker_color>
+	[[clang::always_inline]] bool square_is_attacked_by_king(const position& position, const size_t index)
+	{
+		const bitboard opp_king = get_bitboard_for<attacker_color | king>(position);
+		return opp_king & king_movemasks[index];
 	}
 
 	// If the opponent isn't checking with a pawn, skip pawn checks.
@@ -109,24 +108,25 @@ namespace chess
 	force_inline_toggle bool is_king_in_check(const position& position, const rank rank, const file file)
 	{
 		constexpr color_t opp_color = other_color(king_color);
+		const size_t king_index = to_index(rank, file);
 
-		if (is_attacked_by_sliding_piece<king_color>(position, 1ull << to_index(rank, file))) return true;
+		if (is_attacked_by_sliding_piece<king_color>(position, 1ull << king_index)) return true;
 
 		if constexpr (check_type == check_type::do_all)
 		{
-			if (square_is_attacked_by_king<opp_color>(position, rank, file)) return true;
+			if (square_is_attacked_by_king<opp_color>(position, king_index)) return true;
 		}
 
 		if constexpr (check_type == check_type::do_knight_checks ||
 					  check_type == check_type::do_all)
 		{
-			if (square_is_attacked_by_knight<opp_color>(position, rank, file)) return true;
+			if (square_is_attacked_by_knight<opp_color>(position, king_index)) return true;
 		}
 
 		if constexpr (check_type == check_type::do_pawn_checks ||
 					  check_type == check_type::do_all)
 		{
-			if (square_is_attacked_by_pawn<opp_color>(position, rank, file)) return true;
+			if (square_is_attacked_by_pawn<opp_color>(position, king_index)) return true;
 		}
 
 		return false;

@@ -26,9 +26,6 @@
     <ClInclude Include="src\board.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\capture.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\evaluation.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

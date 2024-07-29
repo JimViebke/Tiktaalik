@@ -5,7 +5,6 @@
 #include <variant>
 #include <vector>
 
-#include "capture.hpp"
 #include "config.hpp"
 #include "evaluation.hpp"
 #include "piece.hpp"
