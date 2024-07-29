@@ -691,13 +691,11 @@ namespace chess
 
 		// If the king is in check, return early. We could be in check if:
 		// - We are trying to move our king, or
-		// - the move is an en-passant capture, or
 		// - we started in check, or
 		// - the moving piece shared a rank, file, or diagonal with the king.
 		// If none of these are the case (most of the time), we cannot possibly be in check, and
 		// we can skip the expensive call to is_king_in_check().
 		if (moving_piece_type == king ||
-			move_type == move_type::en_passant_capture ||
 			started_in_check ||
 			moving_piece_might_have_been_pinned(king_index, std::forward<board_args>(args)...))
 		{
