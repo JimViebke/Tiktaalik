@@ -82,9 +82,6 @@ namespace chess
 		explicit board(const size_t parent_idx,
 					   const rank start_rank, const file start_file, const rank end_rank, const file end_file)
 		{
-			const piece moved_piece = positions[parent_idx].piece_at(start_rank, start_file);
-			set_moved_piece(moved_piece);
-
 			// Record the move that resulted in this position.
 			set_start_rank(start_rank);
 			set_start_file(start_file);
@@ -196,6 +193,14 @@ namespace chess
 		{
 			board board(std::forward<board_args>(args)...);
 
+			constexpr size_t argc = sizeof...(board_args);
+			static_assert(argc == 5 || argc == 6);
+
+			if constexpr (argc == 5) // The move is not a promotion.
+			{
+				board.set_moved_piece(moving_piece_type);
+			}
+
 			if constexpr (move_type == move_type::capture || moving_piece_type == pawn)
 			{
 				board.clear_50_move_counter();
@@ -247,7 +252,7 @@ namespace chess
 		tt::key get_key() const { return key; }
 
 		template<color_t moved_piece_color>
-		piece moved_piece() const
+		piece_t moved_piece() const
 		{
 			// restore the color bit
 			return moved_piece_without_color().value() | moved_piece_color;
@@ -331,35 +336,24 @@ namespace chess
 
 			eval_t incremental_eval = parent_board.get_eval();
 
-			piece piece_before{};
-			if constexpr (moving_piece_type == pawn || moving_piece_type == king)
-			{
-				piece_before = moving_piece_type + moving_color; // known at compile time
-			}
-			else
-			{
-				piece_before = parent_position.piece_at(start_idx);
-			}
+			constexpr piece_t piece_before = moving_color | moving_piece_type;
+			piece_t piece_after{};
 
-			piece piece_after{};
-			if constexpr (moving_piece_type == king ||
+			if constexpr (moving_piece_type != pawn ||
 						  move_type == move_type::pawn_two_squares ||
 						  move_type == move_type::en_passant_capture)
 			{
-				piece_after = moving_color | moving_piece_type; // determine at compile time when possible
+				piece_after = piece_before;
 			}
-			else if (moving_piece_type == pawn)
+			else // A pawn is moving one square or capturing, and may be promoting.
 			{
-				piece_after = moved_piece<moving_color>(); // will be a different type if promoting
+				piece_after = moved_piece<moving_color>();
 				incremental_eval -= eval::piece_eval(piece_before);
 				incremental_eval += eval::piece_eval(piece_after);
 			}
-			else
-			{
-				piece_after = piece_before;
-			}
+
 			// add the key for the arriving piece
-			incremental_key ^= tt::z_keys.piece_square_keys[piece_after.value()][end_idx];
+			incremental_key ^= tt::z_keys.piece_square_keys[piece_after][end_idx];
 			// update square eval for the piece
 			incremental_eval -= eval::piece_square_eval(piece_before, start_idx);
 			incremental_eval += eval::piece_square_eval(piece_after, end_idx);
@@ -371,7 +365,7 @@ namespace chess
 			}
 			else if (move_type == move_type::en_passant_capture)
 			{
-				const size_t captured_pawn_idx = to_index(start_rank, end_file); // the captured pawn is at the start rank and end file
+				const size_t captured_pawn_idx = end_idx + ((moving_color == white) ? 8 : -8);
 				constexpr piece_t captured_pawn = other_color(moving_color) | pawn;
 				// remove key for the captured pawn
 				incremental_key ^= tt::z_keys.piece_square_keys[captured_pawn][captured_pawn_idx];
@@ -384,7 +378,6 @@ namespace chess
 			{
 				constexpr size_t rook_start_file = (move_type == move_type::castle_kingside ? 7 : 0);
 				constexpr size_t rook_start_rank = (moving_color == white ? 7 : 0);
-
 				constexpr size_t rook_start_index = rook_start_rank * 8 + rook_start_file;
 				constexpr size_t rook_end_index = rook_start_index + (move_type == move_type::castle_kingside ? -2 : 3);
 
@@ -393,8 +386,8 @@ namespace chess
 				incremental_key ^= tt::z_keys.piece_square_keys[moving_rook][rook_start_index];
 				incremental_key ^= tt::z_keys.piece_square_keys[moving_rook][rook_end_index];
 				// update eval for the moving rook
-				incremental_eval -= eval::piece_square_eval(moving_rook, rook_start_index); // todo: determine at compile time
-				incremental_eval += eval::piece_square_eval(moving_rook, rook_end_index); // todo: determine at compile time
+				incremental_eval -= eval::piece_square_eval(moving_rook, rook_start_index);
+				incremental_eval += eval::piece_square_eval(moving_rook, rook_end_index);
 			}
 			else if (move_type == move_type::capture) // non-en passant capture
 			{
