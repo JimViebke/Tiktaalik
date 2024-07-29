@@ -95,11 +95,11 @@ namespace chess
 			}
 		}
 
-		packed_move best_move = 0;
+		packed_move tt_move = 0;
 		if constexpr (!quiescing)
 		{
 			eval_t tt_eval = 0;
-			if (tt.probe(tt_eval, best_move, key, depth, alpha, beta, ply))
+			if (tt.probe(tt_eval, tt_move, key, depth, alpha, beta, ply))
 			{
 				return tt_eval;
 			}
@@ -122,8 +122,8 @@ namespace chess
 				((color_to_move == white) ? -eval::mate + ply : eval::mate - ply);
 		}
 
-		if (!quiescing && best_move != 0)
-			swap_tt_move_to_front(best_move, begin_idx, end_idx);
+		if (!quiescing && tt_move != 0)
+			swap_tt_move_to_front(tt_move, begin_idx, end_idx);
 		else
 			swap_best_to_front<color_to_move>(begin_idx, end_idx);
 
@@ -165,7 +165,7 @@ namespace chess
 				{
 					alpha = eval;
 					node_eval_type = eval_type::exact;
-					best_move = boards[child_idx].get_packed_move();
+					tt_move = boards[child_idx].get_packed_move();
 					if constexpr (!quiescing && full_window)
 						update_pv(ply, boards[child_idx]);
 				}
@@ -183,7 +183,7 @@ namespace chess
 				{
 					beta = eval;
 					node_eval_type = eval_type::exact;
-					best_move = boards[child_idx].get_packed_move();
+					tt_move = boards[child_idx].get_packed_move();
 					if constexpr (!quiescing && full_window)
 						update_pv(ply, boards[child_idx]);
 				}
@@ -192,9 +192,9 @@ namespace chess
 			swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
 		}
 
-		// If no move was an improvement, best_move stays as whatever we previously read from the TT.
+		// If no move was an improvement, tt_move stays as whatever we previously read from the TT.
 		if constexpr (!quiescing && full_window)
-			tt.store(key, depth, node_eval_type, eval, ply, best_move);
+			tt.store(key, depth, node_eval_type, eval, ply, tt_move);
 
 		return eval;
 	}

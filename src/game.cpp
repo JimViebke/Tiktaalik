@@ -173,12 +173,12 @@ namespace chess
 		eval_t eval = (color_to_move == white ? -eval::mate : eval::mate);
 
 		eval_t tt_eval = 0; // ignored
-		packed_move best_move = 0;
-		detail::tt.probe(tt_eval, best_move, boards[0].get_key(), depth, alpha, beta, 0);
+		packed_move tt_move = 0;
+		detail::tt.probe(tt_eval, tt_move, boards[0].get_key(), depth, alpha, beta, 0);
 
 		const size_t begin_idx = first_child_index(0);
 
-		detail::swap_tt_move_to_front(best_move, begin_idx, end_idx);
+		detail::swap_tt_move_to_front(tt_move, begin_idx, end_idx);
 
 		for (size_t child_idx = begin_idx; child_idx != end_idx; ++child_idx)
 		{
@@ -193,7 +193,7 @@ namespace chess
 					eval = ab;
 					update_pv(0, boards[child_idx]);
 					send_info(eval);
-					best_move = boards[child_idx].get_packed_move();
+					tt_move = boards[child_idx].get_packed_move();
 				}
 				alpha = std::max(alpha, eval);
 			}
@@ -204,7 +204,7 @@ namespace chess
 					eval = ab;
 					update_pv(0, boards[child_idx]);
 					send_info(eval);
-					best_move = boards[child_idx].get_packed_move();
+					tt_move = boards[child_idx].get_packed_move();
 				}
 				beta = std::min(beta, eval);
 			}
@@ -213,7 +213,7 @@ namespace chess
 		}
 
 		// Store the best move in the TT.
-		detail::tt.store(boards[0].get_key(), depth, tt::eval_type::exact, eval, 0, best_move);
+		detail::tt.store(boards[0].get_key(), depth, tt::eval_type::exact, eval, 0, tt_move);
 	}
 
 	template void Game::search<white>(const size_t, depth_t);
