@@ -41,29 +41,40 @@ namespace chess
 		}
 		else if constexpr (move_type == move_type::en_passant_capture)
 		{
-			child.piece_at(start_rank, end_file) = empty; // the captured pawn will have the moving pawn's start rank and end file
+			child.piece_at(end_idx + ((moving_color == white) ? 8 : -8)) = empty; // the captured pawn will behind the moving pawn
 		}
 		else if constexpr (move_type == move_type::castle_kingside)
 		{
-			child.piece_at(start_rank, 5) = moving_color + rook;
-			child.piece_at(start_rank, 7) = empty;
+			constexpr uint32_t pieces = (empty << 24) + ((moving_color | king) << 16) + ((moving_color | rook) << 8) + empty;
+			constexpr size_t write_idx = (moving_color == white) ? 60 : 4;
+			*(uint32_t*)&child[write_idx] = pieces;
 		}
 		else if constexpr (move_type == move_type::castle_queenside)
 		{
-			child.piece_at(start_rank, 3) = moving_color + rook;
-			child.piece_at(start_rank, 0) = empty;
+			constexpr uint32_t pieces = ((moving_color | rook) << 24) + ((moving_color | king) << 16) + (empty << 8) + empty;
+			constexpr size_t write_idx = (moving_color == white) ? 56 : 0;
+			*(uint32_t*)&child[write_idx] = pieces;
 		}
 
-		if constexpr (moving_piece_type == king)
+		// Add the moved piece in all cases except castling.
+		if constexpr (move_type != move_type::castle_kingside &&
+					  move_type != move_type::castle_queenside)
 		{
-			child.piece_at(end_idx) = moving_piece_type | moving_color;
-		}
-		else
-		{
-			child.piece_at(end_idx) = child_board.moved_piece<moving_color>();
+			if constexpr (moving_piece_type == king)
+			{
+				child.piece_at(end_idx) = moving_piece_type | moving_color;
+			}
+			else
+			{
+				child.piece_at(end_idx) = child_board.moved_piece<moving_color>();
+			}
 		}
 
-		child.piece_at(start_idx) = empty;
+		// Clear the moved piece in all cases except kingside castling.
+		if constexpr (move_type != move_type::castle_kingside)
+		{
+			child.piece_at(start_idx) = empty;
+		}
 	}
 
 	template<color_t attacker_color>
