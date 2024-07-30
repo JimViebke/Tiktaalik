@@ -180,6 +180,8 @@ namespace chess
 
 					++engine_depth;
 
+					util::log(std::format("Finished depth {}, {} ms, {} nodes.", engine_depth.value(), engine_time, nodes));
+
 					detail::tt.hit = 0;
 					detail::tt.miss = 0;
 				}
