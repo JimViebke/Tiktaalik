@@ -485,8 +485,8 @@ namespace chess
 					append_if_legal<color_to_move, check_type, piece_type>(
 						out_index, parent_idx, king_index, started_in_check, key,
 						parent_idx, rank, file, rank - offset, file + offset);
-					continue;
 				}
+				continue;
 			}
 			else if (position.piece_at(rank - offset, file + offset).is_opposing_color(color_to_move))
 			{
