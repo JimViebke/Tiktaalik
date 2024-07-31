@@ -8,7 +8,8 @@ namespace chess
 	enum class gen_moves
 	{
 		all,
-		captures
+		captures,
+		noncaptures
 	};
 
 	template<color_t king_color>

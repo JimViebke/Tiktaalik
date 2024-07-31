@@ -29,6 +29,24 @@ namespace chess
 		pv_lengths[ply] = pv_lengths[ply + 1];
 	}
 
+	bool is_capture(const position& parent_position, const packed_move move)
+	{
+		// A move is a capture move if:
+		// - the destination square is occupied, or
+		// - the moving piece is a pawn that is changing file.
+
+		constexpr size_t idx_mask = 0b111111;
+		const size_t end_idx = (move >> 6) & idx_mask;
+		if (parent_position[end_idx].is_occupied()) return true;
+
+		const size_t start_idx = move & idx_mask;
+		const file start_file = start_idx % 8;
+		const file end_file = end_idx % 8;
+		if (parent_position[start_idx].is_pawn() && start_file != end_file) return true;
+
+		return false;
+	}
+
 	template<color_t color_to_move, bool quiescing, bool full_window>
 	eval_t detail::alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta)
 	{
@@ -48,7 +66,7 @@ namespace chess
 		if constexpr (!quiescing && full_window)
 			pv_lengths[ply] = ply;
 
-		board& board = boards[idx];
+		const board& board = boards[idx];
 		const tt::key key = board.get_key();
 
 		if constexpr (!quiescing)
@@ -106,9 +124,108 @@ namespace chess
 		}
 
 		const size_t begin_idx = first_child_index(idx);
-		const size_t end_idx = generate_child_boards<color_to_move, quiescing ? gen_moves::captures : gen_moves::all>(idx);
+		size_t end_idx{};
+		gen_moves generated_moves{};
 
-		if (begin_idx == end_idx)
+		if (quiescing || tt_move == 0 || is_capture(positions[idx], tt_move))
+		{
+			end_idx = generate_child_boards<color_to_move, gen_moves::captures>(idx);
+			generated_moves = gen_moves::captures;
+		}
+		else // We have a non-capture tt_move.
+		{
+			end_idx = generate_child_boards<color_to_move, gen_moves::all>(idx);
+			generated_moves = gen_moves::all;
+		}
+
+		if (!quiescing && tt_move != 0)
+			swap_tt_move_to_front(tt_move, begin_idx, end_idx);
+		else
+			swap_best_to_front<color_to_move>(begin_idx, end_idx);
+
+		bool terminal = true;
+		eval_t eval = (color_to_move == white ? -eval::mate : eval::mate);
+		eval_type node_eval_type = (color_to_move == white ? eval_type::alpha : eval_type::beta);
+
+		while (1)
+		{
+			if (begin_idx != end_idx)
+				terminal = false;
+
+			for (size_t child_idx = begin_idx; child_idx < end_idx; ++child_idx)
+			{
+				eval_t ab = 0;
+				//if (depth < 4 || child_idx == begin_idx)
+				//{
+				ab = alpha_beta<other_color(color_to_move), quiescing, full_window>(child_idx, ply + !quiescing, depth - !quiescing, alpha, beta);
+				//}
+				//else // We are at least 4 ply from a leaf node, and not on a first child; try a null window search.
+				//{
+				//	if constexpr (color_to_move == white)
+				//		ab = alpha_beta<other_color(color_to_move), false>(child_idx, ply + 1, depth - 1, alpha, alpha + 1);
+				//	else
+				//		ab = alpha_beta<other_color(color_to_move), false>(child_idx, ply + 1, depth - 1, beta - 1, beta);
+
+				//	if (alpha < ab && ab < beta) // If the null window failed, redo the search with the normal (alpha, beta) window.
+				//	{
+				//		ab = alpha_beta<other_color(color_to_move), full_window>(child_idx, ply + 1, depth - 1, alpha, beta);
+				//	}
+				//}
+
+				if (!searching) return 0;
+
+				if constexpr (color_to_move == white)
+				{
+					eval = std::max(eval, ab);
+					if (eval >= beta)
+					{
+						if constexpr (!quiescing && full_window)
+							tt.store(key, depth, eval_type::beta, beta, ply, boards[child_idx].get_packed_move());
+						return beta;
+					}
+					if (eval > alpha)
+					{
+						alpha = eval;
+						node_eval_type = eval_type::exact;
+						tt_move = boards[child_idx].get_packed_move();
+						if constexpr (!quiescing && full_window)
+							update_pv(ply, boards[child_idx]);
+					}
+				}
+				else
+				{
+					eval = std::min(eval, ab);
+					if (eval <= alpha)
+					{
+						if constexpr (!quiescing && full_window)
+							tt.store(key, depth, eval_type::alpha, alpha, ply, boards[child_idx].get_packed_move());
+						return alpha;
+					}
+					if (eval < beta)
+					{
+						beta = eval;
+						node_eval_type = eval_type::exact;
+						tt_move = boards[child_idx].get_packed_move();
+						if constexpr (!quiescing && full_window)
+							update_pv(ply, boards[child_idx]);
+					}
+				}
+
+				swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
+			}
+
+			if (!quiescing && generated_moves == gen_moves::captures)
+			{
+				end_idx = generate_child_boards<color_to_move, gen_moves::noncaptures>(idx);
+				generated_moves = gen_moves::all;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		if (terminal)
 		{
 			// The position is either terminal (eval is min, max, or 0) or quiescent.
 			const eval_t eval = board.get_eval();
@@ -120,76 +237,6 @@ namespace chess
 			// Otherwise, the position is a checkmate; apply a distance penalty.
 			return (quiescing || eval == 0) ? eval :
 				((color_to_move == white) ? -eval::mate + ply : eval::mate - ply);
-		}
-
-		if (!quiescing && tt_move != 0)
-			swap_tt_move_to_front(tt_move, begin_idx, end_idx);
-		else
-			swap_best_to_front<color_to_move>(begin_idx, end_idx);
-
-		eval_t eval = (color_to_move == white ? -eval::mate : eval::mate);
-		eval_type node_eval_type = (color_to_move == white ? eval_type::alpha : eval_type::beta);
-
-		for (size_t child_idx = begin_idx; child_idx < end_idx; ++child_idx)
-		{
-			eval_t ab = 0;
-			//if (depth < 4 || child_idx == begin_idx)
-			//{
-			ab = alpha_beta<other_color(color_to_move), quiescing, full_window>(child_idx, ply + !quiescing, depth - !quiescing, alpha, beta);
-			//}
-			//else // We are at least 4 ply from a leaf node, and not on a first child; try a null window search.
-			//{
-			//	if constexpr (color_to_move == white)
-			//		ab = alpha_beta<other_color(color_to_move), false>(child_idx, ply + 1, depth - 1, alpha, alpha + 1);
-			//	else
-			//		ab = alpha_beta<other_color(color_to_move), false>(child_idx, ply + 1, depth - 1, beta - 1, beta);
-
-			//	if (alpha < ab && ab < beta) // If the null window failed, redo the search with the normal (alpha, beta) window.
-			//	{
-			//		ab = alpha_beta<other_color(color_to_move), full_window>(child_idx, ply + 1, depth - 1, alpha, beta);
-			//	}
-			//}
-
-			if (!searching) return 0;
-
-			if constexpr (color_to_move == white)
-			{
-				eval = std::max(eval, ab);
-				if (eval >= beta)
-				{
-					if constexpr (!quiescing && full_window)
-						tt.store(key, depth, eval_type::beta, beta, ply, boards[child_idx].get_packed_move());
-					return beta;
-				}
-				if (eval > alpha)
-				{
-					alpha = eval;
-					node_eval_type = eval_type::exact;
-					tt_move = boards[child_idx].get_packed_move();
-					if constexpr (!quiescing && full_window)
-						update_pv(ply, boards[child_idx]);
-				}
-			}
-			else
-			{
-				eval = std::min(eval, ab);
-				if (eval <= alpha)
-				{
-					if constexpr (!quiescing && full_window)
-						tt.store(key, depth, eval_type::alpha, alpha, ply, boards[child_idx].get_packed_move());
-					return alpha;
-				}
-				if (eval < beta)
-				{
-					beta = eval;
-					node_eval_type = eval_type::exact;
-					tt_move = boards[child_idx].get_packed_move();
-					if constexpr (!quiescing && full_window)
-						update_pv(ply, boards[child_idx]);
-				}
-			}
-
-			swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
 		}
 
 		// If no move was an improvement, tt_move stays as whatever we previously read from the TT.
