@@ -16,6 +16,8 @@ namespace chess
 		key = generate_key(*this, loaded_position, color_to_move);
 
 		eval = loaded_position.evaluate_position();
+
+		bitboards = chess::get_bitboards(loaded_position);
 	}
 
 	std::array<board, positions_size> boards{};

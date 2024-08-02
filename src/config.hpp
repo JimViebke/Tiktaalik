@@ -9,6 +9,7 @@ namespace chess
 		static constexpr bool verify_cached_sliding_piece_bitboards = false;
 		static constexpr bool verify_incremental_key = false;
 		static constexpr bool verify_incremental_eval = false;
+		static constexpr bool verify_incremental_bitboards = false;
 	}
 
 	namespace tt::config

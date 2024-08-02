@@ -22,12 +22,14 @@ namespace chess
 		constexpr piece_t opp_pawn = opp_color | pawn;
 		constexpr piece_t opp_knight = opp_color | knight;
 
-		const size_t king_idx = find_king_index<color_to_move>(positions[0]);
-		const rank king_rank = king_idx / 8;
-		const file king_file = king_idx % 8;
-
 		board& board = boards[0];
 		position& position = positions[0];
+
+		const bitboards bitboards = get_bitboards(position);
+
+		const size_t king_idx = get_next_bit_index(bitboards.get<color_to_move>() & bitboards.kings);
+		const rank king_rank = king_idx / 8;
+		const file king_file = king_idx % 8;
 
 		const rank attacking_pawn_rank = king_rank + ((color_to_move == white) ? -1 : 1);
 		if (bounds_check(attacking_pawn_rank))
@@ -48,12 +50,12 @@ namespace chess
 			}
 		}
 
-		const bitboard attacking_knights = get_bitboard_for<opp_knight>(position) & knight_movemasks[king_idx];
+		const bitboard attacking_knights = get_bitboard_for<opp_knight>(position) & knight_attack_masks[king_idx];
 
 		if (attacking_knights != 0)
 		{
 			board.set_moved_piece(opp_knight);
-			board.set_end_index(get_next_bit(attacking_knights));
+			board.set_end_index(get_next_bit_index(attacking_knights));
 			return;
 		}
 

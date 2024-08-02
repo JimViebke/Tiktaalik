@@ -143,14 +143,14 @@ namespace chess
 		else
 			swap_best_to_front<color_to_move>(begin_idx, end_idx);
 
-		bool terminal = true;
+		bool found_moves = false;
 		eval_t eval = (color_to_move == white ? -eval::mate : eval::mate);
 		eval_type node_eval_type = (color_to_move == white ? eval_type::alpha : eval_type::beta);
 
 		while (1)
 		{
 			if (begin_idx != end_idx)
-				terminal = false;
+				found_moves = true;
 
 			for (size_t child_idx = begin_idx; child_idx < end_idx; ++child_idx)
 			{
@@ -225,18 +225,23 @@ namespace chess
 			}
 		}
 
-		if (terminal)
+		if (!found_moves)
 		{
 			// The position is either terminal (eval is min, max, or 0) or quiescent.
-			const eval_t eval = board.get_eval();
 
-			if constexpr (!quiescing)
-				tt.store(key, depth, eval_type::exact, eval);
+			if (quiescing) return board.get_eval();
 
-			// If we are quiescing or in stalemate (eval == 0), return eval.
-			// Otherwise, the position is a checkmate; apply a distance penalty.
-			return (quiescing || eval == 0) ? eval :
-				((color_to_move == white) ? -eval::mate + ply : eval::mate - ply);
+			const bitboards& bitboards = board.get_bitboards();
+			const size_t king_index = get_next_bit_index(bitboards.get<color_to_move>() & bitboards.kings);
+
+			eval_t terminal_eval{};
+			if (is_king_in_check<color_to_move, check_type::do_all>(bitboards, king_index / 8, king_index % 8))
+				terminal_eval = (color_to_move == white) ? -eval::mate + ply : eval::mate - ply;
+			else
+				terminal_eval = 0; // Todo: use contempt factor.
+
+			tt.store(key, depth, eval_type::exact, terminal_eval);
+			return terminal_eval;
 		}
 
 		// If no move was an improvement, tt_move stays as whatever we previously read from the TT.
