@@ -57,15 +57,120 @@ namespace chess
 											 const size_t king_index, const bool started_in_check, const tt::key key)
 	{
 		constexpr bitboard promotion_start_file = (color_to_move == white) ? rank_7 : rank_2;
-		constexpr bitboard ep_capture_start_rank = (color_to_move == white) ? rank_5 : rank_4;
 
 		const bitboard pawns = bitboards.pawns & bitboards.get<color_to_move>();
 
 		if constexpr (gen_moves == gen_moves::all ||
+					  gen_moves == gen_moves::captures)
+		{
+			const bitboard opp_pieces = bitboards.get<other_color(color_to_move)>();
+
+			bitboard capture_to_lower_file = pawns & pawn_capture_lower_file
+				& ((color_to_move == white) ? opp_pieces << 9 : opp_pieces >> 7);
+			bitboard capture_to_lower_file_promotion = capture_to_lower_file & promotion_start_file;
+			capture_to_lower_file ^= capture_to_lower_file_promotion;
+
+			while (capture_to_lower_file_promotion)
+			{
+				const size_t start_idx = get_next_bit_index(capture_to_lower_file_promotion);
+				const bitboard start = get_next_bit(capture_to_lower_file_promotion);
+				capture_to_lower_file_promotion = clear_next_bit(capture_to_lower_file_promotion);
+
+				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
+
+				append_if_legal<color_to_move, check_type, pawn, move_type::capture, queen>(
+					out_index, parent_idx, bitboards, king_index, started_in_check,
+					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
+				append_if_legal<color_to_move, check_type, pawn, move_type::capture, knight>(
+					out_index, parent_idx, bitboards, king_index, started_in_check,
+					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
+				append_if_legal<color_to_move, check_type, pawn, move_type::capture, rook>(
+					out_index, parent_idx, bitboards, king_index, started_in_check,
+					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
+				append_if_legal<color_to_move, check_type, pawn, move_type::capture, bishop>(
+					out_index, parent_idx, bitboards, king_index, started_in_check,
+					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
+			}
+
+			while (capture_to_lower_file)
+			{
+				const size_t start_idx = get_next_bit_index(capture_to_lower_file);
+				const bitboard start = get_next_bit(capture_to_lower_file);
+				capture_to_lower_file = clear_next_bit(capture_to_lower_file);
+
+				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
+
+				append_if_legal<color_to_move, check_type, pawn, move_type::capture>(
+					out_index, parent_idx, bitboards, king_index, started_in_check,
+					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
+			}
+
+			bitboard capture_to_higher_file = pawns & pawn_capture_higher_file
+				& ((color_to_move == white) ? opp_pieces << 7 : opp_pieces >> 9);
+			bitboard capture_to_higher_file_promotion = capture_to_higher_file & promotion_start_file;
+			capture_to_higher_file ^= capture_to_higher_file_promotion;
+
+			while (capture_to_higher_file_promotion)
+			{
+				const size_t start_idx = get_next_bit_index(capture_to_higher_file_promotion);
+				const bitboard start = get_next_bit(capture_to_higher_file_promotion);
+				capture_to_higher_file_promotion = clear_next_bit(capture_to_higher_file_promotion);
+
+				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
+
+				append_if_legal<color_to_move, check_type, pawn, move_type::capture, queen>(
+					out_index, parent_idx, bitboards, king_index, started_in_check,
+					incremental_key, start, (color_to_move == white) ? start >> 7 : start << 9);
+				append_if_legal<color_to_move, check_type, pawn, move_type::capture, knight>(
+					out_index, parent_idx, bitboards, king_index, started_in_check,
+					incremental_key, start, (color_to_move == white) ? start >> 7 : start << 9);
+				append_if_legal<color_to_move, check_type, pawn, move_type::capture, rook>(
+					out_index, parent_idx, bitboards, king_index, started_in_check,
+					incremental_key, start, (color_to_move == white) ? start >> 7 : start << 9);
+				append_if_legal<color_to_move, check_type, pawn, move_type::capture, bishop>(
+					out_index, parent_idx, bitboards, king_index, started_in_check,
+					incremental_key, start, (color_to_move == white) ? start >> 7 : start << 9);
+			}
+
+			while (capture_to_higher_file)
+			{
+				const size_t start_idx = get_next_bit_index(capture_to_higher_file);
+				const bitboard start = get_next_bit(capture_to_higher_file);
+				capture_to_higher_file = clear_next_bit(capture_to_higher_file);
+
+				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
+
+				append_if_legal<color_to_move, check_type, pawn, move_type::capture>(
+					out_index, parent_idx, bitboards, king_index, started_in_check,
+					incremental_key, start, (color_to_move == white) ? start >> 7 : start << 9);
+			}
+
+			const file ep_capture_file = boards[parent_idx].get_en_passant_file();
+
+			if (ep_capture_file != empty)
+			{
+				constexpr bitboard ep_capture_start_rank = (color_to_move == white) ? rank_5 : rank_4;
+				bitboard ep_capturers = pawns & ep_capture_start_rank & (ep_capture_mask << (ep_capture_file + (color_to_move == white ? 0 : 8)));
+
+				while (ep_capturers) // 0-2
+				{
+					size_t start_idx = get_next_bit_index(ep_capturers);
+					const bitboard start = get_next_bit(ep_capturers);
+					ep_capturers = clear_next_bit(ep_capturers);
+
+					const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
+
+					append_if_legal<color_to_move, check_type, pawn, move_type::en_passant_capture>(
+						out_index, parent_idx, bitboards, king_index, started_in_check, incremental_key,
+						start, (1ull << ((color_to_move == white) ? 16 : 40)) << ep_capture_file);
+				}
+			}
+		}
+
+		if constexpr (gen_moves == gen_moves::all ||
 					  gen_moves == gen_moves::noncaptures)
 		{
-			bitboard empty_squares = bitboards.get_empty();
-
+			const bitboard empty_squares = bitboards.get_empty();
 			bitboard move_one_square = pawns & ((color_to_move == white) ? empty_squares << 8 : empty_squares >> 8);
 
 			bitboard noncapture_promotions = move_one_square & promotion_start_file;
@@ -73,7 +178,7 @@ namespace chess
 
 			while (noncapture_promotions)
 			{
-				size_t start_idx = get_next_bit_index(noncapture_promotions);
+				const size_t start_idx = get_next_bit_index(noncapture_promotions);
 				const bitboard start = get_next_bit(noncapture_promotions);
 				noncapture_promotions = clear_next_bit(noncapture_promotions);
 
@@ -99,7 +204,7 @@ namespace chess
 
 			while (move_two_squares)
 			{
-				size_t start_idx = get_next_bit_index(move_two_squares);
+				const size_t start_idx = get_next_bit_index(move_two_squares);
 				const bitboard start = get_next_bit(move_two_squares);
 				move_two_squares = clear_next_bit(move_two_squares);
 
@@ -112,7 +217,7 @@ namespace chess
 
 			while (move_one_square)
 			{
-				size_t start_idx = get_next_bit_index(move_one_square);
+				const size_t start_idx = get_next_bit_index(move_one_square);
 				const bitboard start = get_next_bit(move_one_square);
 				move_one_square = clear_next_bit(move_one_square);
 
@@ -121,112 +226,6 @@ namespace chess
 				append_if_legal<color_to_move, check_type, pawn>(
 					out_index, parent_idx, bitboards, king_index, started_in_check, incremental_key,
 					start, (color_to_move == white) ? start >> 8 : start << 8);
-			}
-		}
-
-		const bitboard opp_pieces = bitboards.get<other_color(color_to_move)>();
-
-		if constexpr (gen_moves == gen_moves::all ||
-					  gen_moves == gen_moves::captures)
-		{
-			bitboard capture_to_lower_file = pawns & pawn_capture_lower_file
-				& ((color_to_move == white) ? opp_pieces << 9 : opp_pieces >> 7);
-			bitboard capture_to_lower_file_promotion = capture_to_lower_file & promotion_start_file;
-			capture_to_lower_file ^= capture_to_lower_file_promotion;
-
-			while (capture_to_lower_file_promotion)
-			{
-				size_t start_idx = get_next_bit_index(capture_to_lower_file_promotion);
-				const bitboard start = get_next_bit(capture_to_lower_file_promotion);
-				capture_to_lower_file_promotion = clear_next_bit(capture_to_lower_file_promotion);
-
-				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
-
-				append_if_legal<color_to_move, check_type, pawn, move_type::capture, queen>(
-					out_index, parent_idx, bitboards, king_index, started_in_check,
-					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
-				append_if_legal<color_to_move, check_type, pawn, move_type::capture, knight>(
-					out_index, parent_idx, bitboards, king_index, started_in_check,
-					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
-				append_if_legal<color_to_move, check_type, pawn, move_type::capture, rook>(
-					out_index, parent_idx, bitboards, king_index, started_in_check,
-					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
-				append_if_legal<color_to_move, check_type, pawn, move_type::capture, bishop>(
-					out_index, parent_idx, bitboards, king_index, started_in_check,
-					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
-			}
-
-			while (capture_to_lower_file)
-			{
-				size_t start_idx = get_next_bit_index(capture_to_lower_file);
-				const bitboard start = get_next_bit(capture_to_lower_file);
-				capture_to_lower_file = clear_next_bit(capture_to_lower_file);
-
-				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
-
-				append_if_legal<color_to_move, check_type, pawn, move_type::capture>(
-					out_index, parent_idx, bitboards, king_index, started_in_check,
-					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
-			}
-
-			bitboard capture_to_higher_file = pawns & pawn_capture_higher_file
-				& ((color_to_move == white) ? opp_pieces << 7 : opp_pieces >> 9);
-			bitboard capture_to_higher_file_promotion = capture_to_higher_file & promotion_start_file;
-			capture_to_higher_file ^= capture_to_higher_file_promotion;
-
-			while (capture_to_higher_file_promotion)
-			{
-				size_t start_idx = get_next_bit_index(capture_to_higher_file_promotion);
-				const bitboard start = get_next_bit(capture_to_higher_file_promotion);
-				capture_to_higher_file_promotion = clear_next_bit(capture_to_higher_file_promotion);
-
-				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
-
-				append_if_legal<color_to_move, check_type, pawn, move_type::capture, queen>(
-					out_index, parent_idx, bitboards, king_index, started_in_check,
-					incremental_key, start, (color_to_move == white) ? start >> 7 : start << 9);
-				append_if_legal<color_to_move, check_type, pawn, move_type::capture, knight>(
-					out_index, parent_idx, bitboards, king_index, started_in_check,
-					incremental_key, start, (color_to_move == white) ? start >> 7 : start << 9);
-				append_if_legal<color_to_move, check_type, pawn, move_type::capture, rook>(
-					out_index, parent_idx, bitboards, king_index, started_in_check,
-					incremental_key, start, (color_to_move == white) ? start >> 7 : start << 9);
-				append_if_legal<color_to_move, check_type, pawn, move_type::capture, bishop>(
-					out_index, parent_idx, bitboards, king_index, started_in_check,
-					incremental_key, start, (color_to_move == white) ? start >> 7 : start << 9);
-			}
-
-			while (capture_to_higher_file)
-			{
-				size_t start_idx = get_next_bit_index(capture_to_higher_file);
-				const bitboard start = get_next_bit(capture_to_higher_file);
-				capture_to_higher_file = clear_next_bit(capture_to_higher_file);
-
-				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
-
-				append_if_legal<color_to_move, check_type, pawn, move_type::capture>(
-					out_index, parent_idx, bitboards, king_index, started_in_check,
-					incremental_key, start, (color_to_move == white) ? start >> 7 : start << 9);
-			}
-
-			const file ep_capture_file = boards[parent_idx].get_en_passant_file();
-
-			if (ep_capture_file != empty)
-			{
-				bitboard ep_capturers = pawns & ep_capture_start_rank & (ep_capture_mask << (ep_capture_file + (color_to_move == white ? 0 : 8)));
-
-				while (ep_capturers) // 0-2
-				{
-					size_t start_idx = get_next_bit_index(ep_capturers);
-					const bitboard start = get_next_bit(ep_capturers);
-					ep_capturers = clear_next_bit(ep_capturers);
-
-					const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
-
-					append_if_legal<color_to_move, check_type, pawn, move_type::en_passant_capture>(
-						out_index, parent_idx, bitboards, king_index, started_in_check, incremental_key,
-						start, (1ull << ((color_to_move == white) ? 16 : 40)) << ep_capture_file);
-				}
 			}
 		}
 	}
