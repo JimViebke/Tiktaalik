@@ -496,8 +496,6 @@ namespace chess
 	template<color_t color_to_move, gen_moves gen_moves, bool perft>
 	size_t generate_child_boards(const size_t parent_idx)
 	{
-		constexpr color_t opp_color = other_color(color_to_move);
-
 		const board& parent_board = boards[parent_idx];
 		tt::key key = parent_board.get_key() ^ tt::z_keys.black_to_move;
 
@@ -507,55 +505,35 @@ namespace chess
 			key ^= tt::z_keys.en_passant_keys[parent_en_passant_file];
 		}
 
-		const bitboards& bitboards = parent_board.get_bitboards();
-
 		// Filter which types of checks we need to look for during move generation,
 		// based on which piece (if any) is known to be attacking the king.
 		// - When generating non-king moves, never check for a king.
 		// - When generating king moves, do all checks.
 
-		const size_t king_index = get_next_bit_index(bitboards.get<color_to_move>() & bitboards.kings);
-
 		const piece last_moved_piece = parent_board.moved_piece_without_color();
-
-		const size_t begin_idx = first_child_index(parent_idx);
-		size_t end_idx = begin_idx;
-		bool started_in_check = false;
+		constexpr color_t opp_color = other_color(color_to_move);
+		const bitboards& bitboards = parent_board.get_bitboards();
+		const size_t king_index = get_next_bit_index(bitboards.get<color_to_move>() & bitboards.kings);
+		size_t end_idx = first_child_index(parent_idx);
 
 		if (last_moved_piece.is_pawn() &&
 			square_is_attacked_by_pawn<opp_color>(bitboards, king_index))
 		{
-			started_in_check = true;
 			generate_child_boards<color_to_move, gen_moves, check_type::do_pawn_checks>(
-				end_idx, parent_idx, bitboards, king_index, started_in_check, key);
+				end_idx, parent_idx, bitboards, king_index, true, key);
 		}
 		else if (last_moved_piece.is_knight() &&
 				 square_is_attacked_by_knight<opp_color>(bitboards, king_index))
 		{
-			started_in_check = true;
 			generate_child_boards<color_to_move, gen_moves, check_type::do_knight_checks>(
-				end_idx, parent_idx, bitboards, king_index, started_in_check, key);
+				end_idx, parent_idx, bitboards, king_index, true, key);
 		}
 		else // the nominal path
 		{
-			started_in_check = is_king_in_check<color_to_move, check_type::skip_pawn_and_knight_checks>(
+			const bool started_in_check = is_king_in_check<color_to_move, check_type::skip_pawn_and_knight_checks>(
 				bitboards, king_index / 8, king_index % 8);
 			generate_child_boards<color_to_move, gen_moves, check_type::skip_pawn_and_knight_checks>(
 				end_idx, parent_idx, bitboards, king_index, started_in_check, key);
-		}
-
-		// During quiescence, a "terminal" position is just a position without available captures.
-		// During perft, we don't care about terminal evaluations.
-		if constexpr (gen_moves == gen_moves::all && !perft)
-		{
-			// If there are no legal moves, record the result.
-			if (end_idx == begin_idx)
-			{
-				if (started_in_check) // checkmate
-					boards[parent_idx].set_eval((color_to_move == white) ? -eval::mate : eval::mate);
-				else // stalemate
-					boards[parent_idx].set_eval(0);
-			}
 		}
 
 		return end_idx;

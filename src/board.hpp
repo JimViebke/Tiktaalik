@@ -375,7 +375,6 @@ namespace chess
 		}
 		const class bitboards& get_bitboards() const { return bitboards; }
 
-		void set_eval(const eval_t set_eval) { eval = set_eval; }
 		void set_end_index(size_t idx) { board_state |= uint32_t(idx) << end_file_offset; }
 		void set_moved_piece(piece piece) { board_state |= uint32_t(piece.value() >> 1) << moved_piece_offset; }
 
