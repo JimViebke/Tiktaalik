@@ -354,7 +354,7 @@ namespace chess
 				const bitboard end = get_next_bit(captures);
 				captures = clear_next_bit(captures);
 
-				append_if_legal<color_to_move, check_type::do_all, false, king, move_type::capture>(
+				append_if_legal<color_to_move, check_type::all, false, king, move_type::capture>(
 					out_index, parent_idx, bitboards, end_idx, incremental_key,
 					1ull << king_index, end);
 			}
@@ -369,7 +369,7 @@ namespace chess
 				const bitboard end = get_next_bit(non_captures);
 				non_captures = clear_next_bit(non_captures);
 
-				append_if_legal<color_to_move, check_type::do_all, false, king>(
+				append_if_legal<color_to_move, check_type::all, false, king>(
 					out_index, parent_idx, bitboards, end_idx, incremental_key,
 					1ull << king_index, end);
 			}
@@ -387,9 +387,9 @@ namespace chess
 			if (can_castle_ks && ks_pieces == ks_pieces_mask)
 			{
 				// Check that the king would not be moving through check.
-				if (!is_king_in_check<color_to_move, check_type::do_all>(bitboards, rank, file + 1))
+				if (!is_king_in_check<color_to_move, check_type::all>(bitboards, rank, file + 1))
 				{
-					append_if_legal<color_to_move, check_type::do_all, false, king, move_type::castle_kingside>(
+					append_if_legal<color_to_move, check_type::all, false, king, move_type::castle_kingside>(
 						out_index, parent_idx, bitboards, to_index(rank, file + 2), incremental_key,
 						1ull << king_index, 1ull << to_index(rank, file + 2));
 				}
@@ -403,9 +403,9 @@ namespace chess
 
 			if (can_castle_qs && qs_pieces == qs_pieces_mask)
 			{
-				if (!is_king_in_check<color_to_move, check_type::do_all>(bitboards, rank, file - 1))
+				if (!is_king_in_check<color_to_move, check_type::all>(bitboards, rank, file - 1))
 				{
-					append_if_legal<color_to_move, check_type::do_all, false, king, move_type::castle_queenside>(
+					append_if_legal<color_to_move, check_type::all, false, king, move_type::castle_queenside>(
 						out_index, parent_idx, bitboards, to_index(rank, file - 2), incremental_key,
 						1ull << king_index, 1ull << to_index(rank, file - 2));
 				}
@@ -518,26 +518,26 @@ namespace chess
 		if (last_moved_piece.is_pawn() &&
 			square_is_attacked_by_pawn<opp_color>(bitboards, king_index))
 		{
-			generate_child_boards<color_to_move, gen_moves, check_type::do_pawn_checks, true>(
+			generate_child_boards<color_to_move, gen_moves, check_type::pawn, true>(
 				end_idx, parent_idx, bitboards, king_index, key);
 		}
 		else if (last_moved_piece.is_knight() &&
 				 square_is_attacked_by_knight<opp_color>(bitboards, king_index))
 		{
-			generate_child_boards<color_to_move, gen_moves, check_type::do_knight_checks, true>(
+			generate_child_boards<color_to_move, gen_moves, check_type::knight, true>(
 				end_idx, parent_idx, bitboards, king_index, key);
 		}
 		else // the nominal path
 		{
-			if (is_king_in_check<color_to_move, check_type::skip_pawn_and_knight_checks>(
+			if (is_king_in_check<color_to_move, check_type::sliders>(
 				bitboards, king_index / 8, king_index % 8))
 			{
-				generate_child_boards<color_to_move, gen_moves, check_type::skip_pawn_and_knight_checks, true>(
+				generate_child_boards<color_to_move, gen_moves, check_type::sliders, true>(
 					end_idx, parent_idx, bitboards, king_index, key);
 			}
 			else
 			{
-				generate_child_boards<color_to_move, gen_moves, check_type::skip_pawn_and_knight_checks, false>(
+				generate_child_boards<color_to_move, gen_moves, check_type::sliders, false>(
 					end_idx, parent_idx, bitboards, king_index, key);
 			}
 		}

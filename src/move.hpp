@@ -37,15 +37,17 @@ namespace chess
 		return opp_king & king_attack_masks[index];
 	}
 
-	// If the opponent isn't checking with a pawn, skip pawn checks.
-	// If the opponent isn't checking with a knight, skip knight checks.
+	// Constrain which types of checks is_king_in_check() performs.
+	// - If we are moving our king or are outside of move generation, do all checks.
+	// - Otherwise, if we started in check from a pawn, do pawn and slider checks.
+	// - Otherwise, if we started in check from a knight, do knight and slider checks.
+	// - Otherwise (the nominal case), only do slider checks.
 	enum class check_type
 	{
-		do_pawn_checks, // implies skipping knight and king checks
-		do_knight_checks, // implies skipping pawn and king checks
-		skip_pawn_and_knight_checks, // nominal case (only do sliding piece checks)
-
-		do_all // do all checks
+		all,
+		pawn,
+		knight,
+		sliders
 	};
 
 	template<color_t king_color, check_type check_type>
@@ -56,19 +58,17 @@ namespace chess
 
 		if (is_attacked_by_sliding_piece<king_color>(bitboards, 1ull << king_index)) return true;
 
-		if constexpr (check_type == check_type::do_all)
+		if constexpr (check_type == check_type::all)
 		{
 			if (square_is_attacked_by_king<opp_color>(bitboards, king_index)) return true;
 		}
 
-		if constexpr (check_type == check_type::do_knight_checks ||
-					  check_type == check_type::do_all)
+		if constexpr (check_type == check_type::knight || check_type == check_type::all)
 		{
 			if (square_is_attacked_by_knight<opp_color>(bitboards, king_index)) return true;
 		}
 
-		if constexpr (check_type == check_type::do_pawn_checks ||
-					  check_type == check_type::do_all)
+		if constexpr (check_type == check_type::pawn || check_type == check_type::all)
 		{
 			if (square_is_attacked_by_pawn<opp_color>(bitboards, king_index)) return true;
 		}
