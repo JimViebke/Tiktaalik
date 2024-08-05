@@ -61,13 +61,24 @@ namespace chess
 
 		bool operator==(const bitboards&) const = default;
 
-		const bitboard get_empty() const { return ~white & ~black; }
-		const bitboard get_occupied() const { return white | black; }
+		const bitboard occupied() const { return white | black; }
+		const bitboard empty() const { return ~occupied(); }
 
 		template<color_t color>
 		const bitboard& get() const
 		{
 			return ((color == chess::white) ? white : black);
+		}
+
+		template<color_t color, piece_t piece>
+		const bitboard get() const
+		{
+			return get<color>() &
+				((piece == pawn) ? pawns :
+				 (piece == knight) ? knights :
+				 (piece == bishop) ? bishops :
+				 (piece == rook) ? rooks :
+				 (piece == queen) ? queens : kings);
 		}
 
 		void print() const;
@@ -159,39 +170,39 @@ namespace chess
 		return ::util::blsr(bitboard);
 	}
 
-	template<piece_t piece_type>
+	template<piece_t piece>
 	bitboard get_slider_moves(const bitboards& bitboards, const size_t idx)
 	{
-		static_assert(piece_type == bishop || piece_type == rook || piece_type == queen);
+		static_assert(piece == bishop || piece == rook || piece == queen);
 
 		bitboard bishop_pext_mask;
 		bitboard rook_pext_mask;
-		if constexpr (piece_type == bishop || piece_type == queen)
+		if constexpr (piece == bishop || piece == queen)
 			bishop_pext_mask = bishop_pext_masks[idx];
-		if constexpr (piece_type == rook || piece_type == queen)
+		if constexpr (piece == rook || piece == queen)
 			rook_pext_mask = rook_pext_masks[idx];
 
-		const bitboard occupied = bitboards.get_occupied();
+		const bitboard occupied = bitboards.occupied();
 
 		size_t bishop_movemask_idx;
 		size_t rook_movemask_idx;
-		if constexpr (piece_type == bishop || piece_type == queen)
+		if constexpr (piece == bishop || piece == queen)
 			bishop_movemask_idx = pext(occupied, bishop_pext_mask);
-		if constexpr (piece_type == rook || piece_type == queen)
+		if constexpr (piece == rook || piece == queen)
 			rook_movemask_idx = pext(occupied, rook_pext_mask);
 
 		bitboard moves;
-		if constexpr (piece_type == bishop || piece_type == queen)
+		if constexpr (piece == bishop || piece == queen)
 			moves |= (*bishop_move_masks)[idx][bishop_movemask_idx];
-		if constexpr (piece_type == rook || piece_type == queen)
+		if constexpr (piece == rook || piece == queen)
 			moves |= (*rook_move_masks)[idx][rook_movemask_idx];
 
 		return moves;
 	}
-	template<piece_t piece_type>
+	template<piece_t piece>
 	bitboard get_slider_moves(const bitboards& bitboards, const bitboard square)
 	{
-		return get_slider_moves<piece_type>(bitboards, get_next_bit_index(square));
+		return get_slider_moves<piece>(bitboards, get_next_bit_index(square));
 	}
 
 	template<color_t king_color>

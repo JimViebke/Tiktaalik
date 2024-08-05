@@ -10,7 +10,7 @@ namespace chess
 	[[clang::always_inline]] static bool square_is_attacked_by_pawn(
 		const bitboards& bitboards, const size_t index)
 	{
-		const bitboard opp_pawns = bitboards.get<attacker_color>() & bitboards.pawns;
+		const bitboard opp_pawns = bitboards.get<attacker_color, pawn>();
 		const bitboard index_bb = 1ull << index;
 
 		const bitboard checkers_to_lower_file = opp_pawns & pawn_capture_lower_file
@@ -25,7 +25,7 @@ namespace chess
 	[[clang::always_inline]] static bool square_is_attacked_by_knight(
 		const bitboards& bitboards, const size_t index)
 	{
-		const bitboard opp_knights = bitboards.get<attacker_color>() & bitboards.knights;
+		const bitboard opp_knights = bitboards.get<attacker_color, knight>();
 		return opp_knights & knight_attack_masks[index];
 	}
 
@@ -33,7 +33,7 @@ namespace chess
 	[[clang::always_inline]] static bool square_is_attacked_by_king(
 		const bitboards& bitboards, const size_t index)
 	{
-		const bitboard opp_king = bitboards.get<attacker_color>() & bitboards.kings;
+		const bitboard opp_king = bitboards.get<attacker_color, king>();
 		return opp_king & king_attack_masks[index];
 	}
 

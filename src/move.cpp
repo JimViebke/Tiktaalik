@@ -58,7 +58,7 @@ namespace chess
 	{
 		constexpr bitboard promotion_start_file = (color_to_move == white) ? rank_7 : rank_2;
 
-		const bitboard pawns = bitboards.pawns & bitboards.get<color_to_move>();
+		const bitboard pawns = bitboards.get<color_to_move, pawn>();
 
 		if constexpr (gen_moves == gen_moves::all ||
 					  gen_moves == gen_moves::captures)
@@ -170,7 +170,7 @@ namespace chess
 		if constexpr (gen_moves == gen_moves::all ||
 					  gen_moves == gen_moves::noncaptures)
 		{
-			const bitboard empty_squares = bitboards.get_empty();
+			const bitboard empty_squares = bitboards.empty();
 			bitboard move_one_square = pawns & ((color_to_move == white) ? empty_squares << 8 : empty_squares >> 8);
 
 			bitboard noncapture_promotions = move_one_square & promotion_start_file;
@@ -238,7 +238,7 @@ namespace chess
 		const bitboard moves = knight_attack_masks[knight_index];
 
 		bitboard captures = moves & bitboards.get<other_color(color_to_move)>();
-		bitboard noncaptures = moves & bitboards.get_empty();
+		bitboard noncaptures = moves & bitboards.empty();
 
 		if constexpr (gen_moves == gen_moves::all ||
 					  gen_moves == gen_moves::captures)
@@ -295,7 +295,7 @@ namespace chess
 		if constexpr (gen_moves == gen_moves::noncaptures ||
 					  gen_moves == gen_moves::all)
 		{
-			bitboard noncaptures = moves & bitboards.get_empty();
+			bitboard noncaptures = moves & bitboards.empty();
 			while (noncaptures)
 			{
 				const bitboard end = get_next_bit(noncaptures);
@@ -321,7 +321,7 @@ namespace chess
 		const bitboard moves = king_attack_masks[king_index];
 
 		bitboard captures = moves & bitboards.get<other_color(color_to_move)>();
-		bitboard non_captures = moves & bitboards.get_empty();
+		bitboard non_captures = moves & bitboards.empty();
 
 		if constexpr (gen_moves == gen_moves::all ||
 					  gen_moves == gen_moves::captures)
@@ -490,7 +490,7 @@ namespace chess
 		const piece last_moved_piece = parent_board.moved_piece_without_color();
 		constexpr color_t opp_color = other_color(color_to_move);
 		const bitboards& bitboards = parent_board.get_bitboards();
-		const size_t king_index = get_next_bit_index(bitboards.get<color_to_move>() & bitboards.kings);
+		const size_t king_index = get_next_bit_index(bitboards.get<color_to_move, king>());
 		size_t end_idx = first_child_index(parent_idx);
 
 		if (last_moved_piece.is_pawn() &&

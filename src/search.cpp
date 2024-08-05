@@ -232,7 +232,7 @@ namespace chess
 			if constexpr (quiescing) return board.get_eval();
 
 			const bitboards& bitboards = board.get_bitboards();
-			const size_t king_index = get_next_bit_index(bitboards.get<color_to_move>() & bitboards.kings);
+			const size_t king_index = get_next_bit_index(bitboards.get<color_to_move, king>());
 
 			eval_t terminal_eval{};
 			if (is_king_in_check<color_to_move, check_type::all>(bitboards, king_index / 8, king_index % 8))
