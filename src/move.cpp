@@ -447,6 +447,39 @@ namespace chess
 				std::cout << "Incremental and generated bitboards mismatch in append_if_legal\n";
 	}
 
+	template<color_t color_to_move, piece_t piece_type, gen_moves gen_moves, check_type check_type, bool started_in_check>
+	force_inline_toggle void find_moves_for(size_t& out_index, const size_t parent_idx,
+											const bitboards& bitboards, const size_t king_index,
+											const tt::key key)
+	{
+		static_assert(piece_type == knight ||
+					  piece_type == bishop ||
+					  piece_type == rook ||
+					  piece_type == queen);
+
+		bitboard pieces = bitboards.get<color_to_move, piece_type>();
+
+		while (pieces)
+		{
+			const size_t piece_idx = get_next_bit_index(pieces);
+			pieces = clear_next_bit(pieces);
+
+			// XOR the key for the leaving piece once for all of its moves
+			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | piece_type][piece_idx];
+
+			if constexpr (piece_type == knight)
+			{
+				find_knight_moves<color_to_move, gen_moves, check_type, started_in_check>(
+					out_index, parent_idx, bitboards, piece_idx / 8, piece_idx % 8, king_index, incremental_key);
+			}
+			else
+			{
+				find_slider_moves<color_to_move, gen_moves, check_type, started_in_check, piece_type>(
+					out_index, parent_idx, bitboards, piece_idx / 8, piece_idx % 8, king_index, incremental_key);
+			}
+		}
+	}
+
 	template<color_t color_to_move, gen_moves gen_moves, check_type check_type, bool started_in_check>
 	force_inline_toggle void generate_child_boards(size_t& end_idx, const size_t parent_idx, const bitboards& bitboards,
 												   const size_t king_index,
@@ -454,18 +487,14 @@ namespace chess
 	{
 		find_pawn_moves<color_to_move, gen_moves, check_type, started_in_check>(
 			end_idx, parent_idx, bitboards, king_index, key);
-		find_moves_for<color_to_move, knight>(
-			end_idx, parent_idx, bitboards, king_index, key,
-			&find_knight_moves<color_to_move, gen_moves, check_type, started_in_check>);
-		find_moves_for<color_to_move, bishop>(
-			end_idx, parent_idx, bitboards, king_index, key,
-			&find_slider_moves<color_to_move, gen_moves, check_type, started_in_check, bishop>);
-		find_moves_for<color_to_move, rook>(
-			end_idx, parent_idx, bitboards, king_index, key,
-			&find_slider_moves<color_to_move, gen_moves, check_type, started_in_check, rook>);
-		find_moves_for<color_to_move, queen>(
-			end_idx, parent_idx, bitboards, king_index, key,
-			&find_slider_moves<color_to_move, gen_moves, check_type, started_in_check, queen>);
+		find_moves_for<color_to_move, knight, gen_moves, check_type, started_in_check>(
+			end_idx, parent_idx, bitboards, king_index, key);
+		find_moves_for<color_to_move, bishop, gen_moves, check_type, started_in_check>(
+			end_idx, parent_idx, bitboards, king_index, key);
+		find_moves_for<color_to_move, rook, gen_moves, check_type, started_in_check>(
+			end_idx, parent_idx, bitboards, king_index, key);
+		find_moves_for<color_to_move, queen, gen_moves, check_type, started_in_check>(
+			end_idx, parent_idx, bitboards, king_index, key);
 		find_king_moves<color_to_move, gen_moves, check_type, started_in_check>(
 			end_idx, parent_idx, bitboards, king_index, key);
 	}

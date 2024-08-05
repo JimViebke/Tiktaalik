@@ -228,34 +228,4 @@ namespace chess
 
 		return checkers != 0;
 	}
-
-	template<color_t color_to_move, piece_t piece_type, typename generate_moves_fn_t>
-	force_inline_toggle void find_moves_for(size_t& out_index, const size_t parent_idx,
-											const bitboards& bitboards, const size_t king_index,
-											const tt::key key, generate_moves_fn_t generate_moves_fn)
-	{
-		static_assert(piece_type == knight ||
-					  piece_type == bishop ||
-					  piece_type == rook ||
-					  piece_type == queen);
-
-		bitboard pieces = bitboards.get<color_to_move>() &
-			((piece_type == knight) ? bitboards.knights :
-			 (piece_type == bishop) ? bitboards.bishops :
-			 (piece_type == rook) ? bitboards.rooks :
-			 bitboards.queens);
-
-		while (pieces)
-		{
-			const size_t piece_idx = get_next_bit_index(pieces);
-			pieces = clear_next_bit(pieces);
-
-			// XOR the key for the leaving piece once for all of its moves
-			const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | piece_type][piece_idx];
-
-			generate_moves_fn(out_index, parent_idx, bitboards,
-							  piece_idx / 8, piece_idx % 8,
-							  king_index, incremental_key);
-		}
-	}
 }
