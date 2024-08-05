@@ -489,10 +489,10 @@ namespace chess
 		// Check that we're using the expected number of bits.
 		static_assert(fifty_move_counter_bits + fifty_move_counter_offset + 1 == 32);
 
-		uint32_t board_state;
-		eval_t eval;
-		tt::key key;
-		bitboards bitboards;
+		uint32_t board_state{};
+		eval_t eval{};
+		tt::key key{};
+		bitboards bitboards{};
 	};
 
 	tt::key generate_key(const board& board, const position& position, const color_t color_to_move);
