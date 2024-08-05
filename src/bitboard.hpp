@@ -205,6 +205,17 @@ namespace chess
 		return get_slider_moves<piece>(bitboards, get_next_bit_index(square));
 	}
 
+	template<color_t color>
+	force_inline_toggle bitboard get_blockers(const bitboards& bitboards)
+	{
+		const bitboard our_pieces = bitboards.get<color>();
+		const bitboard king_bitboard = our_pieces & bitboards.kings;
+		const size_t king_idx = get_next_bit_index(king_bitboard);
+		const bitboard moves = get_slider_moves<queen>(bitboards, king_idx);
+		const bitboard blocker_squares = bishop_pext_masks[king_idx] | rook_pext_masks[king_idx];
+		return our_pieces & blocker_squares & moves;
+	}
+
 	template<color_t king_color>
 	force_inline_toggle bool is_attacked_by_sliding_piece(const bitboards& bitboards,
 														  const bitboard king_position)

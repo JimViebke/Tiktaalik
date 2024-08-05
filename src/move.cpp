@@ -53,7 +53,8 @@ namespace chess
 	}
 
 	template<color_t color_to_move, gen_moves gen_moves, check_type check_type, bool started_in_check>
-	force_inline_toggle void find_pawn_moves(size_t& out_index, const size_t parent_idx, const bitboards& bitboards,
+	force_inline_toggle void find_pawn_moves(size_t& out_index, const size_t parent_idx,
+											 const bitboards& bitboards, const bitboard blockers,
 											 const size_t king_index, const tt::key key)
 	{
 		constexpr bitboard promotion_start_file = (color_to_move == white) ? rank_7 : rank_2;
@@ -79,16 +80,16 @@ namespace chess
 				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::capture, queen>(
-					out_index, parent_idx, bitboards, king_index,
+					out_index, parent_idx, bitboards, blockers, king_index,
 					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::capture, knight>(
-					out_index, parent_idx, bitboards, king_index,
+					out_index, parent_idx, bitboards, blockers, king_index,
 					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::capture, rook>(
-					out_index, parent_idx, bitboards, king_index,
+					out_index, parent_idx, bitboards, blockers, king_index,
 					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::capture, bishop>(
-					out_index, parent_idx, bitboards, king_index,
+					out_index, parent_idx, bitboards, blockers, king_index,
 					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
 			}
 
@@ -101,7 +102,7 @@ namespace chess
 				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::capture>(
-					out_index, parent_idx, bitboards, king_index,
+					out_index, parent_idx, bitboards, blockers, king_index,
 					incremental_key, start, (color_to_move == white) ? start >> 9 : start << 7);
 			}
 
@@ -119,16 +120,16 @@ namespace chess
 				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::capture, queen>(
-					out_index, parent_idx, bitboards, king_index, incremental_key,
+					out_index, parent_idx, bitboards, blockers, king_index, incremental_key,
 					start, (color_to_move == white) ? start >> 7 : start << 9);
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::capture, knight>(
-					out_index, parent_idx, bitboards, king_index, incremental_key,
+					out_index, parent_idx, bitboards, blockers, king_index, incremental_key,
 					start, (color_to_move == white) ? start >> 7 : start << 9);
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::capture, rook>(
-					out_index, parent_idx, bitboards, king_index, incremental_key,
+					out_index, parent_idx, bitboards, blockers, king_index, incremental_key,
 					start, (color_to_move == white) ? start >> 7 : start << 9);
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::capture, bishop>(
-					out_index, parent_idx, bitboards, king_index, incremental_key,
+					out_index, parent_idx, bitboards, blockers, king_index, incremental_key,
 					start, (color_to_move == white) ? start >> 7 : start << 9);
 			}
 
@@ -141,7 +142,7 @@ namespace chess
 				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::capture>(
-					out_index, parent_idx, bitboards, king_index, incremental_key,
+					out_index, parent_idx, bitboards, blockers, king_index, incremental_key,
 					start, (color_to_move == white) ? start >> 7 : start << 9);
 			}
 
@@ -161,7 +162,7 @@ namespace chess
 					const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 					append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::en_passant_capture>(
-						out_index, parent_idx, bitboards, king_index, incremental_key,
+						out_index, parent_idx, bitboards, blockers, king_index, incremental_key,
 						start, (1ull << ((color_to_move == white) ? 16 : 40)) << ep_capture_file);
 				}
 			}
@@ -185,16 +186,16 @@ namespace chess
 				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::other, queen>(
-					out_index, parent_idx, bitboards, king_index, incremental_key,
+					out_index, parent_idx, bitboards, blockers, king_index, incremental_key,
 					start, (color_to_move == white) ? start >> 8 : start << 8);
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::other, knight>(
-					out_index, parent_idx, bitboards, king_index, incremental_key,
+					out_index, parent_idx, bitboards, blockers, king_index, incremental_key,
 					start, (color_to_move == white) ? start >> 8 : start << 8);
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::other, rook>(
-					out_index, parent_idx, bitboards, king_index, incremental_key,
+					out_index, parent_idx, bitboards, blockers, king_index, incremental_key,
 					start, (color_to_move == white) ? start >> 8 : start << 8);
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::other, bishop>(
-					out_index, parent_idx, bitboards, king_index, incremental_key,
+					out_index, parent_idx, bitboards, blockers, king_index, incremental_key,
 					start, (color_to_move == white) ? start >> 8 : start << 8);
 			}
 
@@ -211,7 +212,7 @@ namespace chess
 				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 				append_if_legal<color_to_move, check_type, started_in_check, pawn, move_type::pawn_two_squares>(
-					out_index, parent_idx, bitboards, king_index, incremental_key,
+					out_index, parent_idx, bitboards, blockers, king_index, incremental_key,
 					start, (color_to_move == white) ? start >> 16 : start << 16);
 			}
 
@@ -224,13 +225,14 @@ namespace chess
 				const tt::key incremental_key = key ^ tt::z_keys.piece_square_keys[color_to_move | pawn][start_idx];
 
 				append_if_legal<color_to_move, check_type, started_in_check, pawn>(
-					out_index, parent_idx, bitboards, king_index, incremental_key,
+					out_index, parent_idx, bitboards, blockers, king_index, incremental_key,
 					start, (color_to_move == white) ? start >> 8 : start << 8);
 			}
 		}
 	}
 	template<color_t color_to_move, gen_moves gen_moves, check_type check_type, bool started_in_check>
-	force_inline_toggle void find_knight_moves(size_t& out_index, const size_t parent_idx, const bitboards& bitboards,
+	force_inline_toggle void find_knight_moves(size_t& out_index, const size_t parent_idx,
+											   const bitboards& bitboards, const bitboard blockers,
 											   const rank rank, const file file,
 											   const size_t king_index, const tt::key key)
 	{
@@ -249,7 +251,7 @@ namespace chess
 				captures = clear_next_bit(captures);
 
 				append_if_legal<color_to_move, check_type, started_in_check, knight, move_type::capture>(
-					out_index, parent_idx, bitboards, king_index, key,
+					out_index, parent_idx, bitboards, blockers, king_index, key,
 					1ull << to_index(rank, file), end);
 			}
 		}
@@ -263,13 +265,14 @@ namespace chess
 				noncaptures = clear_next_bit(noncaptures);
 
 				append_if_legal<color_to_move, check_type, started_in_check, knight>(
-					out_index, parent_idx, bitboards, king_index, key,
+					out_index, parent_idx, bitboards, blockers, king_index, key,
 					1ull << to_index(rank, file), end);
 			}
 		}
 	}
 	template<color_t color_to_move, gen_moves gen_moves, check_type check_type, bool started_in_check, piece_t piece_type>
-	force_inline_toggle void find_slider_moves(size_t& out_index, const size_t parent_idx, const bitboards& bitboards,
+	force_inline_toggle void find_slider_moves(size_t& out_index, const size_t parent_idx,
+											   const bitboards& bitboards, const bitboard blockers,
 											   const rank rank, const file file,
 											   const size_t king_index, const tt::key key)
 	{
@@ -287,7 +290,7 @@ namespace chess
 				captures = clear_next_bit(captures);
 
 				append_if_legal<color_to_move, check_type, started_in_check, piece_type, move_type::capture>(
-					out_index, parent_idx, bitboards, king_index, key,
+					out_index, parent_idx, bitboards, blockers, king_index, key,
 					1ull << to_index(rank, file), end);
 			}
 		}
@@ -302,13 +305,14 @@ namespace chess
 				noncaptures = clear_next_bit(noncaptures);
 
 				append_if_legal<color_to_move, check_type, started_in_check, piece_type>(
-					out_index, parent_idx, bitboards, king_index, key,
+					out_index, parent_idx, bitboards, blockers, king_index, key,
 					1ull << to_index(rank, file), end);
 			}
 		}
 	}
 	template<color_t color_to_move, gen_moves gen_moves, check_type check_type, bool started_in_check>
-	force_inline_toggle void find_king_moves(size_t& out_index, const size_t parent_idx, const bitboards& bitboards,
+	force_inline_toggle void find_king_moves(size_t& out_index, const size_t parent_idx,
+											 const bitboards& bitboards, const bitboard blockers,
 											 const size_t king_index, const tt::key key)
 	{
 		const rank rank = king_index / 8;
@@ -333,7 +337,7 @@ namespace chess
 				captures = clear_next_bit(captures);
 
 				append_if_legal<color_to_move, check_type::all, false, king, move_type::capture>(
-					out_index, parent_idx, bitboards, end_idx, incremental_key,
+					out_index, parent_idx, bitboards, blockers, end_idx, incremental_key,
 					1ull << king_index, end);
 			}
 		}
@@ -348,7 +352,7 @@ namespace chess
 				non_captures = clear_next_bit(non_captures);
 
 				append_if_legal<color_to_move, check_type::all, false, king>(
-					out_index, parent_idx, bitboards, end_idx, incremental_key,
+					out_index, parent_idx, bitboards, blockers, end_idx, incremental_key,
 					1ull << king_index, end);
 			}
 
@@ -368,7 +372,7 @@ namespace chess
 				if (!is_king_in_check<color_to_move, check_type::all>(bitboards, rank, file + 1))
 				{
 					append_if_legal<color_to_move, check_type::all, false, king, move_type::castle_kingside>(
-						out_index, parent_idx, bitboards, to_index(rank, file + 2), incremental_key,
+						out_index, parent_idx, bitboards, blockers, to_index(rank, file + 2), incremental_key,
 						1ull << king_index, 1ull << to_index(rank, file + 2));
 				}
 			}
@@ -384,7 +388,7 @@ namespace chess
 				if (!is_king_in_check<color_to_move, check_type::all>(bitboards, rank, file - 1))
 				{
 					append_if_legal<color_to_move, check_type::all, false, king, move_type::castle_queenside>(
-						out_index, parent_idx, bitboards, to_index(rank, file - 2), incremental_key,
+						out_index, parent_idx, bitboards, blockers, to_index(rank, file - 2), incremental_key,
 						1ull << king_index, 1ull << to_index(rank, file - 2));
 				}
 			}
@@ -401,7 +405,8 @@ namespace chess
 
 	template <color_t moving_color, check_type check_type, bool started_in_check, piece_t moving_piece_type,
 		move_type move_type = move_type::other, piece_t promotion_type = empty, typename... board_args>
-	force_inline_toggle void append_if_legal(size_t& out_index, const size_t parent_idx, const bitboards& bitboards,
+	force_inline_toggle void append_if_legal(size_t& out_index, const size_t parent_idx,
+											 const bitboards& bitboards, const bitboard blockers,
 											 const size_t king_index, const tt::key key,
 											 const bitboard start, const bitboard end)
 	{
@@ -410,15 +415,12 @@ namespace chess
 		board& child_board = boards[out_index];
 		child_board.update_bitboards<child_color, moving_piece_type, move_type, promotion_type>(parent_idx, start, end);
 
-		// If the king is in check, return early. We could be in check if:
-		// - We are trying to move our king, or
-		// - we started in check, or
-		// - the moving piece shared a rank, file, or diagonal with the king.
-		// If none of these are the case (most of the time), we cannot possibly be in check, and
-		// we can skip the expensive call to is_king_in_check().
-		if (moving_piece_type == king ||
-			started_in_check ||
-			moving_piece_might_have_been_pinned(king_index, start))
+		// If this move would leave us in check, return early. A move might leave us in check if:
+		// - We started in check, or
+		// - the moving piece is a king, or
+		// - the moving piece was a blocker (ie, had line of sight to the king).
+		// If none of these are the case (most of the time), skip is_king_in_check().
+		if (started_in_check || moving_piece_type == king || start & blockers)
 		{
 			if (is_king_in_check<moving_color, check_type>(child_board.get_bitboards(), king_index / 8, king_index % 8)) return;
 		}
@@ -449,8 +451,8 @@ namespace chess
 
 	template<color_t color_to_move, piece_t piece_type, gen_moves gen_moves, check_type check_type, bool started_in_check>
 	force_inline_toggle void find_moves_for(size_t& out_index, const size_t parent_idx,
-											const bitboards& bitboards, const size_t king_index,
-											const tt::key key)
+											const bitboards& bitboards, const bitboard blockers,
+											const size_t king_index, const tt::key key)
 	{
 		static_assert(piece_type == knight ||
 					  piece_type == bishop ||
@@ -470,33 +472,33 @@ namespace chess
 			if constexpr (piece_type == knight)
 			{
 				find_knight_moves<color_to_move, gen_moves, check_type, started_in_check>(
-					out_index, parent_idx, bitboards, piece_idx / 8, piece_idx % 8, king_index, incremental_key);
+					out_index, parent_idx, bitboards, blockers, piece_idx / 8, piece_idx % 8, king_index, incremental_key);
 			}
 			else
 			{
 				find_slider_moves<color_to_move, gen_moves, check_type, started_in_check, piece_type>(
-					out_index, parent_idx, bitboards, piece_idx / 8, piece_idx % 8, king_index, incremental_key);
+					out_index, parent_idx, bitboards, blockers, piece_idx / 8, piece_idx % 8, king_index, incremental_key);
 			}
 		}
 	}
 
 	template<color_t color_to_move, gen_moves gen_moves, check_type check_type, bool started_in_check>
-	force_inline_toggle void generate_child_boards(size_t& end_idx, const size_t parent_idx, const bitboards& bitboards,
-												   const size_t king_index,
-												   const tt::key key)
+	force_inline_toggle void generate_child_boards(size_t& end_idx, const size_t parent_idx,
+												   const bitboards& bitboards, const bitboard blockers,
+												   const size_t king_index, const tt::key key)
 	{
 		find_pawn_moves<color_to_move, gen_moves, check_type, started_in_check>(
-			end_idx, parent_idx, bitboards, king_index, key);
+			end_idx, parent_idx, bitboards, blockers, king_index, key);
 		find_moves_for<color_to_move, knight, gen_moves, check_type, started_in_check>(
-			end_idx, parent_idx, bitboards, king_index, key);
+			end_idx, parent_idx, bitboards, blockers, king_index, key);
 		find_moves_for<color_to_move, bishop, gen_moves, check_type, started_in_check>(
-			end_idx, parent_idx, bitboards, king_index, key);
+			end_idx, parent_idx, bitboards, blockers, king_index, key);
 		find_moves_for<color_to_move, rook, gen_moves, check_type, started_in_check>(
-			end_idx, parent_idx, bitboards, king_index, key);
+			end_idx, parent_idx, bitboards, blockers, king_index, key);
 		find_moves_for<color_to_move, queen, gen_moves, check_type, started_in_check>(
-			end_idx, parent_idx, bitboards, king_index, key);
+			end_idx, parent_idx, bitboards, blockers, king_index, key);
 		find_king_moves<color_to_move, gen_moves, check_type, started_in_check>(
-			end_idx, parent_idx, bitboards, king_index, key);
+			end_idx, parent_idx, bitboards, blockers, king_index, key);
 	}
 
 	template<color_t color_to_move, gen_moves gen_moves, bool perft>
@@ -526,13 +528,13 @@ namespace chess
 			square_is_attacked_by_pawn<opp_color>(bitboards, king_index))
 		{
 			generate_child_boards<color_to_move, gen_moves, check_type::pawn, true>(
-				end_idx, parent_idx, bitboards, king_index, key);
+				end_idx, parent_idx, bitboards, bitboard{}, king_index, key);
 		}
 		else if (last_moved_piece.is_knight() &&
 				 square_is_attacked_by_knight<opp_color>(bitboards, king_index))
 		{
 			generate_child_boards<color_to_move, gen_moves, check_type::knight, true>(
-				end_idx, parent_idx, bitboards, king_index, key);
+				end_idx, parent_idx, bitboards, bitboard{}, king_index, key);
 		}
 		else // the nominal path
 		{
@@ -540,12 +542,13 @@ namespace chess
 				bitboards, king_index / 8, king_index % 8))
 			{
 				generate_child_boards<color_to_move, gen_moves, check_type::sliders, true>(
-					end_idx, parent_idx, bitboards, king_index, key);
+					end_idx, parent_idx, bitboards, bitboard{}, king_index, key);
 			}
 			else
 			{
+				const bitboard blockers = get_blockers<color_to_move>(bitboards);
 				generate_child_boards<color_to_move, gen_moves, check_type::sliders, false>(
-					end_idx, parent_idx, bitboards, king_index, key);
+					end_idx, parent_idx, bitboards, blockers, king_index, key);
 			}
 		}
 
