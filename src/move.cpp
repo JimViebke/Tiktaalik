@@ -351,15 +351,11 @@ namespace chess
 			if constexpr (started_in_check) return; // A king cannot castle out of check.
 
 			const board& board = boards[parent_idx];
+			constexpr size_t king_start_idx = (color_to_move == white) ? 60 : 4;
 
 			const bool can_castle_ks = (color_to_move == white) ? board.white_can_castle_ks() : board.black_can_castle_ks();
-
-			constexpr uint32_t ks_pieces_mask = ((color_to_move | rook) << 24) + (empty << 16) + (empty << 8) + (color_to_move | king);
-			constexpr size_t king_start_idx = (color_to_move == white) ? 60 : 4;
-			const position& position = positions[parent_idx];
-			const uint32_t ks_pieces = *(uint32_t*)(&position[king_start_idx]);
-
-			if (can_castle_ks && ks_pieces == ks_pieces_mask)
+			constexpr bitboard ks_castle_bits = 0b01100000uz << ((color_to_move == white) ? 56 : 0);
+			if (can_castle_ks && (bitboards.occupied() & ks_castle_bits) == 0)
 			{
 				// Check that the king would not be moving through check.
 				if (!is_king_in_check<color_to_move, check_type::all>(bitboards, king_start_idx + 1))
@@ -371,12 +367,8 @@ namespace chess
 			}
 
 			const bool can_castle_qs = (color_to_move == white) ? board.white_can_castle_qs() : board.black_can_castle_qs();
-
-			constexpr uint32_t qs_pieces_mask = (empty << 24) + (empty << 16) + (empty << 8) + (color_to_move | rook);
-			constexpr size_t qs_rook_start_index = (color_to_move == white) ? 56 : 0;
-			const uint32_t qs_pieces = *(uint32_t*)(&position[qs_rook_start_index]);
-
-			if (can_castle_qs && qs_pieces == qs_pieces_mask)
+			constexpr bitboard qs_castle_bits = 0b00001110uz << ((color_to_move == white) ? 56 : 0);
+			if (can_castle_qs && (bitboards.occupied() & qs_castle_bits) == 0)
 			{
 				if (!is_king_in_check<color_to_move, check_type::all>(bitboards, king_start_idx - 1))
 				{
