@@ -395,14 +395,6 @@ namespace chess
 		}
 	}
 
-	force_inline_toggle bool moving_piece_might_have_been_pinned(const size_t king_index,
-																 const bitboard start)
-	{
-		// If a piece left a square that shared a rank, file, or diagonal with the king, it might have been pinned.
-		const bitboard king_attack_mask = bishop_attack_masks[king_index] | rook_attack_masks[king_index];
-		return (king_attack_mask & start) != 0;
-	}
-
 	template <color_t moving_color, check_type check_type, bool started_in_check, piece_t moving_piece_type,
 		move_type move_type = move_type::other, piece_t promotion_type = empty, typename... board_args>
 	force_inline_toggle void append_if_legal(size_t& out_index, const size_t parent_idx,
