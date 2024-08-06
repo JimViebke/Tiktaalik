@@ -171,7 +171,7 @@ namespace chess
 	}
 
 	template<piece_t piece>
-	bitboard get_slider_moves(const bitboards& bitboards, const size_t idx)
+	force_inline_toggle bitboard get_slider_moves(const bitboards& bitboards, const size_t idx)
 	{
 		static_assert(piece == bishop || piece == rook || piece == queen);
 
@@ -200,7 +200,7 @@ namespace chess
 		return moves;
 	}
 	template<piece_t piece>
-	bitboard get_slider_moves(const bitboards& bitboards, const bitboard square)
+	force_inline_toggle bitboard get_slider_moves(const bitboards& bitboards, const bitboard square)
 	{
 		return get_slider_moves<piece>(bitboards, get_next_bit_index(square));
 	}

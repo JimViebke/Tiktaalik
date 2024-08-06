@@ -37,8 +37,8 @@ namespace chess
 					   const file en_passant_file, const int8_t fifty_move_counter);
 
 		template <color_t color_to_move, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
-		force_inline_directive void update_bitboards(const size_t parent_idx,
-													 const bitboard leaving_bit, const bitboard arriving_bit)
+		inline_toggle_member void update_bitboards(const size_t parent_idx,
+												   const bitboard leaving_bit, const bitboard arriving_bit)
 		{
 			constexpr color_t moved_color = other_color(color_to_move);
 
@@ -156,8 +156,8 @@ namespace chess
 		}
 
 		template<color_t color_to_move, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
-		force_inline_directive static void make_board(const size_t child_idx, const size_t parent_idx,
-													  const bitboard start, const bitboard end)
+		force_inline_toggle void make_board(const size_t child_idx, const size_t parent_idx,
+											const bitboard start, const bitboard end)
 		{
 			// Generate a mask at compile time to selectively copy parent state.
 			constexpr uint32_t copy_mask = get_copy_mask<color_to_move, moving_piece_type, move_type, promotion_type>();
