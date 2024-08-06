@@ -418,9 +418,10 @@ namespace chess
 		// If this move would leave us in check, return early. A move might leave us in check if:
 		// - We started in check, or
 		// - the moving piece is a king, or
+		// - the move is an en passant capture, or
 		// - the moving piece was a blocker (ie, had line of sight to the king).
 		// If none of these are the case (most of the time), skip is_king_in_check().
-		if (started_in_check || moving_piece_type == king || start & blockers)
+		if (started_in_check || moving_piece_type == king || move_type == move_type::en_passant_capture || start & blockers)
 		{
 			if (is_king_in_check<moving_color, check_type>(child_board.get_bitboards(), king_index / 8, king_index % 8)) return;
 		}
