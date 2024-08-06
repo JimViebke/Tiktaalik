@@ -171,16 +171,16 @@ namespace chess
 	}
 
 	template<piece_t piece>
-	force_inline_toggle bitboard get_slider_moves(const bitboards& bitboards, const size_t idx)
+	force_inline_toggle bitboard get_slider_moves(const bitboards& bitboards, const size_t start_idx)
 	{
 		static_assert(piece == bishop || piece == rook || piece == queen);
 
 		bitboard bishop_pext_mask;
 		bitboard rook_pext_mask;
 		if constexpr (piece == bishop || piece == queen)
-			bishop_pext_mask = bishop_pext_masks[idx];
+			bishop_pext_mask = bishop_pext_masks[start_idx];
 		if constexpr (piece == rook || piece == queen)
-			rook_pext_mask = rook_pext_masks[idx];
+			rook_pext_mask = rook_pext_masks[start_idx];
 
 		const bitboard occupied = bitboards.occupied();
 
@@ -193,9 +193,9 @@ namespace chess
 
 		bitboard moves;
 		if constexpr (piece == bishop || piece == queen)
-			moves |= (*bishop_move_masks)[idx][bishop_movemask_idx];
+			moves |= (*bishop_move_masks)[start_idx][bishop_movemask_idx];
 		if constexpr (piece == rook || piece == queen)
-			moves |= (*rook_move_masks)[idx][rook_movemask_idx];
+			moves |= (*rook_move_masks)[start_idx][rook_movemask_idx];
 
 		return moves;
 	}
@@ -218,10 +218,8 @@ namespace chess
 
 	template<color_t king_color>
 	force_inline_toggle bool is_attacked_by_sliding_piece(const bitboards& bitboards,
-														  const bitboard king_position)
+														  const size_t king_idx)
 	{
-		const size_t king_idx = get_next_bit_index(king_position);
-
 		const bitboard rook_pext_mask = rook_pext_masks[king_idx];
 		const bitboard bishop_pext_mask = bishop_pext_masks[king_idx];
 		const bitboard occupied = bitboards.white | bitboards.black;

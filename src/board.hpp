@@ -258,29 +258,26 @@ namespace chess
 		}
 
 		template <color_t moving_color, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
-		inline_toggle_member void update_key_and_eval(const position& parent_position, const board& parent_board, tt::key incremental_key)
+		inline_toggle_member void update_key_and_eval(const position& parent_position, const board& parent_board, tt::key incremental_key,
+													  const bitboard start, const bitboard end)
 		{
 			// The incremental_key has already had the leaving piece removed, and the color to move toggled.
 			// We receive it by copy so we can modify it before writing it.
 
-			const rank start_rank = get_start_rank();
-			const file start_file = get_start_file();
-			const rank end_rank = get_end_rank();
-			const file end_file = get_end_file();
-
-			const size_t start_idx = to_index(start_rank, start_file);
-			const size_t end_idx = to_index(end_rank, end_file);
-
-			eval_t incremental_eval = parent_board.get_eval();
-
 			constexpr piece_t piece_before = moving_piece_type | moving_color;
 			constexpr piece_t piece_after = (promotion_type == empty) ? piece_before : (moving_color | promotion_type);
+
+
+			eval_t incremental_eval = parent_board.get_eval();
 
 			if constexpr (promotion_type != empty)
 			{
 				incremental_eval -= eval::piece_eval(piece_before);
 				incremental_eval += eval::piece_eval(piece_after);
 			}
+
+			const size_t start_idx = get_next_bit_index(start);
+			const size_t end_idx = get_next_bit_index(end);
 
 			// add the key for the arriving piece
 			incremental_key ^= tt::z_keys.piece_square_keys[piece_after][end_idx];
@@ -291,7 +288,7 @@ namespace chess
 			if constexpr (move_type == move_type::pawn_two_squares)
 			{
 				// add en passant rights for the opponent
-				incremental_key ^= tt::z_keys.en_passant_keys[end_file];
+				incremental_key ^= tt::z_keys.en_passant_keys[end_idx % 8];
 			}
 			else if (move_type == move_type::en_passant_capture)
 			{

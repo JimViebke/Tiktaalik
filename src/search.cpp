@@ -235,7 +235,7 @@ namespace chess
 			const size_t king_index = get_next_bit_index(bitboards.get<color_to_move, king>());
 
 			eval_t terminal_eval{};
-			if (is_king_in_check<color_to_move, check_type::all>(bitboards, king_index / 8, king_index % 8))
+			if (is_king_in_check<color_to_move, check_type::all>(bitboards, king_index))
 				terminal_eval = (color_to_move == white) ? -eval::mate + ply : eval::mate - ply;
 			else // Stalemate.
 				terminal_eval = 0; // Todo: use contempt factor.
