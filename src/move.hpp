@@ -56,8 +56,6 @@ namespace chess
 		constexpr color_t opp_color = other_color(king_color);
 		const size_t king_index = to_index(rank, file);
 
-		if (is_attacked_by_sliding_piece<king_color>(bitboards, 1ull << king_index)) return true;
-
 		if constexpr (check_type == check_type::all)
 		{
 			if (square_is_attacked_by_king<opp_color>(bitboards, king_index)) return true;
@@ -72,6 +70,8 @@ namespace chess
 		{
 			if (square_is_attacked_by_pawn<opp_color>(bitboards, king_index)) return true;
 		}
+
+		if (is_attacked_by_sliding_piece<king_color>(bitboards, 1ull << king_index)) return true;
 
 		return false;
 	}
