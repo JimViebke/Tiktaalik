@@ -33,9 +33,12 @@ namespace chess
 	{
 	public:
 		board() {}
-		explicit board(const position& loaded_position, const color_t color_to_move,
-					   const bool w_castle_ks, const bool w_castle_qs, const bool b_castle_ks, const bool b_castle_qs,
-					   const file en_passant_file, const int8_t fifty_move_counter);
+
+		// Simple, nonvalidating FEN parser
+		color_t load_fen(const std::string& fen);
+		void set_last_moved_info(const color_t color_to_move);
+		void generate_key_and_eval(const color_t color_to_move);
+		void verify_key_and_eval(const color_t color_to_move);
 
 		template <color_t color_to_move, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
 		inline_toggle_member void update_bitboards(const size_t parent_idx,
@@ -504,6 +507,4 @@ namespace chess
 		tt::key key{};
 		bitboards bitboards{};
 	};
-
-	tt::key generate_key(const board& board, const position& position, const color_t color_to_move);
 }

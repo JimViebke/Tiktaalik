@@ -154,16 +154,6 @@ namespace chess
 			return piece_square_evals[piece.value()][index];
 		}
 
-		inline constexpr eval_t piece_square_eval(const auto position)
-		{
-			eval_t eval = 0;
-			for (size_t i = 0; i < position.size(); ++i)
-			{
-				eval += piece_square_eval(position[i], i);
-			}
-			return eval;
-		}
-
 		// If a white knight on e3 is worth N points, then
 		// a black knight on e6 should be worth -N points.
 		static_assert(piece_square_eval(white_knight, to_index(rank(2), file(4))) ==

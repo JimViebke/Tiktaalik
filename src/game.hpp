@@ -18,14 +18,12 @@ namespace chess
 {
 	const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-	color_t load_fen(const std::string& fen, position& _position);
-
 	void send_command(const std::string& command); // Forward-declare.
 
 	class Game
 	{
 	public:
-		Game() : color_to_move{ load_fen(start_pos, positions[0]) }
+		Game() : color_to_move{ boards[0].load_fen(start_pos) }
 		{
 			update_info_for_new_root_position();
 

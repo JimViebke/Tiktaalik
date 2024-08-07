@@ -410,22 +410,13 @@ namespace chess
 		const position& parent_position = positions[parent_idx];
 		make_move<moving_color, moving_piece_type, move_type, promotion_type>(child_position, parent_position, child_board);
 
-		++out_idx;
-
 		child_board.update_key_and_eval<moving_color, moving_piece_type, move_type, promotion_type>(
 			boards[parent_idx], key, start, end, captured_piece);
 
-		if constexpr (config::verify_incremental_key)
-			if (child_board.get_key() != generate_key(child_board, child_position, child_color))
-				std::cout << "Incremental and generated keys mismatch in append_if_legal\n";
+		++out_idx;
 
-		if constexpr (config::verify_incremental_eval)
-			if (child_board.get_eval() != child_position.evaluate_position())
-				std::cout << "Incremental and generated evals mismatch in append_if_legal\n";
-
-		if constexpr (config::verify_incremental_bitboards)
-			if (child_board.get_bitboards() != get_bitboards(child_position))
-				std::cout << "Incremental and generated bitboards mismatch in append_if_legal\n";
+		if constexpr (config::verify_key_and_eval)
+			child_board.verify_key_and_eval(child_color);
 	}
 
 	template<color_t color_to_move, piece_t piece_type, gen_moves gen_moves, check_type check_type, bool started_in_check>
