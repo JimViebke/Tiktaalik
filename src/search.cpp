@@ -29,20 +29,22 @@ namespace chess
 		pv_lengths[ply] = pv_lengths[ply + 1];
 	}
 
-	bool is_capture(const position& parent_position, const packed_move move)
+	bool is_capture(const size_t parent_idx, const packed_move move)
 	{
 		// A move is a capture move if:
 		// - the destination square is occupied, or
 		// - the moving piece is a pawn that is changing file.
 
+		const bitboards& bitboards = boards[parent_idx].get_bitboards();
+
 		constexpr size_t idx_mask = 0b111111;
 		const size_t end_idx = (move >> 6) & idx_mask;
-		if (parent_position[end_idx].is_occupied()) return true;
+		if (bitboards.occupied() & (1ull << end_idx)) return true;
 
 		const size_t start_idx = move & idx_mask;
 		const file start_file = start_idx % 8;
 		const file end_file = end_idx % 8;
-		if (parent_position[start_idx].is_pawn() && start_file != end_file) return true;
+		if ((bitboards.pawns & (1ull << start_idx)) && start_file != end_file) return true;
 
 		return false;
 	}
@@ -127,7 +129,7 @@ namespace chess
 		size_t end_idx{};
 		gen_moves generated_moves{};
 
-		if (quiescing || tt_move == 0 || is_capture(positions[idx], tt_move))
+		if (quiescing || tt_move == 0 || is_capture(idx, tt_move))
 		{
 			end_idx = generate_child_boards<color_to_move, gen_moves::captures>(idx);
 			generated_moves = gen_moves::captures;
