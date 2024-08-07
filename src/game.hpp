@@ -155,6 +155,9 @@ namespace chess
 
 				const size_t end_idx = first_child_index(0) + n_legal_moves;
 				nodes = 0;
+				detail::tt.hit = 0;
+				detail::tt.miss = 0;
+
 				util::log(std::format("Engine depth {}, searching depth {}.", engine_depth.value(), engine_depth.value() + 1));
 				if (color_to_move == white)
 					search<white>(end_idx, engine_depth + 1);
@@ -178,9 +181,6 @@ namespace chess
 					++engine_depth;
 
 					util::log(std::format("Finished depth {}, {} ms, {} nodes.", engine_depth.value(), engine_time, nodes));
-
-					detail::tt.hit = 0;
-					detail::tt.miss = 0;
 				}
 				else if (util::time_in_ms() >= scheduled_turn_end)
 				{
