@@ -155,6 +155,7 @@ namespace chess
 				if (n_legal_moves == 0)
 				{
 					searching = false;
+					pondering = false;
 					util::log("Position is terminal, search thread stopping.");
 					continue;
 				}
