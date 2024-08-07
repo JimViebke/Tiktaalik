@@ -104,27 +104,6 @@ namespace chess
 
 		inline constexpr eval_t piece_eval(const piece piece) { return eval::material_values[piece.value()]; }
 
-		/*
-		Flip lookup indexes so we can map 0-63 to:
-		{ 56, 57, 58, 59, 60, 61, 62, 63,
-		  ...
-		  8, 9, 10, 11, 12, 13, 14, 15,
-		  0, 1, 2, 3, 4, 5, 6, 7 }
-		*/
-		static constexpr std::array<uint8_t, 64> mirror_idx = []() consteval
-		{
-			std::array<uint8_t, 64> array{};
-			auto it = array.begin();
-			for (size_t i = 0; i < 64; i += 8)
-			{
-				for (size_t j = 0; j < 8; ++j)
-				{
-					*it++ = uint8_t((56ull - i) + j);
-				}
-			}
-			return array;
-		}();
-
 		static constexpr std::array<piece_square_array, n_of_piece_types> piece_square_evals = []() consteval
 		{
 			std::array<piece_square_array, n_of_piece_types> array{};
@@ -142,7 +121,7 @@ namespace chess
 				for (size_t j = 0; j < 64; ++j)
 				{
 					// Copy the evaluation (mirrored across the centerline), and invert the value.
-					array[i + 1][mirror_idx[j]] = 0 - array[i][j];
+					array[i + 1][j ^ 56] = 0 - array[i][j];
 				}
 			}
 
