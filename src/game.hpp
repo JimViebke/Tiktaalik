@@ -58,9 +58,8 @@ namespace chess
 		// The calling thread must own the game mutex.
 		void apply_move(const size_t index)
 		{
-			// Update root color, position, and board.
+			// Update root color and board.
 			color_to_move = other_color(color_to_move);
-			positions[0] = positions[index];
 			boards[0] = boards[index];
 			++root_ply;
 			history[root_ply] = boards[0].get_key();

@@ -9,7 +9,6 @@
 #include "config.hpp"
 #include "evaluation.hpp"
 #include "piece.hpp"
-#include "position.hpp"
 #include "types.hpp"
 #include "util/util.hpp"
 
@@ -27,7 +26,9 @@ namespace chess
 
 	class board;
 
-	extern std::array<board, positions_size> boards;
+	constexpr size_t max_n_of_moves = 256;
+	constexpr size_t boards_size = eval::max_ply * max_n_of_moves;
+	extern std::array<board, boards_size> boards;
 
 	inline constexpr size_t first_child_index(const size_t parent_index)
 	{

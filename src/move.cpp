@@ -6,52 +6,6 @@
 
 namespace chess
 {
-	template<color_t moving_color, piece_t moving_piece_type, move_type move_type, piece_t promotion_type = empty>
-	[[clang::always_inline]] void make_move(position& child, const position& parent, const board& child_board)
-	{
-		// copy the parent position
-		child = parent;
-
-		const rank start_rank = child_board.get_start_rank();
-		const file start_file = child_board.get_start_file();
-		const rank end_rank = child_board.get_end_rank();
-		const file end_file = child_board.get_end_file();
-
-		const size_t start_idx = to_index(start_rank, start_file);
-		const size_t end_idx = to_index(end_rank, end_file);
-
-		if constexpr (move_type == move_type::en_passant_capture)
-		{
-			child.piece_at(end_idx + ((moving_color == white) ? 8 : -8)) = empty; // the captured pawn will behind the moving pawn
-		}
-		else if constexpr (move_type == move_type::castle_kingside)
-		{
-			constexpr uint32_t pieces = (empty << 24) + ((moving_color | king) << 16) + ((moving_color | rook) << 8) + empty;
-			constexpr size_t write_idx = (moving_color == white) ? 60 : 4;
-			*(uint32_t*)&child[write_idx] = pieces;
-		}
-		else if constexpr (move_type == move_type::castle_queenside)
-		{
-			constexpr uint32_t pieces = ((moving_color | rook) << 24) + ((moving_color | king) << 16) + (empty << 8) + empty;
-			constexpr size_t write_idx = (moving_color == white) ? 56 : 0;
-			*(uint32_t*)&child[write_idx] = pieces;
-		}
-
-		// Add the moved piece in all cases except castling.
-		if constexpr (move_type != move_type::castle_kingside &&
-					  move_type != move_type::castle_queenside)
-		{
-			constexpr piece_t piece_type = (promotion_type == empty) ? moving_piece_type : promotion_type;
-			child.piece_at(end_idx) = piece_type | moving_color;
-		}
-
-		// Clear the moved piece in all cases except kingside castling.
-		if constexpr (move_type != move_type::castle_kingside)
-		{
-			child.piece_at(start_idx) = empty;
-		}
-	}
-
 	template<color_t color_to_move, gen_moves gen_moves, check_type check_type, bool started_in_check>
 	force_inline_toggle void find_pawn_moves(size_t& out_idx, const size_t parent_idx,
 											 const bitboards& bitboards, const bitboard blockers,
@@ -405,10 +359,6 @@ namespace chess
 		}
 
 		board::make_board<child_color, moving_piece_type, move_type, promotion_type>(out_idx, parent_idx, start, end);
-
-		position& child_position = positions[out_idx];
-		const position& parent_position = positions[parent_idx];
-		make_move<moving_color, moving_piece_type, move_type, promotion_type>(child_position, parent_position, child_board);
 
 		child_board.update_key_and_eval<moving_color, moving_piece_type, move_type, promotion_type>(
 			boards[parent_idx], key, start, end, captured_piece);

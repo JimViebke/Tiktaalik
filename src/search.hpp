@@ -35,7 +35,6 @@ namespace chess
 				if (boards[idx].move_is(tt_move))
 				{
 					std::swap(boards[begin_idx], boards[idx]);
-					std::swap(positions[begin_idx], positions[idx]);
 					return;
 				}
 			}
@@ -70,7 +69,6 @@ namespace chess
 			}
 
 			std::swap(boards[begin_idx], boards[best_index]);
-			std::swap(positions[begin_idx], positions[best_index]);
 		}
 
 		template<color_t color_to_move, bool quiescing = false, bool full_window = true>

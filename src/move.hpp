@@ -2,7 +2,6 @@
 
 #include "bitboard.hpp"
 #include "board.hpp"
-#include "position.hpp"
 
 namespace chess
 {

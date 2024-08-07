@@ -4,7 +4,6 @@
 #include "move.hpp"
 #include "perft.hpp"
 #include "piece_defines.hpp"
-#include "position.hpp"
 #include "util/util.hpp"
 
 namespace chess
