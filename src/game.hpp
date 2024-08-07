@@ -121,7 +121,7 @@ namespace chess
 		}
 
 		template<color_t color_to_move>
-		void search(const size_t end_idx, const depth_t depth);
+		eval_t search(const size_t end_idx, const depth_t depth);
 
 		void worker_thread()
 		{
@@ -182,10 +182,11 @@ namespace chess
 				detail::tt.miss = 0;
 
 				util::log(std::format("Engine depth {}, searching depth {}.", engine_depth.value(), engine_depth.value() + 1));
+				eval_t eval = 0;
 				if (color_to_move == white)
-					search<white>(end_idx, engine_depth + 1);
+					eval = search<white>(end_idx, engine_depth + 1);
 				else
-					search<black>(end_idx, engine_depth + 1);
+					eval = search<black>(end_idx, engine_depth + 1);
 
 				engine_time = util::time_in_ms() - engine_start_time;
 
@@ -204,6 +205,15 @@ namespace chess
 					++engine_depth;
 
 					util::log(std::format("Finished depth {}, {} ms, {} nodes.", engine_depth.value(), engine_time, nodes));
+
+					// Move immediately if we've found mate and it's our turn.
+					if (eval::found_mate(eval) && !pondering && best_move != "")
+					{
+						util::log("Found mate.");
+						apply_move(best_move);
+						send_move(best_move);
+						best_move = "";
+					}
 				}
 				else if (util::time_in_ms() >= scheduled_turn_end)
 				{

@@ -17,6 +17,11 @@ namespace chess
 		static constexpr eval_t mate = std::numeric_limits<eval_t>::max() - max_ply;
 		static constexpr eval_t mate_threshold = mate - max_ply;
 
+		inline bool found_mate(const eval_t eval)
+		{
+			return eval >= eval::mate_threshold || eval <= -eval::mate_threshold;
+		}
+
 		constexpr eval_t queen = 975;
 		constexpr eval_t rook = 500;
 		constexpr eval_t bishop = 325;
