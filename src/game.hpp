@@ -160,6 +160,16 @@ namespace chess
 					continue;
 				}
 
+				// If there is only one legal move, and it's our turn, play it.
+				if (n_legal_moves == 1 && !pondering)
+				{
+					const std::string move = boards[first_child_index(0)].move_to_string();
+					util::log("Playing only legal move: " + move);
+					apply_move(first_child_index(0));
+					send_move(move);
+					continue;
+				}
+
 				// Search until we complete another round of iterative deepening,
 				// we run out of planned time for this move,
 				// or until the main thread stops us.
