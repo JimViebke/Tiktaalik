@@ -29,4 +29,9 @@ namespace util
 	{
 		return _pext_u64(src, mask);
 	}
+
+	inline constexpr uint64_t popcount(const uint64_t src)
+	{
+		return _mm_popcnt_u64(src);
+	}
 }
