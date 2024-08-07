@@ -6,7 +6,7 @@ namespace chess
 	size_t root_ply{ 0 };
 	std::array<tt::key, eval::max_ply * 2> history{};
 	std::atomic_bool searching{ false };
-	bool pondering{ false };
+	std::atomic_bool pondering{ false };
 	util::timepoint scheduled_turn_end{ 0 };
 	size_t nodes{ 0 };
 
