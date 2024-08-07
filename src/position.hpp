@@ -72,12 +72,4 @@ namespace chess
 	constexpr size_t max_n_of_moves = 256;
 	constexpr size_t positions_size = eval::max_ply * max_n_of_moves;
 	extern std::array<position, positions_size> positions;
-
-	inline constexpr size_t first_child_index(const size_t parent_index)
-	{
-		static_assert(std::popcount(max_n_of_moves) == 1);
-		constexpr size_t ply_mask = ~(max_n_of_moves - 1);
-
-		return (parent_index + max_n_of_moves) & ply_mask;
-	}
 }

@@ -29,6 +29,14 @@ namespace chess
 
 	extern std::array<board, positions_size> boards;
 
+	inline constexpr size_t first_child_index(const size_t parent_index)
+	{
+		static_assert(std::popcount(max_n_of_moves) == 1);
+		constexpr size_t ply_mask = ~(max_n_of_moves - 1);
+
+		return (parent_index + max_n_of_moves) & ply_mask;
+	}
+
 	class board
 	{
 	public:
