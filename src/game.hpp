@@ -90,7 +90,7 @@ namespace chess
 
 		// `move` is either in form of "e4f5" or "c7c8q" in the case of promotion.
 		// The calling thread must own the game mutex.
-		void apply_move(const std::string move)
+		void apply_move(const std::string& move)
 		{
 			// Find and apply the move.
 			for (size_t i = first_child_index(0); i < first_child_index(0) + n_legal_moves; ++i)
@@ -106,6 +106,18 @@ namespace chess
 			std::stringstream ss;
 			ss << "Illegal move: [" << move << ']';
 			util::log(ss.str());
+		}
+
+		void send_move(const std::string& move)
+		{
+			send_command("info pv " + move); // En Croissant workaround: try send the best move as a pv.
+			send_command("bestmove " + move);
+
+			// Ponder after playing the move.
+			searching = true;
+			pondering = true;
+			scheduled_turn_end = util::time_in_ms() + 1'000'000'000;
+			util::log("pondering " + move);
 		}
 
 		template<color_t color_to_move>
@@ -188,30 +200,18 @@ namespace chess
 					// Send the best move if we have one.
 					if (best_move.size() != 0)
 					{
-						// Play the move internally.
 						apply_move(best_move);
-
-						// En Croissant workaround: send the best move as a pv.
-						send_command("info pv " + best_move);
-						// Play the move.
-						send_command("bestmove " + best_move);
-
-						// Ponder after playing the move.
-						searching = true;
-						pondering = true;
-						scheduled_turn_end = util::time_in_ms() + 1'000'000'000;
-						util::log("pondering " + best_move);
-
-						best_move = ""; // Reset the best move.
+						send_move(best_move);
+						best_move = "";
 					}
 					else
 					{
 						util::log("Ran out of search time, but no PV move to send (?).");
 					}
 				}
-				else // We were stopped for any other reason.
+				else // We were stopped by the main thread.
 				{
-					best_move = ""; // Reset the best move.
+					best_move = "";
 				}
 			}
 		}
