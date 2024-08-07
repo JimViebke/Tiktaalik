@@ -390,7 +390,8 @@ namespace chess
 		constexpr color_t child_color = other_color(moving_color);
 
 		board& child_board = boards[out_idx];
-		child_board.update_bitboards<child_color, moving_piece_type, move_type, promotion_type>(parent_idx, start, end);
+		piece_t captured_piece;
+		child_board.update_bitboards<child_color, moving_piece_type, move_type, promotion_type>(parent_idx, start, end, captured_piece);
 
 		// If this move would leave us in check, return early. A move might leave us in check if:
 		// - We started in check, or
@@ -412,7 +413,7 @@ namespace chess
 		++out_idx;
 
 		child_board.update_key_and_eval<moving_color, moving_piece_type, move_type, promotion_type>(
-			parent_position, boards[parent_idx], key, start, end);
+			boards[parent_idx], key, start, end, captured_piece);
 
 		if constexpr (config::verify_incremental_key)
 			if (child_board.get_key() != generate_key(child_board, child_position, child_color))

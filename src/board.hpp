@@ -11,6 +11,7 @@
 #include "piece.hpp"
 #include "position.hpp"
 #include "types.hpp"
+#include "util/util.hpp"
 
 namespace chess
 {
@@ -38,7 +39,8 @@ namespace chess
 
 		template <color_t color_to_move, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
 		inline_toggle_member void update_bitboards(const size_t parent_idx,
-												   const bitboard leaving_bit, const bitboard arriving_bit)
+												   const bitboard leaving_bit, const bitboard arriving_bit,
+												   piece_t& captured_piece)
 		{
 			constexpr color_t moved_color = other_color(color_to_move);
 
@@ -56,8 +58,18 @@ namespace chess
 			if constexpr (move_type == move_type::capture)
 			{
 				const uint256_t clear_bits = _mm256_set1_epi64x(arriving_bit);
+
+				const uint256_t old_lo = bb_lo;
+				const uint256_t old_hi = bb_hi;
 				bb_lo = _mm256_andnot_si256(clear_bits, bb_lo);
 				bb_hi = _mm256_andnot_si256(clear_bits, bb_hi);
+
+				uint32_t lo = _mm256_movemask_pd(_mm256_cmpeq_epi64(bb_lo, old_lo));
+				uint32_t hi = _mm256_movemask_pd(_mm256_cmpeq_epi64(bb_hi, old_hi));
+				uint32_t masks = (hi << 4) | lo; // Combine.
+				masks ^= 0b1111'1111; // Invert the byte we care about.
+				masks >>= 2; // Remove the two color bits.
+				captured_piece = get_next_bit_index(masks); // Get the index of the lowest set bit (0..4 for pawn..queen)
 			}
 
 			if constexpr (promotion_type == empty)
@@ -258,15 +270,14 @@ namespace chess
 		}
 
 		template <color_t moving_color, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
-		inline_toggle_member void update_key_and_eval(const position& parent_position, const board& parent_board, tt::key incremental_key,
-													  const bitboard start, const bitboard end)
+		inline_toggle_member void update_key_and_eval(const board& parent_board, tt::key incremental_key,
+													  const bitboard start, const bitboard end, piece_t captured_piece)
 		{
 			// The incremental_key has already had the leaving piece removed, and the color to move toggled.
 			// We receive it by copy so we can modify it before writing it.
 
 			constexpr piece_t piece_before = moving_piece_type | moving_color;
 			constexpr piece_t piece_after = (promotion_type == empty) ? piece_before : (moving_color | promotion_type);
-
 
 			eval_t incremental_eval = parent_board.get_eval();
 
@@ -318,7 +329,9 @@ namespace chess
 			}
 			else if (move_type == move_type::capture) // non-en passant capture
 			{
-				const piece_t captured_piece = parent_position.piece_at(end_idx).value();
+				captured_piece <<= 1;
+				captured_piece |= (moving_color == white);
+
 				// remove the key for the captured piece
 				incremental_key ^= tt::z_keys.piece_square_keys[captured_piece][end_idx];
 				// update our opponent's castling rights
