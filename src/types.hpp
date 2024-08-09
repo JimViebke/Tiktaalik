@@ -39,22 +39,16 @@ namespace chess
 		using key = ::util::strong_alias<uint64_t, struct tt_key_tag>;
 	}
 
-	template<typename T>
+	template <typename T>
 	constexpr bool bounds_check(const T rank_or_file)
 	{
 		return rank_or_file.value() < 8 && rank_or_file.value() >= 0;
 	}
-	constexpr bool bounds_check(const rank rank, const file file)
-	{
-		return bounds_check(rank) && bounds_check(file);
-	}
+	constexpr bool bounds_check(const rank rank, const file file) { return bounds_check(rank) && bounds_check(file); }
 
-	constexpr size_t to_index(const rank rank, const file file)
-	{
-		return rank.value() * 8ull + file.value();
-	}
+	constexpr size_t to_index(const rank rank, const file file) { return rank.value() * 8ull + file.value(); }
 
-	template<typename T>
+	template <typename T>
 	T diff(const T a, const T b)
 	{
 		return std::abs(a.value() - b.value());

@@ -50,9 +50,8 @@ namespace chess
 		void verify_key_and_eval(const color_t color_to_move);
 
 		template <color_t color_to_move, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
-		inline_toggle_member void update_bitboards(const size_t parent_idx,
-												   const bitboard leaving_bit, const bitboard arriving_bit,
-												   piece_t& captured_piece)
+		inline_toggle_member void update_bitboards(
+		    const size_t parent_idx, const bitboard leaving_bit, const bitboard arriving_bit, piece_t& captured_piece)
 		{
 			constexpr color_t moved_color = other_color(color_to_move);
 
@@ -79,9 +78,10 @@ namespace chess
 				uint32_t lo = _mm256_movemask_pd(_mm256_cmpeq_epi64(bb_lo, old_lo));
 				uint32_t hi = _mm256_movemask_pd(_mm256_cmpeq_epi64(bb_hi, old_hi));
 				uint32_t masks = (hi << 4) | lo; // Combine.
-				masks ^= 0b1111'1111; // Invert the byte we care about.
-				masks >>= 2; // Remove the two color bits.
-				captured_piece = get_next_bit_index(masks); // Get the index of the lowest set bit (0..4 for pawn..queen)
+				masks ^= 0b1111'1111;            // Invert the byte we care about.
+				masks >>= 2;                     // Remove the two color bits.
+				captured_piece =
+				    get_next_bit_index(masks); // Get the index of the lowest set bit (0..4 for pawn..queen)
 			}
 
 			if constexpr (promotion_type == empty)
@@ -179,9 +179,9 @@ namespace chess
 			bitboards.black = (moved_color == white) ? opp_pieces : our_pieces;
 		}
 
-		template<color_t color_to_move, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
-		force_inline_toggle void make_board(const size_t child_idx, const size_t parent_idx,
-											const bitboard start, const bitboard end)
+		template <color_t color_to_move, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
+		force_inline_toggle void make_board(
+		    const size_t child_idx, const size_t parent_idx, const bitboard start, const bitboard end)
 		{
 			// Generate a mask at compile time to selectively copy parent state.
 			constexpr uint32_t copy_mask = get_copy_mask<color_to_move, moving_piece_type, move_type, promotion_type>();
@@ -283,7 +283,7 @@ namespace chess
 
 		template <color_t moving_color, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
 		inline_toggle_member void update_key_and_eval(const board& parent_board, tt::key incremental_key,
-													  const bitboard start, const bitboard end, piece_t captured_piece)
+		    const bitboard start, const bitboard end, piece_t captured_piece)
 		{
 			// The incremental_key has already had the leaving piece removed, and the color to move toggled.
 			// We receive it by copy so we can modify it before writing it.
@@ -323,8 +323,7 @@ namespace chess
 				incremental_eval -= eval::piece_eval(captured_pawn);
 				incremental_eval -= eval::piece_square_eval(captured_pawn, captured_pawn_idx);
 			}
-			else if (move_type == move_type::castle_kingside ||
-					 move_type == move_type::castle_queenside)
+			else if (move_type == move_type::castle_kingside || move_type == move_type::castle_queenside)
 			{
 				constexpr size_t rook_start_file = (move_type == move_type::castle_kingside ? 7 : 0);
 				constexpr size_t rook_start_rank = (moving_color == white ? 7 : 0);
@@ -353,8 +352,7 @@ namespace chess
 				incremental_eval -= eval::piece_square_eval(captured_piece, end_idx);
 			}
 
-			if constexpr (moving_piece_type == king ||
-						  moving_piece_type == rook)
+			if constexpr (moving_piece_type == king || moving_piece_type == rook)
 			{
 				// a king or rook is moving; update our castling rights
 				update_key_castling_rights_for<moving_color>(incremental_key, parent_board);
@@ -371,13 +369,19 @@ namespace chess
 		file get_start_file() const { return (board_state >> start_file_offset) & square_mask; }
 		rank get_end_rank() const { return (board_state >> end_rank_offset) & square_mask; }
 		file get_end_file() const { return (board_state >> end_file_offset) & square_mask; }
-		piece moved_piece_without_color() const { return ((board_state >> moved_piece_offset) & moved_piece_mask) << 1; }
+		piece moved_piece_without_color() const
+		{
+			return ((board_state >> moved_piece_offset) & moved_piece_mask) << 1;
+		}
 		file get_en_passant_file() const { return (board_state >> en_passant_file_offset) & en_passant_mask; }
 		bool white_can_castle_ks() const { return (board_state >> white_can_castle_ks_offset) & castling_right_mask; }
 		bool white_can_castle_qs() const { return (board_state >> white_can_castle_qs_offset) & castling_right_mask; }
 		bool black_can_castle_ks() const { return (board_state >> black_can_castle_ks_offset) & castling_right_mask; }
 		bool black_can_castle_qs() const { return (board_state >> black_can_castle_qs_offset) & castling_right_mask; }
-		size_t get_fifty_move_counter() const { return (board_state >> fifty_move_counter_offset) & fifty_move_counter_mask; }
+		size_t get_fifty_move_counter() const
+		{
+			return (board_state >> fifty_move_counter_offset) & fifty_move_counter_mask;
+		}
 		bool move_is(const packed_move best_move) const { return best_move == get_packed_move(); }
 		const std::string move_to_string() const
 		{
@@ -414,7 +418,7 @@ namespace chess
 		void black_cant_castle_qs() { board_state &= ~(1 << black_can_castle_qs_offset); }
 		void set_fifty_move_counter(uint32_t arg) { board_state |= arg << fifty_move_counter_offset; }
 
-		template<color_t update_color>
+		template <color_t update_color>
 		inline_toggle_member void update_key_castling_rights_for(tt::key& incremental_key, const board& parent_board)
 		{
 			if constexpr (update_color == white)
@@ -433,7 +437,7 @@ namespace chess
 			}
 		}
 
-		template<color_t color_to_move, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
+		template <color_t color_to_move, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
 		consteval static uint32_t get_copy_mask()
 		{
 			constexpr color_t moving_color = other_color(color_to_move);
@@ -468,8 +472,7 @@ namespace chess
 			}
 
 			// If the move is not a capture or pawn move, copy the fifty-move counter.
-			if constexpr (moving_piece_type != pawn &&
-						  move_type != move_type::capture)
+			if constexpr (moving_piece_type != pawn && move_type != move_type::capture)
 			{
 				copy_mask |= fifty_move_counter_mask << fifty_move_counter_offset;
 			}
@@ -487,7 +490,8 @@ namespace chess
 
 		// bitfield positions
 		static constexpr size_t start_file_offset = 0;
-		static constexpr size_t start_rank_offset = start_file_offset + square_bits; // the move that resulted in this position
+		static constexpr size_t start_rank_offset =
+		    start_file_offset + square_bits; // the move that resulted in this position
 		static constexpr size_t end_file_offset = start_rank_offset + square_bits;
 		static constexpr size_t end_rank_offset = end_file_offset + square_bits;
 		static constexpr size_t moved_piece_offset = end_rank_offset + square_bits;
@@ -497,7 +501,8 @@ namespace chess
 		static constexpr size_t white_can_castle_qs_offset = white_can_castle_ks_offset + castling_right_bits;
 		static constexpr size_t black_can_castle_ks_offset = white_can_castle_qs_offset + castling_right_bits;
 		static constexpr size_t black_can_castle_qs_offset = black_can_castle_ks_offset + castling_right_bits;
-		static constexpr size_t fifty_move_counter_offset = black_can_castle_qs_offset + castling_right_bits; // counts ply
+		static constexpr size_t fifty_move_counter_offset =
+		    black_can_castle_qs_offset + castling_right_bits; // counts ply
 
 		// bitfield masks, not including offsets
 		static constexpr uint64_t square_mask = (1ull << square_bits) - 1;

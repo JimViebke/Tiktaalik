@@ -63,42 +63,33 @@ namespace chess
 		const bitboard occupied() const { return white | black; }
 		const bitboard empty() const { return ~occupied(); }
 
-		template<color_t color>
+		template <color_t color>
 		const bitboard& get() const
 		{
 			return ((color == chess::white) ? white : black);
 		}
 
-		template<color_t color, piece_t piece>
+		template <color_t color, piece_t piece>
 		const bitboard get() const
 		{
-			return get<color>() &
-				((piece == pawn) ? pawns :
-				 (piece == knight) ? knights :
-				 (piece == bishop) ? bishops :
-				 (piece == rook) ? rooks :
-				 (piece == queen) ? queens : kings);
+			return get<color>() & ((piece == pawn)        ? pawns
+			                          : (piece == knight) ? knights
+			                          : (piece == bishop) ? bishops
+			                          : (piece == rook)   ? rooks
+			                          : (piece == queen)  ? queens
+			                                              : kings);
 		}
 
 		void print() const;
 	};
 
-	inline size_t get_next_bit_index(const bitboard bitboard)
-	{
-		return ::util::tzcnt(bitboard);
-	}
+	inline size_t get_next_bit_index(const bitboard bitboard) { return ::util::tzcnt(bitboard); }
 
-	inline bitboard get_next_bit(const bitboard bitboard)
-	{
-		return ::util::blsi(bitboard);
-	}
+	inline bitboard get_next_bit(const bitboard bitboard) { return ::util::blsi(bitboard); }
 
-	[[nodiscard]] inline bitboard clear_next_bit(const bitboard bitboard)
-	{
-		return ::util::blsr(bitboard);
-	}
+	[[nodiscard]] inline bitboard clear_next_bit(const bitboard bitboard) { return ::util::blsr(bitboard); }
 
-	template<piece_t piece>
+	template <piece_t piece>
 	force_inline_toggle bitboard get_slider_moves(const bitboards& bitboards, const size_t start_idx)
 	{
 		static_assert(piece == bishop || piece == rook || piece == queen);
@@ -106,34 +97,46 @@ namespace chess
 		bitboard bishop_pext_mask;
 		bitboard rook_pext_mask;
 		if constexpr (piece == bishop || piece == queen)
+		{
 			bishop_pext_mask = bishop_pext_masks[start_idx];
+		}
 		if constexpr (piece == rook || piece == queen)
+		{
 			rook_pext_mask = rook_pext_masks[start_idx];
+		}
 
 		const bitboard occupied = bitboards.occupied();
 
 		size_t bishop_movemask_idx;
 		size_t rook_movemask_idx;
 		if constexpr (piece == bishop || piece == queen)
+		{
 			bishop_movemask_idx = pext(occupied, bishop_pext_mask);
+		}
 		if constexpr (piece == rook || piece == queen)
+		{
 			rook_movemask_idx = pext(occupied, rook_pext_mask);
+		}
 
 		bitboard moves;
 		if constexpr (piece == bishop || piece == queen)
+		{
 			moves |= (*bishop_move_masks)[start_idx][bishop_movemask_idx];
+		}
 		if constexpr (piece == rook || piece == queen)
+		{
 			moves |= (*rook_move_masks)[start_idx][rook_movemask_idx];
+		}
 
 		return moves;
 	}
-	template<piece_t piece>
+	template <piece_t piece>
 	force_inline_toggle bitboard get_slider_moves(const bitboards& bitboards, const bitboard square)
 	{
 		return get_slider_moves<piece>(bitboards, get_next_bit_index(square));
 	}
 
-	template<color_t color>
+	template <color_t color>
 	force_inline_toggle bitboard get_blockers(const bitboards& bitboards)
 	{
 		const bitboard our_pieces = bitboards.get<color>();
@@ -144,9 +147,8 @@ namespace chess
 		return our_pieces & blocker_squares & moves;
 	}
 
-	template<color_t king_color>
-	force_inline_toggle bool is_attacked_by_sliding_piece(const bitboards& bitboards,
-														  const size_t king_idx)
+	template <color_t king_color>
+	force_inline_toggle bool is_attacked_by_sliding_piece(const bitboards& bitboards, const size_t king_idx)
 	{
 		const bitboard rook_pext_mask = rook_pext_masks[king_idx];
 		const bitboard bishop_pext_mask = bishop_pext_masks[king_idx];

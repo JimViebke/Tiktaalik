@@ -53,7 +53,8 @@ namespace chess
 
 		ss << " nps " << nodes * 1'000 / std::max(decltype(engine_time)(1), engine_time);
 		ss << " nodes " << nodes;
-		ss << " hashfull " << detail::tt.occupied_entries * 1'000 / tt::detail::tt_size_in_entries; // Occupancy is per mille.
+		ss << " hashfull "
+		   << detail::tt.occupied_entries * 1'000 / tt::detail::tt_size_in_entries; // Occupancy is per mille.
 		ss << " tbhits " << detail::tt.hit;
 		ss << " time " << engine_time;
 
@@ -121,8 +122,7 @@ namespace chess
 
 		history[0] = boards[0].get_key();
 
-		if (move_token_idx < args.size() &&
-			args[move_token_idx] == "moves")
+		if (move_token_idx < args.size() && args[move_token_idx] == "moves")
 		{
 			apply_moves(args, move_token_idx + 1);
 		}
@@ -220,8 +220,7 @@ namespace chess
 			size_t search_ms = time_inc;
 
 			// If we can remove the increment from the clock, do so.
-			if (time_left > time_inc)
-				time_left -= time_inc;
+			if (time_left > time_inc) time_left -= time_inc;
 
 			// Add 1/25 of the time remaining.
 			search_ms += time_left / 25; // todo: Adjust based on the move number.

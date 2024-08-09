@@ -3,12 +3,12 @@
 
 namespace chess
 {
-	size_t root_ply{ 0 };
+	size_t root_ply{0};
 	std::array<tt::key, eval::max_ply * 2> history{};
-	std::atomic_bool searching{ false };
-	std::atomic_bool pondering{ false };
-	util::timepoint scheduled_turn_end{ 0 };
-	size_t nodes{ 0 };
+	std::atomic_bool searching{false};
+	std::atomic_bool pondering{false};
+	util::timepoint scheduled_turn_end{0};
+	size_t nodes{0};
 
 	namespace detail
 	{
@@ -49,7 +49,7 @@ namespace chess
 		return false;
 	}
 
-	template<color_t color_to_move, bool quiescing, bool full_window>
+	template <color_t color_to_move, bool quiescing, bool full_window>
 	eval_t detail::alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta)
 	{
 		using eval_type = tt::eval_type;
@@ -65,8 +65,7 @@ namespace chess
 			}
 		}
 
-		if constexpr (!quiescing && full_window)
-			pv_lengths[ply] = ply;
+		if constexpr (!quiescing && full_window) pv_lengths[ply] = ply;
 
 		const board& board = boards[idx];
 		const tt::key key = board.get_key();
@@ -74,7 +73,8 @@ namespace chess
 		if constexpr (!quiescing)
 		{
 			// If this position is a repetition, evaluate it as an (unfavorable) draw.
-			// Todo: Scale contempt from large to small, so we don't try to draw over small disadvantages early in the game.
+			// Todo: Scale contempt from large to small, so we don't try to draw over small disadvantages early in the
+			// game.
 			const size_t fifty_move_counter = board.get_fifty_move_counter();
 			auto history_end = history.data() + root_ply + ply;
 			if (fifty_move_counter >= 4)
@@ -103,14 +103,12 @@ namespace chess
 
 			if constexpr (color_to_move == white)
 			{
-				if (stand_pat >= beta)
-					return beta;
+				if (stand_pat >= beta) return beta;
 				alpha = std::max(alpha, stand_pat);
 			}
 			else
 			{
-				if (stand_pat <= alpha)
-					return alpha;
+				if (stand_pat <= alpha) return alpha;
 				beta = std::min(beta, stand_pat);
 			}
 		}
@@ -151,26 +149,28 @@ namespace chess
 
 		while (1)
 		{
-			if (begin_idx != end_idx)
-				found_moves = true;
+			if (begin_idx != end_idx) found_moves = true;
 
 			for (size_t child_idx = begin_idx; child_idx < end_idx; ++child_idx)
 			{
 				eval_t ab = 0;
-				//if (depth < 4 || child_idx == begin_idx)
+				// if (depth < 4 || child_idx == begin_idx)
 				//{
-				ab = alpha_beta<other_color(color_to_move), quiescing, full_window>(child_idx, ply + !quiescing, depth - !quiescing, alpha, beta);
+				ab = alpha_beta<other_color(color_to_move), quiescing, full_window>(
+				    child_idx, ply + !quiescing, depth - !quiescing, alpha, beta);
 				//}
-				//else // We are at least 4 ply from a leaf node, and not on a first child; try a null window search.
+				// else // We are at least 4 ply from a leaf node, and not on a first child; try a null window search.
 				//{
 				//	if constexpr (color_to_move == white)
-				//		ab = alpha_beta<other_color(color_to_move), false>(child_idx, ply + 1, depth - 1, alpha, alpha + 1);
-				//	else
-				//		ab = alpha_beta<other_color(color_to_move), false>(child_idx, ply + 1, depth - 1, beta - 1, beta);
+				//		ab = alpha_beta<other_color(color_to_move), false>(child_idx, ply + 1, depth - 1, alpha, alpha +
+				// 1); 	else 		ab = alpha_beta<other_color(color_to_move), false>(child_idx, ply + 1, depth - 1,
+				// beta - 1, beta);
 
-				//	if (alpha < ab && ab < beta) // If the null window failed, redo the search with the normal (alpha, beta) window.
+				//	if (alpha < ab && ab < beta) // If the null window failed, redo the search with the normal (alpha,
+				// beta) window.
 				//	{
-				//		ab = alpha_beta<other_color(color_to_move), full_window>(child_idx, ply + 1, depth - 1, alpha, beta);
+				//		ab = alpha_beta<other_color(color_to_move), full_window>(child_idx, ply + 1, depth - 1, alpha,
+				// beta);
 				//	}
 				//}
 
@@ -190,8 +190,7 @@ namespace chess
 						alpha = eval;
 						node_eval_type = eval_type::exact;
 						tt_move = boards[child_idx].get_packed_move();
-						if constexpr (!quiescing && full_window)
-							update_pv(ply, boards[child_idx]);
+						if constexpr (!quiescing && full_window) update_pv(ply, boards[child_idx]);
 					}
 				}
 				else
@@ -208,8 +207,7 @@ namespace chess
 						beta = eval;
 						node_eval_type = eval_type::exact;
 						tt_move = boards[child_idx].get_packed_move();
-						if constexpr (!quiescing && full_window)
-							update_pv(ply, boards[child_idx]);
+						if constexpr (!quiescing && full_window) update_pv(ply, boards[child_idx]);
 					}
 				}
 
@@ -239,7 +237,7 @@ namespace chess
 			eval_t terminal_eval{};
 			if (is_king_in_check<color_to_move, check_type::all>(bitboards, king_index))
 				terminal_eval = (color_to_move == white) ? -eval::mate + ply : eval::mate - ply;
-			else // Stalemate.
+			else                   // Stalemate.
 				terminal_eval = 0; // Todo: use contempt factor.
 
 			tt.store(key, depth, eval_type::exact, terminal_eval);
@@ -247,8 +245,7 @@ namespace chess
 		}
 
 		// If no move was an improvement, tt_move stays as whatever we previously read from the TT.
-		if constexpr (!quiescing && full_window)
-			tt.store(key, depth, node_eval_type, eval, ply, tt_move);
+		if constexpr (!quiescing && full_window) tt.store(key, depth, node_eval_type, eval, ply, tt_move);
 
 		return eval;
 	}

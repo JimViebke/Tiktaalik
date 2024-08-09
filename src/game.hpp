@@ -23,7 +23,7 @@ namespace chess
 	class Game
 	{
 	public:
-		Game() : color_to_move{ boards[0].load_fen(start_pos) }
+		Game() : color_to_move{boards[0].load_fen(start_pos)}
 		{
 			update_info_for_new_root_position();
 
@@ -49,10 +49,7 @@ namespace chess
 			n_legal_moves = end_idx - first_child_index(0);
 		}
 
-		void update_info_for_new_root_position()
-		{
-			generate_child_boards_for_root();
-		}
+		void update_info_for_new_root_position() { generate_child_boards_for_root(); }
 
 		// Index must be a ply-1 child of the root position.
 		// The calling thread must own the game mutex.
@@ -67,12 +64,9 @@ namespace chess
 			// If the PV move was played, the rest of the PV is valid. Shift it up.
 			auto& pv = pv_moves[0];
 			auto& pv_length = pv_lengths[0];
-			if (pv_length > 0 &&
-				pv[0].move_to_string() == boards[0].move_to_string())
+			if (pv_length > 0 && pv[0].move_to_string() == boards[0].move_to_string())
 			{
-				std::copy(pv.begin() + 1,
-						  pv.begin() + pv_length,
-						  pv.begin());
+				std::copy(pv.begin() + 1, pv.begin() + pv_length, pv.begin());
 				--pv_length;
 			}
 			else
@@ -84,8 +78,7 @@ namespace chess
 			update_info_for_new_root_position();
 
 			// Decrement the current depth because we're advancing down the tree by one node.
-			if (engine_depth > 0)
-				--engine_depth;
+			if (engine_depth > 0) --engine_depth;
 		}
 
 		// `move` is either in form of "e4f5" or "c7c8q" in the case of promotion.
@@ -120,7 +113,7 @@ namespace chess
 			util::log("pondering " + move);
 		}
 
-		template<color_t color_to_move>
+		template <color_t color_to_move>
 		eval_t search(const size_t end_idx, const depth_t depth);
 
 		void worker_thread()
@@ -181,7 +174,8 @@ namespace chess
 				detail::tt.hit = 0;
 				detail::tt.miss = 0;
 
-				util::log(std::format("Engine depth {}, searching depth {}.", engine_depth.value(), engine_depth.value() + 1));
+				util::log(std::format(
+				    "Engine depth {}, searching depth {}.", engine_depth.value(), engine_depth.value() + 1));
 				eval_t eval = 0;
 				if (color_to_move == white)
 					eval = search<white>(end_idx, engine_depth + 1);
@@ -204,7 +198,8 @@ namespace chess
 
 					++engine_depth;
 
-					util::log(std::format("Finished depth {}, {} ms, {} nodes.", engine_depth.value(), engine_time, nodes));
+					util::log(
+					    std::format("Finished depth {}, {} ms, {} nodes.", engine_depth.value(), engine_time, nodes));
 
 					// Move immediately if we've found mate and it's our turn.
 					if (eval::found_mate(eval) && !pondering && best_move != "")

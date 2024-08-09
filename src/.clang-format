@@ -1,0 +1,40 @@
+Language: Cpp
+
+# General
+
+ColumnLimit: 120
+IndentWidth: 4
+SortIncludes: CaseSensitive
+TabWidth: 4
+UseTab: ForIndentation
+
+# Newlines
+
+AlignAfterOpenBracket: DontAlign
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortFunctionsOnASingleLine: All
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeBraces: Allman
+EmptyLineBeforeAccessModifier: LogicalBlock
+RequiresClausePosition: OwnLine
+
+# Indentation
+
+IndentAccessModifiers: false
+IndentCaseBlocks: true
+IndentCaseLabels: false
+IndentPPDirectives: BeforeHash
+NamespaceIndentation: All
+
+# Alignment
+
+AccessModifierOffset: -4
+AlignArrayOfStructures: Right
+# AlignConsecutiveAssignments: Consecutive
+Cpp11BracedListStyle: true
+PointerAlignment: Left
+SpaceBeforeCpp11BracedList: false
+
+# Comments
+FixNamespaceComments: false

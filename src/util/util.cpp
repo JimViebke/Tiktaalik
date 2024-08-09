@@ -17,7 +17,7 @@ namespace chess::util
 	{
 		using namespace std::chrono;
 
-		const zoned_time zoned_time{ current_zone(), system_clock::now() };
+		const zoned_time zoned_time{current_zone(), system_clock::now()};
 
 		std::stringstream ss;
 		ss << std::format("{:%T} ", zoned_time) << output << '\n';

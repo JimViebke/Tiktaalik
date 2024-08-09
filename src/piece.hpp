@@ -37,20 +37,31 @@ namespace chess
 
 		char to_algebraic_char() const
 		{
-			if (is_knight()) return 'N';
-			else if (is_bishop()) return 'B';
-			else if (is_rook()) return 'R';
-			else if (is_queen()) return 'Q';
-			else if (is_king()) return 'K';
-			else return '?';
+			if (is_knight())
+				return 'N';
+			else if (is_bishop())
+				return 'B';
+			else if (is_rook())
+				return 'R';
+			else if (is_queen())
+				return 'Q';
+			else if (is_king())
+				return 'K';
+			else
+				return '?';
 		}
 		char to_promoted_char() const
 		{
-			if (is_knight()) return 'n';
-			else if (is_bishop()) return 'b';
-			else if (is_rook()) return 'r';
-			else if (is_queen()) return 'q';
-			else return '?';
+			if (is_knight())
+				return 'n';
+			else if (is_bishop())
+				return 'b';
+			else if (is_rook())
+				return 'r';
+			else if (is_queen())
+				return 'q';
+			else
+				return '?';
 		}
 
 	private:

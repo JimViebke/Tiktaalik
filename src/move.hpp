@@ -5,32 +5,30 @@
 
 namespace chess
 {
-	template<color_t attacker_color>
-	[[clang::always_inline]] static bool square_is_attacked_by_pawn(
-		const bitboards& bitboards, const size_t target_idx)
+	template <color_t attacker_color>
+	[[clang::always_inline]] static bool square_is_attacked_by_pawn(const bitboards& bitboards, const size_t target_idx)
 	{
 		const bitboard opp_pawns = bitboards.get<attacker_color, pawn>();
 		const bitboard index_bb = 1ull << target_idx;
 
-		const bitboard checkers_to_lower_file = opp_pawns & pawn_capture_lower_file
-			& ((attacker_color == white) ? index_bb << 9 : index_bb >> 7);
-		const bitboard checkers_to_higher_file = opp_pawns & pawn_capture_higher_file
-			& ((attacker_color == white) ? index_bb << 7 : index_bb >> 9);
+		const bitboard checkers_to_lower_file =
+		    opp_pawns & pawn_capture_lower_file & ((attacker_color == white) ? index_bb << 9 : index_bb >> 7);
+		const bitboard checkers_to_higher_file =
+		    opp_pawns & pawn_capture_higher_file & ((attacker_color == white) ? index_bb << 7 : index_bb >> 9);
 
 		return checkers_to_lower_file | checkers_to_higher_file;
 	}
 
-	template<color_t attacker_color>
+	template <color_t attacker_color>
 	[[clang::always_inline]] static bool square_is_attacked_by_knight(
-		const bitboards& bitboards, const size_t target_idx)
+	    const bitboards& bitboards, const size_t target_idx)
 	{
 		const bitboard opp_knights = bitboards.get<attacker_color, knight>();
 		return opp_knights & knight_attack_masks[target_idx];
 	}
 
-	template<color_t attacker_color>
-	[[clang::always_inline]] static bool square_is_attacked_by_king(
-		const bitboards& bitboards, const size_t target_idx)
+	template <color_t attacker_color>
+	[[clang::always_inline]] static bool square_is_attacked_by_king(const bitboards& bitboards, const size_t target_idx)
 	{
 		const bitboard opp_king = bitboards.get<attacker_color, king>();
 		return opp_king & king_attack_masks[target_idx];
@@ -49,7 +47,7 @@ namespace chess
 		sliders
 	};
 
-	template<color_t king_color, check_type check_type>
+	template <color_t king_color, check_type check_type>
 	force_inline_toggle bool is_king_in_check(const bitboards& bitboards, const size_t king_idx)
 	{
 		constexpr color_t opp_color = other_color(king_color);
@@ -81,6 +79,6 @@ namespace chess
 		noncaptures
 	};
 
-	template<color_t color_to_move, gen_moves gen_moves = gen_moves::all, bool perft = false>
+	template <color_t color_to_move, gen_moves gen_moves = gen_moves::all, bool perft = false>
 	size_t generate_child_boards(const size_t parent_idx);
 }

@@ -39,6 +39,9 @@
     <ClCompile Include="src\uci.cpp" />
     <ClCompile Include="src\util\util.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="src\.clang-format" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{31257ED7-454B-4C67-8418-10EEE6017C08}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

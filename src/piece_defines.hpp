@@ -29,17 +29,17 @@ namespace chess
 
 	static constexpr size_t n_of_piece_types = 6 + 6 + 1;
 
-	static constexpr piece_t white_pawn{ white | pawn };
-	static constexpr piece_t white_knight{ white | knight };
-	static constexpr piece_t white_bishop{ white | bishop };
-	static constexpr piece_t white_rook{ white | rook };
-	static constexpr piece_t white_queen{ white | queen };
-	static constexpr piece_t white_king{ white | king };
+	static constexpr piece_t white_pawn{white | pawn};
+	static constexpr piece_t white_knight{white | knight};
+	static constexpr piece_t white_bishop{white | bishop};
+	static constexpr piece_t white_rook{white | rook};
+	static constexpr piece_t white_queen{white | queen};
+	static constexpr piece_t white_king{white | king};
 
-	static constexpr piece_t black_pawn{ black | pawn };
-	static constexpr piece_t black_knight{ black | knight };
-	static constexpr piece_t black_bishop{ black | bishop };
-	static constexpr piece_t black_rook{ black | rook };
-	static constexpr piece_t black_queen{ black | queen };
-	static constexpr piece_t black_king{ black | king };
+	static constexpr piece_t black_pawn{black | pawn};
+	static constexpr piece_t black_knight{black | knight};
+	static constexpr piece_t black_bishop{black | bishop};
+	static constexpr piece_t black_rook{black | rook};
+	static constexpr piece_t black_queen{black | queen};
+	static constexpr piece_t black_king{black | king};
 }
