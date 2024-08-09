@@ -22,11 +22,11 @@ namespace chess
 			return eval >= eval::mate_threshold || eval <= -eval::mate_threshold;
 		}
 
-		constexpr eval_t queen = 975;
-		constexpr eval_t rook = 500;
-		constexpr eval_t bishop = 325;
-		constexpr eval_t knight = 320;
-		constexpr eval_t pawn = 100;
+		constexpr eval_t queen_eval = 975;
+		constexpr eval_t rook_eval = 500;
+		constexpr eval_t bishop_eval = 325;
+		constexpr eval_t knight_eval = 320;
+		constexpr eval_t pawn_eval = 100;
 
 		using piece_square_array = std::array<int8_t, 64>;
 
@@ -94,63 +94,55 @@ namespace chess
 
 		static constexpr std::array material_values = []() consteval
 		{
-			std::array<eval_t, n_of_piece_types> vals{};
+			std::array<eval_t, n_of_piece_types - 1> vals{};
 
-			vals[white_queen] = queen;
-			vals[white_rook] = rook;
-			vals[white_bishop] = bishop;
-			vals[white_knight] = knight;
-			vals[white_pawn] = pawn;
-
-			vals[black_queen] = -queen;
-			vals[black_rook] = -rook;
-			vals[black_bishop] = -bishop;
-			vals[black_knight] = -knight;
-			vals[black_pawn] = -pawn;
+			vals[chess::pawn >> 1] = pawn_eval;
+			vals[chess::knight >> 1] = knight_eval;
+			vals[chess::bishop >> 1] = bishop_eval;
+			vals[chess::rook >> 1] = rook_eval;
+			vals[chess::queen >> 1] = queen_eval;
 
 			return vals;
 		}();
 
-		inline constexpr eval_t piece_eval(const piece piece) { return eval::material_values[piece.value()]; }
+		template <color_t color>
+		inline constexpr eval_t piece_eval(const piece piece)
+		{
+			const eval_t eval = eval::material_values[piece.value() >> 1];
+			return (color == white) ? eval : -eval;
+		}
 
 		static constexpr std::array<piece_square_array, n_of_piece_types> piece_square_evals = []() consteval
 		{
 			std::array<piece_square_array, n_of_piece_types> piece_square_evals{};
 
-			piece_square_evals[white_pawn] = pawn_squares;
-			piece_square_evals[white_knight] = knight_squares;
-			piece_square_evals[white_bishop] = bishop_squares;
-			piece_square_evals[white_rook] = rook_squares;
-			piece_square_evals[white_queen] = queen_squares;
-			piece_square_evals[white_king] = king_squares;
-
-			// for each of six piece types (indexes 0,2,4,6,8,10) * 64 squares
-			for (size_t i = 0; i < piece_square_evals.size(); i += 2)
-			{
-				for (size_t j = 0; j < 64; ++j)
-				{
-					// Copy the evaluation (mirrored across the centerline), and invert the value.
-					piece_square_evals[i + 1][j ^ 56] = 0 - piece_square_evals[i][j];
-				}
-			}
+			piece_square_evals[chess::pawn >> 1] = pawn_squares;
+			piece_square_evals[chess::knight >> 1] = knight_squares;
+			piece_square_evals[chess::bishop >> 1] = bishop_squares;
+			piece_square_evals[chess::rook >> 1] = rook_squares;
+			piece_square_evals[chess::queen >> 1] = queen_squares;
+			piece_square_evals[chess::king >> 1] = king_squares;
 
 			return piece_square_evals;
 		}();
 
-		inline constexpr eval_t piece_square_eval(const piece piece, const size_t index)
+		template <color_t color>
+		inline constexpr eval_t piece_square_eval(const piece piece, size_t index)
 		{
-			return piece_square_evals[piece.value()][index];
+			if constexpr (color == black) index ^= 0b111000;
+			const eval_t eval = piece_square_evals[piece.value() >> 1][index];
+			return (color == white) ? eval : -eval;
 		}
 
 		// If a white knight on e3 is worth N points, then
 		// a black knight on e6 should be worth -N points.
-		static_assert(piece_square_eval(white_knight, to_index(rank(2), file(4))) ==
-		              piece_square_eval(black_knight, to_index(rank(5), file(4))) * -1);
+		static_assert(piece_square_eval<white>(knight, to_index(rank(2), file(4))) ==
+		              piece_square_eval<black>(knight, to_index(rank(5), file(4))) * -1);
 		// test queens
-		static_assert(piece_square_eval(white_queen, to_index(rank(0), file(7))) ==
-		              piece_square_eval(black_queen, to_index(rank(7), file(7))) * -1);
+		static_assert(piece_square_eval<white>(queen, to_index(rank(0), file(7))) ==
+		              piece_square_eval<black>(queen, to_index(rank(7), file(7))) * -1);
 		// test c pawns
-		static_assert(piece_square_eval(white_pawn, to_index(rank(1), file(2))) ==
-		              piece_square_eval(black_pawn, to_index(rank(6), file(2))) * -1);
+		static_assert(piece_square_eval<white>(pawn, to_index(rank(1), file(2))) ==
+		              piece_square_eval<black>(pawn, to_index(rank(6), file(2))) * -1);
 	}
 }

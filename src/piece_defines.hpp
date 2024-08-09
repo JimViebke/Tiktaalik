@@ -26,7 +26,7 @@ namespace chess
 
 	static constexpr piece_t empty = black + king + 1;
 
-	static constexpr size_t n_of_piece_types = 6 + 6;
+	static constexpr size_t n_of_piece_types = 6;
 
 	static constexpr piece_t white_pawn{white | pawn};
 	static constexpr piece_t white_knight{white | knight};

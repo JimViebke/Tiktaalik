@@ -295,8 +295,8 @@ namespace chess
 
 			if constexpr (promotion_type != empty)
 			{
-				incremental_eval -= eval::piece_eval(piece_before);
-				incremental_eval += eval::piece_eval(piece_after);
+				incremental_eval -= eval::piece_eval<moving_color>(piece_before);
+				incremental_eval += eval::piece_eval<moving_color>(piece_after);
 			}
 
 			const size_t start_idx = get_next_bit_index(start);
@@ -305,8 +305,10 @@ namespace chess
 			// add the key for the arriving piece
 			incremental_key ^= tt::z_keys.piece_square_keys[piece_after][end_idx];
 			// update square eval for the piece
-			incremental_eval -= eval::piece_square_eval(piece_before, start_idx);
-			incremental_eval += eval::piece_square_eval(piece_after, end_idx);
+			incremental_eval -= eval::piece_square_eval<moving_color>(piece_before, start_idx);
+			incremental_eval += eval::piece_square_eval<moving_color>(piece_after, end_idx);
+
+			constexpr color_t opp_color = other_color(moving_color);
 
 			if constexpr (move_type == move_type::pawn_two_squares)
 			{
@@ -320,8 +322,8 @@ namespace chess
 				// remove key for the captured pawn
 				incremental_key ^= tt::z_keys.piece_square_keys[captured_pawn][captured_pawn_idx];
 				// udpate eval for the captured pawn
-				incremental_eval -= eval::piece_eval(captured_pawn);
-				incremental_eval -= eval::piece_square_eval(captured_pawn, captured_pawn_idx);
+				incremental_eval -= eval::piece_eval<opp_color>(captured_pawn);
+				incremental_eval -= eval::piece_square_eval<opp_color>(captured_pawn, captured_pawn_idx);
 			}
 			else if (move_type == move_type::castle_kingside || move_type == move_type::castle_queenside)
 			{
@@ -335,21 +337,21 @@ namespace chess
 				incremental_key ^= tt::z_keys.piece_square_keys[moving_rook][rook_start_index];
 				incremental_key ^= tt::z_keys.piece_square_keys[moving_rook][rook_end_index];
 				// update eval for the moving rook
-				incremental_eval -= eval::piece_square_eval(moving_rook, rook_start_index);
-				incremental_eval += eval::piece_square_eval(moving_rook, rook_end_index);
+				incremental_eval -= eval::piece_square_eval<moving_color>(moving_rook, rook_start_index);
+				incremental_eval += eval::piece_square_eval<moving_color>(moving_rook, rook_end_index);
 			}
 			else if (move_type == move_type::capture) // non-en passant capture
 			{
 				captured_piece <<= 1;
-				captured_piece |= (moving_color == white);
+				captured_piece |= opp_color;
 
 				// remove the key for the captured piece
 				incremental_key ^= tt::z_keys.piece_square_keys[captured_piece][end_idx];
 				// update our opponent's castling rights
-				update_key_castling_rights_for<other_color(moving_color)>(incremental_key, parent_board);
+				update_key_castling_rights_for<opp_color>(incremental_key, parent_board);
 				// update eval for the captured piece
-				incremental_eval -= eval::piece_eval(captured_piece);
-				incremental_eval -= eval::piece_square_eval(captured_piece, end_idx);
+				incremental_eval -= eval::piece_eval<opp_color>(captured_piece);
+				incremental_eval -= eval::piece_square_eval<opp_color>(captured_piece, end_idx);
 			}
 
 			if constexpr (moving_piece_type == king || moving_piece_type == rook)

@@ -200,9 +200,9 @@ namespace chess
 		tt::key new_key = 0;
 		eval_t new_eval = 0;
 
-		auto hash_and_eval_piece = [&](const piece_t piece, bitboard bb)
+		auto hash_and_eval_piece = [&]<color_t color>(const piece_t piece, bitboard bb)
 		{
-			new_eval += eval::piece_eval(piece) * ::util::popcount(bb);
+			new_eval += eval::piece_eval<color>(piece) * ::util::popcount(bb);
 
 			while (bb)
 			{
@@ -210,22 +210,22 @@ namespace chess
 				bb = clear_next_bit(bb);
 
 				new_key ^= tt::z_keys.piece_square_keys[piece][piece_idx];
-				new_eval += eval::piece_square_eval(piece, piece_idx);
+				new_eval += eval::piece_square_eval<color>(piece, piece_idx);
 			}
 		};
 
-		auto hash_and_eval_color = [=, this](const color_t color, const bitboard color_bb)
+		auto hash_and_eval_color = [=, this]<color_t color>(const bitboard color_bb)
 		{
-			hash_and_eval_piece(color | pawn, color_bb & bitboards.pawns);
-			hash_and_eval_piece(color | knight, color_bb & bitboards.knights);
-			hash_and_eval_piece(color | bishop, color_bb & bitboards.bishops);
-			hash_and_eval_piece(color | rook, color_bb & bitboards.rooks);
-			hash_and_eval_piece(color | queen, color_bb & bitboards.queens);
-			hash_and_eval_piece(color | king, color_bb & bitboards.kings);
+			hash_and_eval_piece.operator()<color>(pawn, color_bb & bitboards.pawns);
+			hash_and_eval_piece.operator()<color>(knight, color_bb & bitboards.knights);
+			hash_and_eval_piece.operator()<color>(bishop, color_bb & bitboards.bishops);
+			hash_and_eval_piece.operator()<color>(rook, color_bb & bitboards.rooks);
+			hash_and_eval_piece.operator()<color>(queen, color_bb & bitboards.queens);
+			hash_and_eval_piece.operator()<color>(king, color_bb & bitboards.kings);
 		};
 
-		hash_and_eval_color(white, bitboards.white);
-		hash_and_eval_color(black, bitboards.black);
+		hash_and_eval_color.operator()<white>(bitboards.white);
+		hash_and_eval_color.operator()<black>(bitboards.black);
 
 		const file en_passant_file = get_en_passant_file();
 		if (en_passant_file != empty)
