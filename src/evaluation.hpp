@@ -108,8 +108,6 @@ namespace chess
 			vals[black_knight] = -knight;
 			vals[black_pawn] = -pawn;
 
-			vals[empty] = 0;
-
 			return vals;
 		}();
 
@@ -117,26 +115,26 @@ namespace chess
 
 		static constexpr std::array<piece_square_array, n_of_piece_types> piece_square_evals = []() consteval
 		{
-			std::array<piece_square_array, n_of_piece_types> array{};
+			std::array<piece_square_array, n_of_piece_types> piece_square_evals{};
 
-			array[white_pawn] = pawn_squares;
-			array[white_knight] = knight_squares;
-			array[white_bishop] = bishop_squares;
-			array[white_rook] = rook_squares;
-			array[white_queen] = queen_squares;
-			array[white_king] = king_squares;
+			piece_square_evals[white_pawn] = pawn_squares;
+			piece_square_evals[white_knight] = knight_squares;
+			piece_square_evals[white_bishop] = bishop_squares;
+			piece_square_evals[white_rook] = rook_squares;
+			piece_square_evals[white_queen] = queen_squares;
+			piece_square_evals[white_king] = king_squares;
 
 			// for each of six piece types (indexes 0,2,4,6,8,10) * 64 squares
-			for (size_t i = 0; i < 11; i += 2)
+			for (size_t i = 0; i < piece_square_evals.size(); i += 2)
 			{
 				for (size_t j = 0; j < 64; ++j)
 				{
 					// Copy the evaluation (mirrored across the centerline), and invert the value.
-					array[i + 1][j ^ 56] = 0 - array[i][j];
+					piece_square_evals[i + 1][j ^ 56] = 0 - piece_square_evals[i][j];
 				}
 			}
 
-			return array;
+			return piece_square_evals;
 		}();
 
 		inline constexpr eval_t piece_square_eval(const piece piece, const size_t index)
