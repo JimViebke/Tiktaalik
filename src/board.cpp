@@ -197,7 +197,7 @@ namespace chess
 
 	void board::generate_key_and_eval(const color_t color_to_move)
 	{
-		tt::key new_key = 0;
+		tt_key new_key = 0;
 		eval_t new_eval = 0;
 
 		auto hash_and_eval_piece = [&]<color_t color>(const piece_t piece, bitboard bb)
@@ -209,8 +209,8 @@ namespace chess
 				const size_t piece_idx = get_next_bit_index(bb);
 				bb = clear_next_bit(bb);
 
-				new_key ^= tt::z_keys.piece_square_keys[piece][piece_idx];
-				new_eval += eval::piece_square_eval<color>(piece, piece_idx);
+				new_key ^= tt_keys.piece_square_keys[piece][piece_idx];
+				new_eval += eval::piece_square_eval_mg<color>(piece, piece_idx);
 			}
 		};
 
@@ -230,18 +230,18 @@ namespace chess
 		const file en_passant_file = get_en_passant_file();
 		if (en_passant_file != empty)
 		{
-			new_key ^= tt::z_keys.en_passant_keys[en_passant_file];
+			new_key ^= tt_keys.en_passant_keys[en_passant_file];
 		}
 
 		if (color_to_move == black)
 		{
-			new_key ^= tt::z_keys.black_to_move;
+			new_key ^= tt_keys.black_to_move;
 		}
 
-		new_key ^= (tt::z_keys.w_castle_ks * white_can_castle_ks());
-		new_key ^= (tt::z_keys.w_castle_qs * white_can_castle_qs());
-		new_key ^= (tt::z_keys.b_castle_ks * black_can_castle_ks());
-		new_key ^= (tt::z_keys.b_castle_qs * black_can_castle_qs());
+		new_key ^= (tt_keys.w_castle_ks * white_can_castle_ks());
+		new_key ^= (tt_keys.w_castle_qs * white_can_castle_qs());
+		new_key ^= (tt_keys.b_castle_ks * black_can_castle_ks());
+		new_key ^= (tt_keys.b_castle_qs * black_can_castle_qs());
 
 		key = new_key;
 		eval = new_eval;

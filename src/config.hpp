@@ -2,18 +2,12 @@
 
 #include <stdint.h>
 
-namespace chess
+namespace chess::config
 {
-	namespace config
-	{
-		static constexpr bool verify_key_and_eval = false;
-	}
+	static constexpr bool verify_key_and_eval = false;
 
-	namespace tt::config
-	{
-		static constexpr size_t size_in_mb = 1024 * 1;
-		static constexpr bool require_exact_depth_match = false;
-	}
+	static constexpr size_t tt_size_in_mb = 1024 * 1;
+	static constexpr bool tt_require_exact_depth_match = false;
 }
 
 #if defined __clang__

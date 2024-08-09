@@ -8,47 +8,49 @@
 #include "evaluation.hpp"
 #include "types.hpp"
 
-namespace chess::tt
+namespace chess
 {
-	static_assert(config::size_in_mb / 1024 <= 16); // sanity check, size <= 16 GB
+	static_assert(config::tt_size_in_mb / 1024 <= 16); // sanity check, size <= 16 GB
 
-	enum class eval_type : uint8_t
+	using tt_key = ::util::strong_alias<uint64_t, struct tt_key_tag>;
+
+	enum class tt_eval_type : uint8_t
 	{
 		alpha,
 		beta,
 		exact
 	};
 
-	class entry
+	class tt_entry
 	{
 	private:
 		static constexpr depth_t invalid_depth = std::numeric_limits<depth_t>::min();
 
 	public:
-		key key{};
+		tt_key key{};
 		depth_t eval_depth{invalid_depth};
-		eval_type eval_type{};
+		tt_eval_type eval_type{};
 		eval_t eval{};
 		packed_move best_move{};
 
 		bool is_valid() const { return eval_depth != invalid_depth; }
 	};
 
-	struct z_keys_t
+	struct tt_keys_t
 	{
-		std::array<std::array<key, 64>, 12> piece_square_keys;
-		std::array<key, 8> en_passant_keys;
-		key black_to_move;
-		key w_castle_ks;
-		key w_castle_qs;
-		key b_castle_ks;
-		key b_castle_qs;
+		std::array<std::array<tt_key, 64>, 12> piece_square_keys;
+		std::array<tt_key, 8> en_passant_keys;
+		tt_key black_to_move;
+		tt_key w_castle_ks;
+		tt_key w_castle_qs;
+		tt_key b_castle_ks;
+		tt_key b_castle_qs;
 	};
 
-	static const z_keys_t z_keys = []()
+	static const tt_keys_t tt_keys = []()
 	{
 		std::mt19937_64 rng{0xdeadbeefdeadbeef}; // seed our RNG with a constant so our keys are deterministic
-		z_keys_t keys{};
+		tt_keys_t keys{};
 
 		for (auto& piece_square_keys : keys.piece_square_keys)
 			for (auto& square_key : piece_square_keys)
@@ -69,8 +71,8 @@ namespace chess::tt
 
 	namespace detail
 	{
-		constexpr size_t tt_size_in_bytes = (config::size_in_mb * 1024 * 1024);
-		constexpr size_t tt_size_in_entries = tt_size_in_bytes / sizeof(entry);
+		constexpr size_t tt_size_in_bytes = (config::tt_size_in_mb * 1024 * 1024);
+		constexpr size_t tt_size_in_entries = tt_size_in_bytes / sizeof(tt_entry);
 
 		static_assert(std::popcount(tt_size_in_entries) == 1);
 		constexpr uint64_t key_mask = tt_size_in_entries - 1;
@@ -79,7 +81,7 @@ namespace chess::tt
 	class transposition_table
 	{
 	private:
-		std::vector<entry> table;
+		std::vector<tt_entry> table;
 
 	public:
 		size_t occupied_entries = 0;
@@ -89,13 +91,13 @@ namespace chess::tt
 		size_t hit = 0;
 		size_t miss = 0;
 
-		transposition_table() : table{detail::tt_size_in_entries, entry{}} {}
+		transposition_table() : table{detail::tt_size_in_entries, tt_entry{}} {}
 
 		template <bool terminal = false>
-		inline_toggle_member void store(const key key, const depth_t eval_depth, const eval_type eval_type, eval_t eval,
-		    const size_t ply, const packed_move best_move)
+		inline_toggle_member void store(const tt_key key, const depth_t eval_depth, const tt_eval_type eval_type,
+		    eval_t eval, const size_t ply, const packed_move best_move)
 		{
-			entry& entry = get_entry(key);
+			tt_entry& entry = get_entry(key);
 
 			if (!entry.is_valid()) ++occupied_entries;
 
@@ -123,15 +125,15 @@ namespace chess::tt
 		}
 
 		inline_toggle_member void store(
-		    const key key, const depth_t eval_depth, const eval_type eval_type, const eval_t eval)
+		    const tt_key key, const depth_t eval_depth, const tt_eval_type eval_type, const eval_t eval)
 		{
 			store<true>(key, eval_depth, eval_type, eval, 0, 0);
 		}
 
-		inline_toggle_member bool probe(eval_t& eval, packed_move& best_move, const key key, const depth_t eval_depth,
-		    const eval_t alpha, const eval_t beta, const size_t ply)
+		inline_toggle_member bool probe(eval_t& eval, packed_move& best_move, const tt_key key,
+		    const depth_t eval_depth, const eval_t alpha, const eval_t beta, const size_t ply)
 		{
-			const entry& entry = get_entry(key);
+			const tt_entry& entry = get_entry(key);
 
 			if (entry.key != key)
 			{
@@ -141,7 +143,7 @@ namespace chess::tt
 
 			best_move = entry.best_move; // either a move, or 0
 
-			if constexpr (config::require_exact_depth_match)
+			if constexpr (config::tt_require_exact_depth_match)
 			{
 				if (entry.eval_depth != eval_depth)
 				{
@@ -165,19 +167,19 @@ namespace chess::tt
 			else if (cached_eval <= -eval::mate_threshold)
 				cached_eval += ply;
 
-			if (entry.eval_type == eval_type::exact)
+			if (entry.eval_type == tt_eval_type::exact)
 			{
 				eval = cached_eval;
 				++hit;
 				return true;
 			}
-			else if (entry.eval_type == eval_type::alpha && cached_eval <= alpha)
+			else if (entry.eval_type == tt_eval_type::alpha && cached_eval <= alpha)
 			{
 				eval = alpha;
 				++hit;
 				return true;
 			}
-			else if (entry.eval_type == eval_type::beta && cached_eval >= beta)
+			else if (entry.eval_type == tt_eval_type::beta && cached_eval >= beta)
 			{
 				eval = beta;
 				++hit;
@@ -190,7 +192,7 @@ namespace chess::tt
 		}
 
 	private:
-		const entry& get_entry(const key key) const { return table[key & detail::key_mask]; }
-		entry& get_entry(const key key) { return table[key & detail::key_mask]; }
+		const tt_entry& get_entry(const tt_key key) const { return table[key & detail::key_mask]; }
+		tt_entry& get_entry(const tt_key key) { return table[key & detail::key_mask]; }
 	};
 }

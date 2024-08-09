@@ -171,8 +171,8 @@ namespace chess
 
 				const size_t end_idx = first_child_index(0) + n_legal_moves;
 				nodes = 0;
-				detail::tt.hit = 0;
-				detail::tt.miss = 0;
+				tt.hit = 0;
+				tt.miss = 0;
 
 				util::log(std::format(
 				    "Engine depth {}, searching depth {}.", engine_depth.value(), engine_depth.value() + 1));

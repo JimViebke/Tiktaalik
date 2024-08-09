@@ -11,12 +11,6 @@ namespace chess
 
 	constexpr inline color_t other_color(const color_t color) { return (color == white) ? black : white; }
 
-	namespace detail
-	{
-		static constexpr piece_t type_mask = 0b1110;
-		static constexpr piece_t color_mask = 0b0001;
-	}
-
 	static constexpr piece_t pawn = 0 << 1;
 	static constexpr piece_t knight = 1 << 1;
 	static constexpr piece_t bishop = 2 << 1;

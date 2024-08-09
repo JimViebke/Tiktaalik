@@ -53,9 +53,8 @@ namespace chess
 
 		ss << " nps " << nodes * 1'000 / std::max(decltype(engine_time)(1), engine_time);
 		ss << " nodes " << nodes;
-		ss << " hashfull "
-		   << detail::tt.occupied_entries * 1'000 / tt::detail::tt_size_in_entries; // Occupancy is per mille.
-		ss << " tbhits " << detail::tt.hit;
+		ss << " hashfull " << tt.occupied_entries * 1'000 / detail::tt_size_in_entries; // Occupancy is per mille.
+		ss << " tbhits " << tt.hit;
 		ss << " time " << engine_time;
 
 		if (pv_lengths[0] > 0)

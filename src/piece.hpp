@@ -65,7 +65,9 @@ namespace chess
 		}
 
 	private:
-		color_t get_color() const { return value() & detail::color_mask; }
-		piece_t get_type() const { return value() & detail::type_mask; }
+		static constexpr piece_t type_mask = 0b1110;
+		static constexpr piece_t color_mask = 0b0001;
+		color_t get_color() const { return value() & color_mask; }
+		piece_t get_type() const { return value() & type_mask; }
 	};
 }

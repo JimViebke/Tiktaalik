@@ -4,16 +4,13 @@
 namespace chess
 {
 	size_t root_ply{0};
-	std::array<tt::key, eval::max_ply * 2> history{};
+	std::array<tt_key, eval::max_ply * 2> history{};
 	std::atomic_bool searching{false};
 	std::atomic_bool pondering{false};
 	util::timepoint scheduled_turn_end{0};
 	size_t nodes{0};
 
-	namespace detail
-	{
-		chess::tt::transposition_table tt;
-	}
+	transposition_table tt;
 
 	std::array<size_t, eval::max_ply> pv_lengths;
 	std::array<std::array<board, eval::max_ply>, eval::max_ply> pv_moves;
@@ -50,10 +47,8 @@ namespace chess
 	}
 
 	template <color_t color_to_move, bool quiescing, bool full_window>
-	eval_t detail::alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta)
+	eval_t alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta)
 	{
-		using eval_type = tt::eval_type;
-
 		++nodes;
 		if (nodes % 1024 == 0)
 		{
@@ -68,7 +63,7 @@ namespace chess
 		if constexpr (!quiescing && full_window) pv_lengths[ply] = ply;
 
 		const board& board = boards[idx];
-		const tt::key key = board.get_key();
+		const tt_key key = board.get_key();
 
 		if constexpr (!quiescing)
 		{
@@ -145,7 +140,7 @@ namespace chess
 
 		bool found_moves = false;
 		eval_t eval = (color_to_move == white ? -eval::mate : eval::mate);
-		eval_type node_eval_type = (color_to_move == white ? eval_type::alpha : eval_type::beta);
+		tt_eval_type node_eval_type = (color_to_move == white ? tt_eval_type::alpha : tt_eval_type::beta);
 
 		while (1)
 		{
@@ -182,13 +177,13 @@ namespace chess
 					if (eval >= beta)
 					{
 						if constexpr (!quiescing && full_window)
-							tt.store(key, depth, eval_type::beta, beta, ply, boards[child_idx].get_packed_move());
+							tt.store(key, depth, tt_eval_type::beta, beta, ply, boards[child_idx].get_packed_move());
 						return beta;
 					}
 					if (eval > alpha)
 					{
 						alpha = eval;
-						node_eval_type = eval_type::exact;
+						node_eval_type = tt_eval_type::exact;
 						tt_move = boards[child_idx].get_packed_move();
 						if constexpr (!quiescing && full_window) update_pv(ply, boards[child_idx]);
 					}
@@ -199,13 +194,13 @@ namespace chess
 					if (eval <= alpha)
 					{
 						if constexpr (!quiescing && full_window)
-							tt.store(key, depth, eval_type::alpha, alpha, ply, boards[child_idx].get_packed_move());
+							tt.store(key, depth, tt_eval_type::alpha, alpha, ply, boards[child_idx].get_packed_move());
 						return alpha;
 					}
 					if (eval < beta)
 					{
 						beta = eval;
-						node_eval_type = eval_type::exact;
+						node_eval_type = tt_eval_type::exact;
 						tt_move = boards[child_idx].get_packed_move();
 						if constexpr (!quiescing && full_window) update_pv(ply, boards[child_idx]);
 					}
@@ -240,7 +235,7 @@ namespace chess
 			else                   // Stalemate.
 				terminal_eval = 0; // Todo: use contempt factor.
 
-			tt.store(key, depth, eval_type::exact, terminal_eval);
+			tt.store(key, depth, tt_eval_type::exact, terminal_eval);
 			return terminal_eval;
 		}
 
@@ -250,8 +245,8 @@ namespace chess
 		return eval;
 	}
 
-	template eval_t detail::alpha_beta<white, true>(const size_t, const size_t, const depth_t, eval_t, eval_t);
-	template eval_t detail::alpha_beta<white, false>(const size_t, const size_t, const depth_t, eval_t, eval_t);
-	template eval_t detail::alpha_beta<black, true>(const size_t, const size_t, const depth_t, eval_t, eval_t);
-	template eval_t detail::alpha_beta<black, false>(const size_t, const size_t, const depth_t, eval_t, eval_t);
+	template eval_t alpha_beta<white, true>(const size_t, const size_t, const depth_t, eval_t, eval_t);
+	template eval_t alpha_beta<white, false>(const size_t, const size_t, const depth_t, eval_t, eval_t);
+	template eval_t alpha_beta<black, true>(const size_t, const size_t, const depth_t, eval_t, eval_t);
+	template eval_t alpha_beta<black, false>(const size_t, const size_t, const depth_t, eval_t, eval_t);
 }

@@ -18,15 +18,15 @@ namespace chess
 
 		eval_t tt_eval = 0; // ignored
 		packed_move tt_move = 0;
-		detail::tt.probe(tt_eval, tt_move, boards[0].get_key(), depth, alpha, beta, 0);
+		tt.probe(tt_eval, tt_move, boards[0].get_key(), depth, alpha, beta, 0);
 
 		const size_t begin_idx = first_child_index(0);
 
-		detail::swap_tt_move_to_front(tt_move, begin_idx, end_idx);
+		swap_tt_move_to_front(tt_move, begin_idx, end_idx);
 
 		for (size_t child_idx = begin_idx; child_idx != end_idx; ++child_idx)
 		{
-			eval_t ab = detail::alpha_beta<other_color(color_to_move)>(child_idx, 1, depth - 1, alpha, beta);
+			eval_t ab = alpha_beta<other_color(color_to_move)>(child_idx, 1, depth - 1, alpha, beta);
 
 			if (!searching) return eval;
 
@@ -53,11 +53,11 @@ namespace chess
 				beta = std::min(beta, eval);
 			}
 
-			detail::swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
+			swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
 		}
 
 		// Store the best move in the TT.
-		detail::tt.store(boards[0].get_key(), depth, tt::eval_type::exact, eval, 0, tt_move);
+		tt.store(boards[0].get_key(), depth, tt_eval_type::exact, eval, 0, tt_move);
 
 		return eval;
 	}

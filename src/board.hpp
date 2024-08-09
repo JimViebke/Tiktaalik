@@ -9,6 +9,7 @@
 #include "config.hpp"
 #include "evaluation.hpp"
 #include "piece.hpp"
+#include "transposition_table.hpp"
 #include "types.hpp"
 #include "util/util.hpp"
 
@@ -282,7 +283,7 @@ namespace chess
 		}
 
 		template <color_t moving_color, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
-		inline_toggle_member void update_key_and_eval(const board& parent_board, tt::key incremental_key,
+		inline_toggle_member void update_key_and_eval(const board& parent_board, tt_key incremental_key,
 		    const bitboard start, const bitboard end, piece_t captured_piece)
 		{
 			// The incremental_key has already had the leaving piece removed, and the color to move toggled.
@@ -303,7 +304,7 @@ namespace chess
 			const size_t end_idx = get_next_bit_index(end);
 
 			// add the key for the arriving piece
-			incremental_key ^= tt::z_keys.piece_square_keys[piece_after][end_idx];
+			incremental_key ^= tt_keys.piece_square_keys[piece_after][end_idx];
 			// update square eval for the piece
 			incremental_eval -= eval::piece_square_eval<moving_color>(piece_before, start_idx);
 			incremental_eval += eval::piece_square_eval<moving_color>(piece_after, end_idx);
@@ -313,14 +314,14 @@ namespace chess
 			if constexpr (move_type == move_type::pawn_two_squares)
 			{
 				// add en passant rights for the opponent
-				incremental_key ^= tt::z_keys.en_passant_keys[end_idx % 8];
+				incremental_key ^= tt_keys.en_passant_keys[end_idx % 8];
 			}
 			else if (move_type == move_type::en_passant_capture)
 			{
 				const size_t captured_pawn_idx = end_idx + ((moving_color == white) ? 8 : -8);
 				constexpr piece_t captured_pawn = other_color(moving_color) | pawn;
 				// remove key for the captured pawn
-				incremental_key ^= tt::z_keys.piece_square_keys[captured_pawn][captured_pawn_idx];
+				incremental_key ^= tt_keys.piece_square_keys[captured_pawn][captured_pawn_idx];
 				// udpate eval for the captured pawn
 				incremental_eval -= eval::piece_eval<opp_color>(captured_pawn);
 				incremental_eval -= eval::piece_square_eval<opp_color>(captured_pawn, captured_pawn_idx);
@@ -334,8 +335,8 @@ namespace chess
 
 				constexpr piece_t moving_rook = moving_color | rook;
 				// update keys for the moving rook
-				incremental_key ^= tt::z_keys.piece_square_keys[moving_rook][rook_start_index];
-				incremental_key ^= tt::z_keys.piece_square_keys[moving_rook][rook_end_index];
+				incremental_key ^= tt_keys.piece_square_keys[moving_rook][rook_start_index];
+				incremental_key ^= tt_keys.piece_square_keys[moving_rook][rook_end_index];
 				// update eval for the moving rook
 				incremental_eval -= eval::piece_square_eval<moving_color>(moving_rook, rook_start_index);
 				incremental_eval += eval::piece_square_eval<moving_color>(moving_rook, rook_end_index);
@@ -346,7 +347,7 @@ namespace chess
 				captured_piece |= opp_color;
 
 				// remove the key for the captured piece
-				incremental_key ^= tt::z_keys.piece_square_keys[captured_piece][end_idx];
+				incremental_key ^= tt_keys.piece_square_keys[captured_piece][end_idx];
 				// update our opponent's castling rights
 				update_key_castling_rights_for<opp_color>(incremental_key, parent_board);
 				// update eval for the captured piece
@@ -364,7 +365,7 @@ namespace chess
 			key = incremental_key;
 		}
 
-		tt::key get_key() const { return key; }
+		tt_key get_key() const { return key; }
 		eval_t get_eval() const { return eval; }
 		packed_move get_packed_move() const { return board_state & packed_move(-1); }
 		rank get_start_rank() const { return (board_state >> start_rank_offset) & square_mask; }
@@ -421,21 +422,17 @@ namespace chess
 		void set_fifty_move_counter(uint32_t arg) { board_state |= arg << fifty_move_counter_offset; }
 
 		template <color_t update_color>
-		inline_toggle_member void update_key_castling_rights_for(tt::key& incremental_key, const board& parent_board)
+		inline_toggle_member void update_key_castling_rights_for(tt_key& incremental_key, const board& parent_board)
 		{
 			if constexpr (update_color == white)
 			{
-				if (white_can_castle_ks() != parent_board.white_can_castle_ks())
-					incremental_key ^= tt::z_keys.w_castle_ks;
-				if (white_can_castle_qs() != parent_board.white_can_castle_qs())
-					incremental_key ^= tt::z_keys.w_castle_qs;
+				if (white_can_castle_ks() != parent_board.white_can_castle_ks()) incremental_key ^= tt_keys.w_castle_ks;
+				if (white_can_castle_qs() != parent_board.white_can_castle_qs()) incremental_key ^= tt_keys.w_castle_qs;
 			}
 			else
 			{
-				if (black_can_castle_ks() != parent_board.black_can_castle_ks())
-					incremental_key ^= tt::z_keys.b_castle_ks;
-				if (black_can_castle_qs() != parent_board.black_can_castle_qs())
-					incremental_key ^= tt::z_keys.b_castle_qs;
+				if (black_can_castle_ks() != parent_board.black_can_castle_ks()) incremental_key ^= tt_keys.b_castle_ks;
+				if (black_can_castle_qs() != parent_board.black_can_castle_qs()) incremental_key ^= tt_keys.b_castle_qs;
 			}
 		}
 
@@ -520,7 +517,7 @@ namespace chess
 
 		uint32_t board_state{};
 		eval_t eval{};
-		tt::key key{};
+		tt_key key{};
 		bitboards bitboards{};
 	};
 }
