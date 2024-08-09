@@ -306,8 +306,8 @@ namespace chess
 			// add the key for the arriving piece
 			incremental_key ^= tt_keys.piece_square_keys[piece_after][end_idx];
 			// update square eval for the piece
-			incremental_eval -= eval::piece_square_eval<moving_color>(piece_before, start_idx);
-			incremental_eval += eval::piece_square_eval<moving_color>(piece_after, end_idx);
+			incremental_eval -= eval::piece_square_eval_mg<moving_color>(piece_before, start_idx);
+			incremental_eval += eval::piece_square_eval_mg<moving_color>(piece_after, end_idx);
 
 			constexpr color_t opp_color = other_color(moving_color);
 
@@ -324,7 +324,7 @@ namespace chess
 				incremental_key ^= tt_keys.piece_square_keys[captured_pawn][captured_pawn_idx];
 				// udpate eval for the captured pawn
 				incremental_eval -= eval::piece_eval<opp_color>(captured_pawn);
-				incremental_eval -= eval::piece_square_eval<opp_color>(captured_pawn, captured_pawn_idx);
+				incremental_eval -= eval::piece_square_eval_mg<opp_color>(captured_pawn, captured_pawn_idx);
 			}
 			else if (move_type == move_type::castle_kingside || move_type == move_type::castle_queenside)
 			{
@@ -338,8 +338,8 @@ namespace chess
 				incremental_key ^= tt_keys.piece_square_keys[moving_rook][rook_start_index];
 				incremental_key ^= tt_keys.piece_square_keys[moving_rook][rook_end_index];
 				// update eval for the moving rook
-				incremental_eval -= eval::piece_square_eval<moving_color>(moving_rook, rook_start_index);
-				incremental_eval += eval::piece_square_eval<moving_color>(moving_rook, rook_end_index);
+				incremental_eval -= eval::piece_square_eval_mg<moving_color>(moving_rook, rook_start_index);
+				incremental_eval += eval::piece_square_eval_mg<moving_color>(moving_rook, rook_end_index);
 			}
 			else if (move_type == move_type::capture) // non-en passant capture
 			{
@@ -352,7 +352,7 @@ namespace chess
 				update_key_castling_rights_for<opp_color>(incremental_key, parent_board);
 				// update eval for the captured piece
 				incremental_eval -= eval::piece_eval<opp_color>(captured_piece);
-				incremental_eval -= eval::piece_square_eval<opp_color>(captured_piece, end_idx);
+				incremental_eval -= eval::piece_square_eval_mg<opp_color>(captured_piece, end_idx);
 			}
 
 			if constexpr (moving_piece_type == king || moving_piece_type == rook)

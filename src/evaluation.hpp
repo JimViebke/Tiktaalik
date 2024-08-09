@@ -28,10 +28,10 @@ namespace chess
 		constexpr eval_t knight_eval = 320;
 		constexpr eval_t pawn_eval = 100;
 
-		using piece_square_array = std::array<int8_t, 64>;
+		static constexpr size_t pse_size = 64 * n_of_piece_types * 2;
 
-		// via: https://www.chessprogramming.org/Simplified_Evaluation_Function
-		static constexpr piece_square_array pawn_squares = {
+		static constexpr std::array<int8_t, pse_size> piece_square_evals = {
+		    // pawn mg
 		    0, 0, 0, 0, 0, 0, 0, 0,         //
 		    50, 50, 50, 50, 50, 50, 50, 50, //
 		    10, 10, 20, 30, 30, 20, 10, 10, //
@@ -39,9 +39,17 @@ namespace chess
 		    0, 0, 0, 20, 20, 0, 0, 0,       //
 		    5, -5, -10, 0, 0, -10, -5, 5,   //
 		    5, 10, 10, -20, -20, 10, 10, 5, //
-		    0, 0, 0, 0, 0, 0, 0, 0          //
-		};
-		static constexpr piece_square_array knight_squares = {
+		    0, 0, 0, 0, 0, 0, 0, 0,         //
+		    // pawn eg
+		    0, 0, 0, 0, 0, 0, 0, 0,         //
+		    50, 50, 50, 50, 50, 50, 50, 50, //
+		    10, 10, 20, 30, 30, 20, 10, 10, //
+		    5, 5, 10, 25, 25, 10, 5, 5,     //
+		    0, 0, 0, 20, 20, 0, 0, 0,       //
+		    5, -5, -10, 0, 0, -10, -5, 5,   //
+		    5, 10, 10, -20, -20, 10, 10, 5, //
+		    0, 0, 0, 0, 0, 0, 0, 0,         //
+		    // knight mg
 		    -50, -40, -30, -30, -30, -30, -40, -50, //
 		    -40, -20, 0, 0, 0, 0, -20, -40,         //
 		    -30, 0, 10, 15, 15, 10, 0, -30,         //
@@ -49,9 +57,17 @@ namespace chess
 		    -30, 0, 15, 20, 20, 15, 0, -30,         //
 		    -30, 5, 10, 15, 15, 10, 5, -30,         //
 		    -40, -20, 0, 5, 5, 0, -20, -40,         //
-		    -50, -40, -30, -30, -30, -30, -40, -50  //
-		};
-		static constexpr piece_square_array bishop_squares = {
+		    -50, -40, -30, -30, -30, -30, -40, -50, //
+		    // knight eg
+		    -50, -40, -30, -30, -30, -30, -40, -50, //
+		    -40, -20, 0, 0, 0, 0, -20, -40,         //
+		    -30, 0, 10, 15, 15, 10, 0, -30,         //
+		    -30, 5, 15, 20, 20, 15, 5, -30,         //
+		    -30, 0, 15, 20, 20, 15, 0, -30,         //
+		    -30, 5, 10, 15, 15, 10, 5, -30,         //
+		    -40, -20, 0, 5, 5, 0, -20, -40,         //
+		    -50, -40, -30, -30, -30, -30, -40, -50, //
+		    // bishop mg
 		    -20, -10, -10, -10, -10, -10, -10, -20, //
 		    -10, 0, 0, 0, 0, 0, 0, -10,             //
 		    -10, 0, 5, 10, 10, 5, 0, -10,           //
@@ -59,9 +75,17 @@ namespace chess
 		    -10, 0, 10, 10, 10, 10, 0, -10,         //
 		    -10, 10, 10, 10, 10, 10, 10, -10,       //
 		    -10, 5, 0, 0, 0, 0, 5, -10,             //
-		    -20, -10, -10, -10, -10, -10, -10, -20  //
-		};
-		static constexpr piece_square_array rook_squares = {
+		    -20, -10, -10, -10, -10, -10, -10, -20, //
+		    // bishop eg
+		    -20, -10, -10, -10, -10, -10, -10, -20, //
+		    -10, 0, 0, 0, 0, 0, 0, -10,             //
+		    -10, 0, 5, 10, 10, 5, 0, -10,           //
+		    -10, 5, 5, 10, 10, 5, 5, -10,           //
+		    -10, 0, 10, 10, 10, 10, 0, -10,         //
+		    -10, 10, 10, 10, 10, 10, 10, -10,       //
+		    -10, 5, 0, 0, 0, 0, 5, -10,             //
+		    -20, -10, -10, -10, -10, -10, -10, -20, //
+		    // rook mg
 		    0, 0, 0, 0, 0, 0, 0, 0,       //
 		    5, 10, 10, 10, 10, 10, 10, 5, //
 		    -5, 0, 0, 0, 0, 0, 0, -5,     //
@@ -69,9 +93,17 @@ namespace chess
 		    -5, 0, 0, 0, 0, 0, 0, -5,     //
 		    -5, 0, 0, 0, 0, 0, 0, -5,     //
 		    -5, 0, 0, 0, 0, 0, 0, -5,     //
-		    0, 0, 0, 5, 5, 0, 0, 0        //
-		};
-		static constexpr piece_square_array queen_squares = {
+		    0, 0, 0, 5, 5, 0, 0, 0,       //
+		    // rook eg
+		    0, 0, 0, 0, 0, 0, 0, 0,       //
+		    5, 10, 10, 10, 10, 10, 10, 5, //
+		    -5, 0, 0, 0, 0, 0, 0, -5,     //
+		    -5, 0, 0, 0, 0, 0, 0, -5,     //
+		    -5, 0, 0, 0, 0, 0, 0, -5,     //
+		    -5, 0, 0, 0, 0, 0, 0, -5,     //
+		    -5, 0, 0, 0, 0, 0, 0, -5,     //
+		    0, 0, 0, 5, 5, 0, 0, 0,       //
+		    // queen mg
 		    -20, -10, -10, -5, -5, -10, -10, -20, //
 		    -10, 0, 0, 0, 0, 0, 0, -10,           //
 		    -10, 0, 5, 5, 5, 5, 0, -10,           //
@@ -79,9 +111,17 @@ namespace chess
 		    0, 0, 5, 5, 5, 5, 0, -5,              //
 		    -10, 5, 5, 5, 5, 5, 0, -10,           //
 		    -10, 0, 5, 0, 0, 0, 0, -10,           //
-		    -20, -10, -10, -5, -5, -10, -10, -20  //
-		};
-		static constexpr piece_square_array king_squares = {
+		    -20, -10, -10, -5, -5, -10, -10, -20, //
+		    // queen eg
+		    -20, -10, -10, -5, -5, -10, -10, -20, //
+		    -10, 0, 0, 0, 0, 0, 0, -10,           //
+		    -10, 0, 5, 5, 5, 5, 0, -10,           //
+		    -5, 0, 5, 5, 5, 5, 0, -5,             //
+		    0, 0, 5, 5, 5, 5, 0, -5,              //
+		    -10, 5, 5, 5, 5, 5, 0, -10,           //
+		    -10, 0, 5, 0, 0, 0, 0, -10,           //
+		    -20, -10, -10, -5, -5, -10, -10, -20, //
+		    // king mg
 		    -30, -40, -40, -50, -50, -40, -40, -30, //
 		    -30, -40, -40, -50, -50, -40, -40, -30, //
 		    -30, -40, -40, -50, -50, -40, -40, -30, //
@@ -89,8 +129,18 @@ namespace chess
 		    -20, -30, -30, -40, -40, -30, -30, -20, //
 		    -10, -20, -20, -20, -20, -20, -20, -10, //
 		    20, 20, 0, 0, 0, 0, 20, 20,             //
-		    20, 30, 10, 0, 0, 10, 30, 20            //
+		    20, 30, 10, 0, 0, 10, 30, 20,           //
+		    // king eg
+		    -30, -40, -40, -50, -50, -40, -40, -30, //
+		    -30, -40, -40, -50, -50, -40, -40, -30, //
+		    -30, -40, -40, -50, -50, -40, -40, -30, //
+		    -30, -40, -40, -50, -50, -40, -40, -30, //
+		    -20, -30, -30, -40, -40, -30, -30, -20, //
+		    -10, -20, -20, -20, -20, -20, -20, -10, //
+		    20, 20, 0, 0, 0, 0, 20, 20,             //
+		    20, 30, 10, 0, 0, 10, 30, 20,           //
 		};
+		static_assert(piece_square_evals.size() == 64 * n_of_piece_types * 2);
 
 		static constexpr std::array material_values = []() consteval
 		{
@@ -112,37 +162,37 @@ namespace chess
 			return (color == white) ? eval : -eval;
 		}
 
-		static constexpr std::array<piece_square_array, n_of_piece_types> piece_square_evals = []() consteval
+		namespace detail
 		{
-			std::array<piece_square_array, n_of_piece_types> piece_square_evals{};
-
-			piece_square_evals[chess::pawn >> 1] = pawn_squares;
-			piece_square_evals[chess::knight >> 1] = knight_squares;
-			piece_square_evals[chess::bishop >> 1] = bishop_squares;
-			piece_square_evals[chess::rook >> 1] = rook_squares;
-			piece_square_evals[chess::queen >> 1] = queen_squares;
-			piece_square_evals[chess::king >> 1] = king_squares;
-
-			return piece_square_evals;
-		}();
+			template <color_t color>
+			inline constexpr eval_t piece_square_eval(const piece piece, size_t index)
+			{
+				if constexpr (color == black) index ^= 0b111000;
+				const eval_t eval = piece_square_evals[(piece.value() >> 1) * 128 + index];
+				return (color == white) ? eval : -eval;
+			}
+		}
 
 		template <color_t color>
-		inline constexpr eval_t piece_square_eval(const piece piece, size_t index)
+		inline constexpr eval_t piece_square_eval_mg(const piece piece, const size_t index)
 		{
-			if constexpr (color == black) index ^= 0b111000;
-			const eval_t eval = piece_square_evals[piece.value() >> 1][index];
-			return (color == white) ? eval : -eval;
+			return detail::piece_square_eval<color>(piece, index);
+		}
+		template <color_t color>
+		inline constexpr eval_t piece_square_eval_eg(const piece piece, const size_t index)
+		{
+			return detail::piece_square_eval<color>(piece, index + 64);
 		}
 
 		// If a white knight on e3 is worth N points, then
 		// a black knight on e6 should be worth -N points.
-		static_assert(piece_square_eval<white>(knight, to_index(rank(2), file(4))) ==
-		              piece_square_eval<black>(knight, to_index(rank(5), file(4))) * -1);
+		static_assert(piece_square_eval_mg<white>(knight, to_index(rank(2), file(4))) ==
+		              piece_square_eval_mg<black>(knight, to_index(rank(5), file(4))) * -1);
 		// test queens
-		static_assert(piece_square_eval<white>(queen, to_index(rank(0), file(7))) ==
-		              piece_square_eval<black>(queen, to_index(rank(7), file(7))) * -1);
+		static_assert(piece_square_eval_mg<white>(queen, to_index(rank(0), file(7))) ==
+		              piece_square_eval_mg<black>(queen, to_index(rank(7), file(7))) * -1);
 		// test c pawns
-		static_assert(piece_square_eval<white>(pawn, to_index(rank(1), file(2))) ==
-		              piece_square_eval<black>(pawn, to_index(rank(6), file(2))) * -1);
+		static_assert(piece_square_eval_eg<white>(pawn, to_index(rank(1), file(2))) ==
+		              piece_square_eval_eg<black>(pawn, to_index(rank(6), file(2))) * -1);
 	}
 }
