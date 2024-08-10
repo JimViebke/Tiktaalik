@@ -58,8 +58,6 @@ namespace chess
 		bitboard white, black;
 		bitboard pawns, knights, bishops, rooks, queens, kings;
 
-		bool operator==(const bitboards&) const = default;
-
 		const bitboard occupied() const { return white | black; }
 		const bitboard empty() const { return ~occupied(); }
 
