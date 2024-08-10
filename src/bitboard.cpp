@@ -188,28 +188,28 @@ namespace chess
 		{
 			const bitboard square = 1ull << to_index(rank, start_file);
 			moves |= square;
-			if ((square & blocker_mask) != 0) break;
+			if ((square & blocker_mask) != 0u) break;
 		}
 		// Search E.
 		for (file file = start_file + 1; file < 8; ++file)
 		{
 			const bitboard square = 1ull << to_index(start_rank, file);
 			moves |= square;
-			if ((square & blocker_mask) != 0) break;
+			if ((square & blocker_mask) != 0u) break;
 		}
 		// Search S.
 		for (rank rank = start_rank + 1; rank < 8; ++rank)
 		{
 			const bitboard square = 1ull << to_index(rank, start_file);
 			moves |= square;
-			if ((square & blocker_mask) != 0) break;
+			if ((square & blocker_mask) != 0u) break;
 		}
 		// Search W.
 		for (file file = start_file - 1; file >= 0; --file)
 		{
 			const bitboard square = 1ull << to_index(start_rank, file);
 			moves |= square;
-			if ((square & blocker_mask) != 0) break;
+			if ((square & blocker_mask) != 0u) break;
 		}
 
 		return moves;
@@ -268,7 +268,7 @@ namespace chess
 			{
 				const bitboard square = 1ull << to_index(rank, file);
 				moves |= square;
-				if ((square & blocker_mask) != 0) break;
+				if ((square & blocker_mask) != 0u) break;
 			}
 		}
 		// Search SE.
@@ -279,7 +279,7 @@ namespace chess
 			{
 				const bitboard square = 1ull << to_index(rank, file);
 				moves |= square;
-				if ((square & blocker_mask) != 0) break;
+				if ((square & blocker_mask) != 0u) break;
 			}
 		}
 		// Search SW.
@@ -290,7 +290,7 @@ namespace chess
 			{
 				const bitboard square = 1ull << to_index(rank, file);
 				moves |= square;
-				if ((square & blocker_mask) != 0) break;
+				if ((square & blocker_mask) != 0u) break;
 			}
 		}
 		// Search NW.
@@ -301,7 +301,7 @@ namespace chess
 			{
 				const bitboard square = 1ull << to_index(rank, file);
 				moves |= square;
-				if ((square & blocker_mask) != 0) break;
+				if ((square & blocker_mask) != 0u) break;
 			}
 		}
 

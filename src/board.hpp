@@ -389,10 +389,10 @@ namespace chess
 		const std::string move_to_string() const
 		{
 			std::string result;
-			result += get_start_file().value() + 'a';
-			result += (get_start_rank().value() * -1) + 8 + '0';
-			result += get_end_file().value() + 'a';
-			result += (get_end_rank().value() * -1) + 8 + '0';
+			result += get_start_file() + 'a';
+			result += (get_start_rank() * -1) + 8 + '0';
+			result += get_end_file() + 'a';
+			result += (get_end_rank() * -1) + 8 + '0';
 
 			if (is_promotion())
 			{
@@ -405,12 +405,12 @@ namespace chess
 		const class bitboards& get_bitboards() const { return bitboards; }
 
 		void set_end_index(size_t idx) { board_state |= uint32_t(idx) << end_file_offset; }
-		void set_moved_piece(piece piece) { board_state |= uint32_t(piece.value() >> 1) << moved_piece_offset; }
+		void set_moved_piece(piece piece) { board_state |= uint32_t(piece >> 1) << moved_piece_offset; }
 
 	private:
 		bool is_promotion() const { return (board_state >> promotion_offset) & promotion_bits; }
 
-		void set_en_passant_file(file file) { board_state |= uint32_t(file.value()) << en_passant_file_offset; }
+		void set_en_passant_file(file file) { board_state |= uint32_t(file) << en_passant_file_offset; }
 		void set_white_can_castle_ks(uint32_t arg) { board_state |= arg << white_can_castle_ks_offset; }
 		void set_white_can_castle_qs(uint32_t arg) { board_state |= arg << white_can_castle_qs_offset; }
 		void set_black_can_castle_ks(uint32_t arg) { board_state |= arg << black_can_castle_ks_offset; }

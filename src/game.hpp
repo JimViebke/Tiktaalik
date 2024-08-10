@@ -174,8 +174,7 @@ namespace chess
 				tt.hit = 0;
 				tt.miss = 0;
 
-				util::log(std::format(
-				    "Engine depth {}, searching depth {}.", engine_depth.value(), engine_depth.value() + 1));
+				util::log(std::format("Engine depth {}, searching depth {}.", engine_depth, engine_depth + 1));
 				eval_t eval = 0;
 				if (color_to_move == white)
 					eval = search<white>(end_idx, engine_depth + 1);
@@ -198,8 +197,7 @@ namespace chess
 
 					++engine_depth;
 
-					util::log(
-					    std::format("Finished depth {}, {} ms, {} nodes.", engine_depth.value(), engine_time, nodes));
+					util::log(std::format("Finished depth {}, {} ms, {} nodes.", engine_depth, engine_time, nodes));
 
 					// Move immediately if we've found mate and it's our turn.
 					if (eval::found_mate(eval) && !pondering && best_move != "")

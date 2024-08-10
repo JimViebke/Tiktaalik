@@ -291,7 +291,7 @@ namespace chess
 			const bool can_castle_ks =
 			    (color_to_move == white) ? board.white_can_castle_ks() : board.black_can_castle_ks();
 			constexpr bitboard ks_castle_bits = 0b01100000uz << ((color_to_move == white) ? 56 : 0);
-			if (can_castle_ks && (bitboards.occupied() & ks_castle_bits) == 0)
+			if (can_castle_ks && (bitboards.occupied() & ks_castle_bits) == 0u)
 			{
 				// Check that the king would not be moving through check.
 				if (!is_king_in_check<color_to_move, check_type::all>(bitboards, king_start_idx + 1))
@@ -305,7 +305,7 @@ namespace chess
 			const bool can_castle_qs =
 			    (color_to_move == white) ? board.white_can_castle_qs() : board.black_can_castle_qs();
 			constexpr bitboard qs_castle_bits = 0b00001110uz << ((color_to_move == white) ? 56 : 0);
-			if (can_castle_qs && (bitboards.occupied() & qs_castle_bits) == 0)
+			if (can_castle_qs && (bitboards.occupied() & qs_castle_bits) == 0u)
 			{
 				if (!is_king_in_check<color_to_move, check_type::all>(bitboards, king_start_idx - 1))
 				{

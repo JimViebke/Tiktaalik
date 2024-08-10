@@ -158,7 +158,7 @@ namespace chess
 		template <color_t color>
 		inline constexpr eval_t piece_eval(const piece piece)
 		{
-			const eval_t eval = eval::material_values[piece.value() >> 1];
+			const eval_t eval = eval::material_values[piece >> 1];
 			return (color == white) ? eval : -eval;
 		}
 
@@ -168,7 +168,7 @@ namespace chess
 			inline constexpr eval_t piece_square_eval(const piece piece, size_t index)
 			{
 				if constexpr (color == black) index ^= 0b111000;
-				const eval_t eval = piece_square_evals[(piece.value() >> 1) * 128 + index];
+				const eval_t eval = piece_square_evals[(piece >> 1) * 128 + index];
 				return (color == white) ? eval : -eval;
 			}
 		}

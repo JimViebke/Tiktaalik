@@ -163,6 +163,6 @@ namespace chess
 
 		const bitboard checkers = (opp_rooks_and_queens & rook_moves) | (opp_bishops_and_queens & bishop_moves);
 
-		return checkers != 0;
+		return checkers != 0u;
 	}
 }

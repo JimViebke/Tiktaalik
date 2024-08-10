@@ -185,7 +185,7 @@ namespace chess
 		}
 
 		const bitboard attacking_knights = opp_pieces & bitboards.knights & knight_attack_masks[king_idx];
-		if (attacking_knights != 0)
+		if (attacking_knights != 0u)
 		{
 			set_moved_piece(opp_color | knight);
 			set_end_index(get_next_bit_index(attacking_knights));
