@@ -18,11 +18,9 @@
     <ClInclude Include="src\game.hpp" />
     <ClInclude Include="src\move.hpp" />
     <ClInclude Include="src\perft.hpp" />
-    <ClInclude Include="src\piece.hpp" />
-    <ClInclude Include="src\piece_defines.hpp" />
     <ClInclude Include="src\search.hpp" />
     <ClInclude Include="src\transposition_table.hpp" />
-    <ClInclude Include="src\types.hpp" />
+    <ClInclude Include="src\defines.hpp" />
     <ClInclude Include="src\uci.hpp" />
     <ClInclude Include="src\util\intrinsics.hpp" />
     <ClInclude Include="src\util\strong_alias.hpp" />

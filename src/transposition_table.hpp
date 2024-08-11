@@ -5,8 +5,8 @@
 #include <random>
 
 #include "config.hpp"
+#include "defines.hpp"
 #include "evaluation.hpp"
-#include "types.hpp"
 
 namespace chess
 {
@@ -36,39 +36,6 @@ namespace chess
 		bool is_valid() const { return eval_depth != invalid_depth; }
 	};
 
-	struct tt_keys_t
-	{
-		std::array<std::array<tt_key, 64>, 12> piece_square_keys;
-		std::array<tt_key, 8> en_passant_keys;
-		tt_key black_to_move;
-		tt_key w_castle_ks;
-		tt_key w_castle_qs;
-		tt_key b_castle_ks;
-		tt_key b_castle_qs;
-	};
-
-	static const tt_keys_t tt_keys = []()
-	{
-		std::mt19937_64 rng{0xdeadbeefdeadbeef}; // seed our RNG with a constant so our keys are deterministic
-		tt_keys_t keys{};
-
-		for (auto& piece_square_keys : keys.piece_square_keys)
-			for (auto& square_key : piece_square_keys)
-				square_key = rng();
-
-		for (auto& ep_key : keys.en_passant_keys)
-			ep_key = rng();
-
-		keys.black_to_move = rng();
-
-		keys.w_castle_ks = rng();
-		keys.w_castle_qs = rng();
-		keys.b_castle_ks = rng();
-		keys.b_castle_qs = rng();
-
-		return keys;
-	}();
-
 	namespace detail
 	{
 		constexpr size_t tt_size_in_bytes = (config::tt_size_in_mb * 1024 * 1024);
@@ -76,7 +43,57 @@ namespace chess
 
 		static_assert(std::popcount(tt_size_in_entries) == 1);
 		constexpr uint64_t key_mask = tt_size_in_entries - 1;
+
+		struct tt_keys_t
+		{
+			std::array<std::array<tt_key, 64>, 12> piece_square_keys;
+			std::array<tt_key, 8> en_passant_keys;
+			tt_key black_to_move;
+			tt_key w_castle_ks;
+			tt_key w_castle_qs;
+			tt_key b_castle_ks;
+			tt_key b_castle_qs;
+		};
+
+		static const tt_keys_t tt_keys = []()
+		{
+			std::mt19937_64 rng{0xdeadbeefdeadbeef}; // seed our RNG with a constant so our keys are deterministic
+			tt_keys_t keys{};
+
+			for (auto& piece_square_keys : keys.piece_square_keys)
+				for (auto& square_key : piece_square_keys)
+					square_key = rng();
+
+			for (auto& ep_key : keys.en_passant_keys)
+				ep_key = rng();
+
+			keys.black_to_move = rng();
+
+			keys.w_castle_ks = rng();
+			keys.w_castle_qs = rng();
+			keys.b_castle_ks = rng();
+			keys.b_castle_qs = rng();
+
+			return keys;
+		}();
 	}
+
+	template <color color, piece piece>
+	inline tt_key piece_square_key(const size_t idx)
+	{
+		return detail::tt_keys.piece_square_keys[(piece << 1) | color][idx];
+	}
+	template <color color>
+	inline tt_key piece_square_key(const piece piece, const size_t idx)
+	{
+		return detail::tt_keys.piece_square_keys[(piece << 1) | color][idx];
+	}
+	inline tt_key en_passant_key(const file file) { return detail::tt_keys.en_passant_keys[file]; }
+	inline tt_key black_to_move_key() { return detail::tt_keys.black_to_move; }
+	inline tt_key w_castle_ks_key() { return detail::tt_keys.w_castle_ks; }
+	inline tt_key w_castle_qs_key() { return detail::tt_keys.w_castle_qs; }
+	inline tt_key b_castle_ks_key() { return detail::tt_keys.b_castle_ks; }
+	inline tt_key b_castle_qs_key() { return detail::tt_keys.b_castle_qs; }
 
 	class transposition_table
 	{

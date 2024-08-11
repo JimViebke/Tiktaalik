@@ -7,7 +7,7 @@ namespace chess
 {
 	std::array<board, boards_size> boards{};
 
-	color_t board::load_fen(const std::string& fen)
+	color board::load_fen(const std::string& fen)
 	{
 		board_state = uint32_t{}; // Reset the fields we'll be modifying.
 		bitboards = chess::bitboards{};
@@ -88,7 +88,7 @@ namespace chess
 
 		// 2. Active color. "w" means White moves next, "b" means Black.
 
-		const color_t color_to_move = (*fen_it == 'w') ? white : black;
+		const color color_to_move = (*fen_it == 'w') ? white : black;
 
 		fen_it += 2; // step past color and space
 
@@ -119,7 +119,7 @@ namespace chess
 		}
 		else
 		{
-			set_en_passant_file(empty);
+			set_en_passant_file(no_ep_file);
 		}
 		++fen_it; // step past the space
 
@@ -144,7 +144,7 @@ namespace chess
 		return color_to_move;
 	}
 
-	void board::set_last_moved_info(const color_t color_to_move)
+	void board::set_last_moved_info(const color color_to_move)
 	{
 		// During move generation, we optimize by noting that the only way a player can
 		// start their turn in check from a knight or pawn is if the opponent moved a
@@ -160,8 +160,6 @@ namespace chess
 		const rank king_rank = king_idx / 8;
 		const file king_file = king_idx % 8;
 
-		const color_t opp_color = other_color(color_to_move);
-
 		const rank attacking_pawn_rank = king_rank + ((color_to_move == white) ? -1 : 1);
 		if (bounds_check(attacking_pawn_rank))
 		{
@@ -172,13 +170,13 @@ namespace chess
 
 			if (bounds_check(king_file - 1) && (opp_pawns & (1ull << pawn_lo_idx)))
 			{
-				set_moved_piece(opp_color | pawn);
+				set_moved_piece<pawn>();
 				set_end_index(pawn_lo_idx);
 				return;
 			}
 			else if (bounds_check(king_file + 1) && (opp_pawns & (1ull << pawn_hi_idx)))
 			{
-				set_moved_piece(opp_color | pawn);
+				set_moved_piece<pawn>();
 				set_end_index(pawn_hi_idx);
 				return;
 			}
@@ -187,67 +185,72 @@ namespace chess
 		const bitboard attacking_knights = opp_pieces & bitboards.knights & knight_attack_masks[king_idx];
 		if (attacking_knights != 0u)
 		{
-			set_moved_piece(opp_color | knight);
+			set_moved_piece<knight>();
 			set_end_index(get_next_bit_index(attacking_knights));
 			return;
 		}
 
-		set_moved_piece(empty);
+		set_moved_piece<empty>();
 	}
 
-	void board::generate_key_and_eval(const color_t color_to_move)
+	void board::generate_key_and_eval(const color color_to_move)
 	{
 		tt_key new_key = 0;
 		eval_t new_eval = 0;
 
-		auto hash_and_eval_piece = [&]<color_t color>(const piece_t piece, bitboard bb)
+		auto hash_and_eval_piece = [&]<color color, piece piece>()
 		{
-			new_eval += eval::piece_eval<color>(piece) * ::util::popcount(bb);
+			bitboard bb = bitboards.get<color, piece>();
+
+			if constexpr (piece != king)
+			{
+				new_eval += eval::piece_eval<color>(piece) * ::util::popcount(bb);
+			}
 
 			while (bb)
 			{
 				const size_t piece_idx = get_next_bit_index(bb);
 				bb = clear_next_bit(bb);
 
-				new_key ^= tt_keys.piece_square_keys[piece][piece_idx];
-				new_eval += eval::piece_square_eval_mg<color>(piece, piece_idx);
+				new_key ^= piece_square_key<color, piece>(piece_idx);
+				new_eval += eval::piece_square_eval_mg<color, piece>(piece_idx);
 			}
 		};
 
-		auto hash_and_eval_color = [=, this]<color_t color>(const bitboard color_bb)
+		auto hash_and_eval_color = [=]<color color>()
 		{
-			hash_and_eval_piece.operator()<color>(pawn, color_bb & bitboards.pawns);
-			hash_and_eval_piece.operator()<color>(knight, color_bb & bitboards.knights);
-			hash_and_eval_piece.operator()<color>(bishop, color_bb & bitboards.bishops);
-			hash_and_eval_piece.operator()<color>(rook, color_bb & bitboards.rooks);
-			hash_and_eval_piece.operator()<color>(queen, color_bb & bitboards.queens);
-			hash_and_eval_piece.operator()<color>(king, color_bb & bitboards.kings);
+			hash_and_eval_piece.operator()<color, pawn>();
+			hash_and_eval_piece.operator()<color, knight>();
+			hash_and_eval_piece.operator()<color, bishop>();
+			hash_and_eval_piece.operator()<color, rook>();
+			hash_and_eval_piece.operator()<color, queen>();
+			hash_and_eval_piece.operator()<color, king>();
 		};
 
-		hash_and_eval_color.operator()<white>(bitboards.white);
-		hash_and_eval_color.operator()<black>(bitboards.black);
+		hash_and_eval_color.operator()<white>();
+		hash_and_eval_color.operator()<black>();
 
-		const file en_passant_file = get_en_passant_file();
-		if (en_passant_file != empty)
+		const file ep_file = get_en_passant_file();
+		if (ep_file != no_ep_file)
 		{
-			new_key ^= tt_keys.en_passant_keys[en_passant_file];
+			new_key ^= en_passant_key(ep_file);
 		}
 
 		if (color_to_move == black)
 		{
-			new_key ^= tt_keys.black_to_move;
+			new_key ^= black_to_move_key();
 		}
 
-		new_key ^= (tt_keys.w_castle_ks * white_can_castle_ks());
-		new_key ^= (tt_keys.w_castle_qs * white_can_castle_qs());
-		new_key ^= (tt_keys.b_castle_ks * black_can_castle_ks());
-		new_key ^= (tt_keys.b_castle_qs * black_can_castle_qs());
+		new_key ^= (w_castle_ks_key() * white_can_castle_ks());
+		new_key ^= (w_castle_qs_key() * white_can_castle_qs());
+		new_key ^= (b_castle_ks_key() * black_can_castle_ks());
+		new_key ^= (b_castle_qs_key() * black_can_castle_qs());
 
 		key = new_key;
 		eval = new_eval;
 	}
 
-	void board::verify_key_and_eval(const color_t color_to_move)
+	void board::verify_key_and_eval(const color color_to_move)
 	{
 		const auto expected_key = key;
 		const auto expected_eval = eval;

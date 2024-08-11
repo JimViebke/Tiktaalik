@@ -4,8 +4,7 @@
 #include <memory>
 
 #include "config.hpp"
-#include "piece.hpp"
-#include "types.hpp"
+#include "defines.hpp"
 #include "util/intrinsics.hpp"
 #include "util/strong_alias.hpp"
 
@@ -61,13 +60,13 @@ namespace chess
 		const bitboard occupied() const { return white | black; }
 		const bitboard empty() const { return ~occupied(); }
 
-		template <color_t color>
+		template <color color>
 		const bitboard& get() const
 		{
 			return ((color == chess::white) ? white : black);
 		}
 
-		template <color_t color, piece_t piece>
+		template <color color, piece piece>
 		const bitboard get() const
 		{
 			return get<color>() & ((piece == pawn)        ? pawns
@@ -87,7 +86,7 @@ namespace chess
 
 	[[nodiscard]] inline bitboard clear_next_bit(const bitboard bitboard) { return ::util::blsr(bitboard); }
 
-	template <piece_t piece>
+	template <piece piece>
 	force_inline_toggle bitboard get_slider_moves(const bitboards& bitboards, const size_t start_idx)
 	{
 		static_assert(piece == bishop || piece == rook || piece == queen);
@@ -128,13 +127,13 @@ namespace chess
 
 		return moves;
 	}
-	template <piece_t piece>
+	template <piece piece>
 	force_inline_toggle bitboard get_slider_moves(const bitboards& bitboards, const bitboard square)
 	{
 		return get_slider_moves<piece>(bitboards, get_next_bit_index(square));
 	}
 
-	template <color_t color>
+	template <color color>
 	force_inline_toggle bitboard get_blockers(const bitboards& bitboards)
 	{
 		const bitboard our_pieces = bitboards.get<color>();
@@ -145,7 +144,7 @@ namespace chess
 		return our_pieces & blocker_squares & moves;
 	}
 
-	template <color_t king_color>
+	template <color king_color>
 	force_inline_toggle bool is_attacked_by_sliding_piece(const bitboards& bitboards, const size_t king_idx)
 	{
 		const bitboard rook_pext_mask = rook_pext_masks[king_idx];
@@ -157,7 +156,7 @@ namespace chess
 		const bitboard rook_moves = (*rook_move_masks)[king_idx][rook_movemask_idx];
 		const bitboard bishop_moves = (*bishop_move_masks)[king_idx][bishop_movemask_idx];
 
-		constexpr color_t opp_color = other_color(king_color);
+		constexpr color opp_color = other_color(king_color);
 		const bitboard opp_rooks_and_queens = (bitboards.rooks | bitboards.queens) & bitboards.get<opp_color>();
 		const bitboard opp_bishops_and_queens = (bitboards.bishops | bitboards.queens) & bitboards.get<opp_color>();
 

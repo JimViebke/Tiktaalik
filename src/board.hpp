@@ -7,10 +7,10 @@
 
 #include "bitboard.hpp"
 #include "config.hpp"
+#include "defines.hpp"
 #include "evaluation.hpp"
-#include "piece.hpp"
 #include "transposition_table.hpp"
-#include "types.hpp"
+#include "util/intrinsics.hpp"
 #include "util/util.hpp"
 
 namespace chess
@@ -45,16 +45,16 @@ namespace chess
 		board() {}
 
 		// Simple, nonvalidating FEN parser
-		color_t load_fen(const std::string& fen);
-		void set_last_moved_info(const color_t color_to_move);
-		void generate_key_and_eval(const color_t color_to_move);
-		void verify_key_and_eval(const color_t color_to_move);
+		color load_fen(const std::string& fen);
+		void set_last_moved_info(const color color_to_move);
+		void generate_key_and_eval(const color color_to_move);
+		void verify_key_and_eval(const color color_to_move);
 
-		template <color_t color_to_move, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
+		template <color color_to_move, piece moving_piece, move_type move_type, piece promoted_piece>
 		inline_toggle_member void update_bitboards(
-		    const size_t parent_idx, const bitboard leaving_bit, const bitboard arriving_bit, piece_t& captured_piece)
+		    const size_t parent_idx, const bitboard leaving_bit, const bitboard arriving_bit, piece& captured_piece)
 		{
-			constexpr color_t moved_color = other_color(color_to_move);
+			constexpr color moved_color = other_color(color_to_move);
 
 			const class bitboards& parent_bbs = boards[parent_idx].get_bitboards();
 
@@ -78,29 +78,28 @@ namespace chess
 
 				uint32_t lo = _mm256_movemask_pd(_mm256_cmpeq_epi64(bb_lo, old_lo));
 				uint32_t hi = _mm256_movemask_pd(_mm256_cmpeq_epi64(bb_hi, old_hi));
-				uint32_t masks = (hi << 4) | lo; // Combine.
-				masks ^= 0b1111'1111;            // Invert the byte we care about.
-				masks >>= 2;                     // Remove the two color bits.
-				captured_piece =
-				    get_next_bit_index(masks); // Get the index of the lowest set bit (0..4 for pawn..queen)
+				uint32_t masks = (hi << 4) | lo;            // Combine.
+				masks ^= 0b1111'1111;                       // Invert the byte we care about.
+				masks >>= 2;                                // Remove the two color bits.
+				captured_piece = get_next_bit_index(masks); // Get 0..4 for pawn..queen.
 			}
 
-			if constexpr (promotion_type == empty)
+			if constexpr (promoted_piece == empty)
 			{
 				uint256_t toggle_bits = _mm256_setzero_si256();
 				toggle_bits = _mm256_insert_epi64(toggle_bits, leaving_bit | arriving_bit, 0);
 
-				if constexpr (moving_piece_type == pawn || moving_piece_type == knight)
+				if constexpr (moving_piece == pawn || moving_piece == knight)
 				{
 					// If a white pawn is moving, XOR at 0 and 2.
 					// If a white knight is moving, XOR at 0 and 3.
 					// If a black pawn is moving, XOR at 1 and 2.
 					// If a black knight is moving, XOR at 1 and 3.
-					if constexpr (moved_color == white && moving_piece_type == pawn)
+					if constexpr (moved_color == white && moving_piece == pawn)
 						toggle_bits = _mm256_permute4x64_epi64(toggle_bits, 0b01'00'01'00); // 0b01 is empty
-					else if constexpr (moved_color == white && moving_piece_type == knight)
+					else if constexpr (moved_color == white && moving_piece == knight)
 						toggle_bits = _mm256_permute4x64_epi64(toggle_bits, 0b00'01'01'00);
-					else if constexpr (moved_color == black && moving_piece_type == pawn)
+					else if constexpr (moved_color == black && moving_piece == pawn)
 						toggle_bits = _mm256_permute4x64_epi64(toggle_bits, 0b01'00'00'01);
 					else // A black knight is moving.
 						toggle_bits = _mm256_permute4x64_epi64(toggle_bits, 0b00'01'00'01);
@@ -116,11 +115,11 @@ namespace chess
 						bb_lo = _mm256_xor_si256(bb_lo, _mm256_permute4x64_epi64(toggle_bits, 0b01'01'00'01));
 
 					// XOR at one of [4-7] for the moving bishop/rook/queen/king.
-					if constexpr (moving_piece_type == bishop)
+					if constexpr (moving_piece == bishop)
 						bb_hi = _mm256_xor_si256(bb_hi, toggle_bits);
-					else if constexpr (moving_piece_type == rook)
+					else if constexpr (moving_piece == rook)
 						bb_hi = _mm256_xor_si256(bb_hi, _mm256_permute4x64_epi64(toggle_bits, 0b01'01'00'01));
-					else if constexpr (moving_piece_type == queen)
+					else if constexpr (moving_piece == queen)
 						bb_hi = _mm256_xor_si256(bb_hi, _mm256_permute4x64_epi64(toggle_bits, 0b01'00'01'01));
 					else // A king is moving.
 						bb_hi = _mm256_xor_si256(bb_hi, _mm256_permute4x64_epi64(toggle_bits, 0b00'01'01'01));
@@ -133,19 +132,19 @@ namespace chess
 			bitboard our_pieces = bitboards.get<moved_color>();
 			bitboard opp_pieces = bitboards.get<color_to_move>();
 
-			if constexpr (promotion_type != empty)
+			if constexpr (promoted_piece != empty)
 			{
 				our_pieces ^= leaving_bit | arriving_bit;
 
 				bitboards.pawns ^= leaving_bit;
 
-				if constexpr (promotion_type == knight)
+				if constexpr (promoted_piece == knight)
 					bitboards.knights |= arriving_bit;
-				else if constexpr (promotion_type == bishop)
+				else if constexpr (promoted_piece == bishop)
 					bitboards.bishops |= arriving_bit;
-				else if constexpr (promotion_type == rook)
+				else if constexpr (promoted_piece == rook)
 					bitboards.rooks |= arriving_bit;
-				else if constexpr (promotion_type == queen)
+				else if constexpr (promoted_piece == queen)
 					bitboards.queens |= arriving_bit;
 			}
 
@@ -180,12 +179,12 @@ namespace chess
 			bitboards.black = (moved_color == white) ? opp_pieces : our_pieces;
 		}
 
-		template <color_t color_to_move, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
+		template <color color_to_move, piece moving_piece, move_type move_type, piece promoted_piece>
 		force_inline_toggle void make_board(
 		    const size_t child_idx, const size_t parent_idx, const bitboard start, const bitboard end)
 		{
 			// Generate a mask at compile time to selectively copy parent state.
-			constexpr uint32_t copy_mask = get_copy_mask<color_to_move, moving_piece_type, move_type, promotion_type>();
+			constexpr uint32_t copy_mask = get_copy_mask<color_to_move, moving_piece, move_type, promoted_piece>();
 			uint32_t bitfield = boards[parent_idx].board_state & copy_mask;
 
 			// Record the move that resulted in this position.
@@ -196,20 +195,20 @@ namespace chess
 
 			// Record the type of piece that was moved, or in the case of promotion,
 			// record the promoted-to type.
-			if constexpr (promotion_type == empty)
+			if constexpr (promoted_piece == empty)
 			{
-				bitfield |= moving_piece_type << (moved_piece_offset - 1);
+				bitfield |= uint32_t(moving_piece) << moved_piece_offset;
 			}
 			else
 			{
-				bitfield |= promotion_type << (moved_piece_offset - 1);
-				bitfield |= 1ull << promotion_offset;
+				bitfield |= uint32_t(promoted_piece) << moved_piece_offset;
+				bitfield |= 1 << promotion_offset;
 			}
 
 			// If the move is not a capture or pawn move, increment the fifty-move counter.
-			if constexpr (move_type != move_type::capture && moving_piece_type != pawn)
+			if constexpr (move_type != move_type::capture && moving_piece != pawn)
 			{
-				bitfield += 1ull << fifty_move_counter_offset;
+				bitfield += 1 << fifty_move_counter_offset;
 			}
 
 			// Record any en passant right for the opponent.
@@ -219,13 +218,13 @@ namespace chess
 			}
 			else
 			{
-				bitfield |= empty << en_passant_file_offset;
+				bitfield |= uint32_t(no_ep_file) << en_passant_file_offset;
 			}
 
 			// If a rook moves, it cannot be used to castle.
 			// Update castling rights for the moving player.
-			constexpr color_t moving_color = other_color(color_to_move);
-			if constexpr (moving_piece_type == rook)
+			constexpr color moving_color = other_color(color_to_move);
+			if constexpr (moving_piece == rook)
 			{
 				const rank start_rank = start_idx / 8;
 				const file start_file = start_idx % 8;
@@ -234,9 +233,9 @@ namespace chess
 					if (start_rank == 7)
 					{
 						if (start_file == 0)
-							bitfield &= ~(1ull << white_can_castle_qs_offset);
+							bitfield &= ~(1 << white_can_castle_qs_offset);
 						else if (start_file == 7)
-							bitfield &= ~(1ull << white_can_castle_ks_offset);
+							bitfield &= ~(1 << white_can_castle_ks_offset);
 					}
 				}
 				else
@@ -244,9 +243,9 @@ namespace chess
 					if (start_rank == 0)
 					{
 						if (start_file == 0)
-							bitfield &= ~(1ull << black_can_castle_qs_offset);
+							bitfield &= ~(1 << black_can_castle_qs_offset);
 						else if (start_file == 7)
-							bitfield &= ~(1ull << black_can_castle_ks_offset);
+							bitfield &= ~(1 << black_can_castle_ks_offset);
 					}
 				}
 			}
@@ -262,9 +261,9 @@ namespace chess
 					if (end_rank == 0)
 					{
 						if (end_file == 0)
-							bitfield &= ~(1ull << black_can_castle_qs_offset);
+							bitfield &= ~(1 << black_can_castle_qs_offset);
 						else if (end_file == 7)
-							bitfield &= ~(1ull << black_can_castle_ks_offset);
+							bitfield &= ~(1 << black_can_castle_ks_offset);
 					}
 				}
 				else
@@ -272,9 +271,9 @@ namespace chess
 					if (end_rank == 7)
 					{
 						if (end_file == 0)
-							bitfield &= ~(1ull << white_can_castle_qs_offset);
+							bitfield &= ~(1 << white_can_castle_qs_offset);
 						else if (end_file == 7)
-							bitfield &= ~(1ull << white_can_castle_ks_offset);
+							bitfield &= ~(1 << white_can_castle_ks_offset);
 					}
 				}
 			}
@@ -282,49 +281,49 @@ namespace chess
 			boards[child_idx].board_state = bitfield;
 		}
 
-		template <color_t moving_color, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
+		template <color moving_color, piece moving_piece, move_type move_type, piece promoted_piece>
 		inline_toggle_member void update_key_and_eval(const board& parent_board, tt_key incremental_key,
-		    const bitboard start, const bitboard end, piece_t captured_piece)
+		    const bitboard start, const bitboard end, piece captured_piece)
 		{
 			// The incremental_key has already had the leaving piece removed, and the color to move toggled.
 			// We receive it by copy so we can modify it before writing it.
 
-			constexpr piece_t piece_before = moving_piece_type | moving_color;
-			constexpr piece_t piece_after = (promotion_type == empty) ? piece_before : (moving_color | promotion_type);
+			constexpr piece piece_before = moving_piece;
+			constexpr piece piece_after = (promoted_piece == empty) ? piece_before : promoted_piece;
 
 			eval_t incremental_eval = parent_board.get_eval();
 
-			if constexpr (promotion_type != empty)
+			if constexpr (promoted_piece != empty)
 			{
-				incremental_eval -= eval::piece_eval<moving_color>(piece_before);
-				incremental_eval += eval::piece_eval<moving_color>(piece_after);
+				incremental_eval -= eval::piece_eval<moving_color, piece_before>();
+				incremental_eval += eval::piece_eval<moving_color, piece_after>();
 			}
 
 			const size_t start_idx = get_next_bit_index(start);
 			const size_t end_idx = get_next_bit_index(end);
 
 			// add the key for the arriving piece
-			incremental_key ^= tt_keys.piece_square_keys[piece_after][end_idx];
-			// update square eval for the piece
-			incremental_eval -= eval::piece_square_eval_mg<moving_color>(piece_before, start_idx);
-			incremental_eval += eval::piece_square_eval_mg<moving_color>(piece_after, end_idx);
+			incremental_key ^= piece_square_key<moving_color, piece_after>(end_idx);
 
-			constexpr color_t opp_color = other_color(moving_color);
+			// update square eval for the piece
+			incremental_eval -= eval::piece_square_eval_mg<moving_color, piece_before>(start_idx);
+			incremental_eval += eval::piece_square_eval_mg<moving_color, piece_after>(end_idx);
+
+			constexpr color opp_color = other_color(moving_color);
 
 			if constexpr (move_type == move_type::pawn_two_squares)
 			{
 				// add en passant rights for the opponent
-				incremental_key ^= tt_keys.en_passant_keys[end_idx % 8];
+				incremental_key ^= en_passant_key(end_idx % 8);
 			}
 			else if (move_type == move_type::en_passant_capture)
 			{
 				const size_t captured_pawn_idx = end_idx + ((moving_color == white) ? 8 : -8);
-				constexpr piece_t captured_pawn = other_color(moving_color) | pawn;
 				// remove key for the captured pawn
-				incremental_key ^= tt_keys.piece_square_keys[captured_pawn][captured_pawn_idx];
+				incremental_key ^= piece_square_key<opp_color, pawn>(captured_pawn_idx);
 				// udpate eval for the captured pawn
-				incremental_eval -= eval::piece_eval<opp_color>(captured_pawn);
-				incremental_eval -= eval::piece_square_eval_mg<opp_color>(captured_pawn, captured_pawn_idx);
+				incremental_eval -= eval::piece_eval<opp_color, pawn>();
+				incremental_eval -= eval::piece_square_eval_mg<opp_color, pawn>(captured_pawn_idx);
 			}
 			else if (move_type == move_type::castle_kingside || move_type == move_type::castle_queenside)
 			{
@@ -333,21 +332,17 @@ namespace chess
 				constexpr size_t rook_start_index = rook_start_rank * 8 + rook_start_file;
 				constexpr size_t rook_end_index = rook_start_index + (move_type == move_type::castle_kingside ? -2 : 3);
 
-				constexpr piece_t moving_rook = moving_color | rook;
 				// update keys for the moving rook
-				incremental_key ^= tt_keys.piece_square_keys[moving_rook][rook_start_index];
-				incremental_key ^= tt_keys.piece_square_keys[moving_rook][rook_end_index];
+				incremental_key ^= piece_square_key<moving_color, rook>(rook_start_index);
+				incremental_key ^= piece_square_key<moving_color, rook>(rook_end_index);
 				// update eval for the moving rook
-				incremental_eval -= eval::piece_square_eval_mg<moving_color>(moving_rook, rook_start_index);
-				incremental_eval += eval::piece_square_eval_mg<moving_color>(moving_rook, rook_end_index);
+				incremental_eval -= eval::piece_square_eval_mg<moving_color, rook>(rook_start_index);
+				incremental_eval += eval::piece_square_eval_mg<moving_color, rook>(rook_end_index);
 			}
 			else if (move_type == move_type::capture) // non-en passant capture
 			{
-				captured_piece <<= 1;
-				captured_piece |= opp_color;
-
 				// remove the key for the captured piece
-				incremental_key ^= tt_keys.piece_square_keys[captured_piece][end_idx];
+				incremental_key ^= piece_square_key<opp_color>(captured_piece, end_idx);
 				// update our opponent's castling rights
 				update_key_castling_rights_for<opp_color>(incremental_key, parent_board);
 				// update eval for the captured piece
@@ -355,7 +350,7 @@ namespace chess
 				incremental_eval -= eval::piece_square_eval_mg<opp_color>(captured_piece, end_idx);
 			}
 
-			if constexpr (moving_piece_type == king || moving_piece_type == rook)
+			if constexpr (moving_piece == king || moving_piece == rook)
 			{
 				// a king or rook is moving; update our castling rights
 				update_key_castling_rights_for<moving_color>(incremental_key, parent_board);
@@ -372,10 +367,7 @@ namespace chess
 		file get_start_file() const { return (board_state >> start_file_offset) & square_mask; }
 		rank get_end_rank() const { return (board_state >> end_rank_offset) & square_mask; }
 		file get_end_file() const { return (board_state >> end_file_offset) & square_mask; }
-		piece moved_piece_without_color() const
-		{
-			return ((board_state >> moved_piece_offset) & moved_piece_mask) << 1;
-		}
+		piece get_moved_piece() const { return (board_state >> moved_piece_offset) & moved_piece_mask; }
 		file get_en_passant_file() const { return (board_state >> en_passant_file_offset) & en_passant_mask; }
 		bool white_can_castle_ks() const { return (board_state >> white_can_castle_ks_offset) & castling_right_mask; }
 		bool white_can_castle_qs() const { return (board_state >> white_can_castle_qs_offset) & castling_right_mask; }
@@ -385,7 +377,10 @@ namespace chess
 		{
 			return (board_state >> fifty_move_counter_offset) & fifty_move_counter_mask;
 		}
+		const class bitboards& get_bitboards() const { return bitboards; }
+
 		bool move_is(const packed_move best_move) const { return best_move == get_packed_move(); }
+
 		const std::string move_to_string() const
 		{
 			std::string result;
@@ -396,87 +391,97 @@ namespace chess
 
 			if (is_promotion())
 			{
-				// Append one of "qrbk".
-				result += moved_piece_without_color().to_promoted_char();
+				switch (get_moved_piece()) // Append one of "qrbk".
+				{
+				case knight: result += 'n'; break;
+				case bishop: result += 'b'; break;
+				case rook: result += 'r'; break;
+				case queen: result += 'q'; break;
+				default: result += '?';
+				}
 			}
 
 			return result;
 		}
-		const class bitboards& get_bitboards() const { return bitboards; }
 
-		void set_end_index(size_t idx) { board_state |= uint32_t(idx) << end_file_offset; }
-		void set_moved_piece(piece piece) { board_state |= uint32_t(piece >> 1) << moved_piece_offset; }
+		void set_end_index(const size_t idx) { board_state |= uint32_t(idx) << end_file_offset; }
+
+		template <piece piece>
+		void set_moved_piece()
+		{
+			board_state |= uint32_t(piece) << moved_piece_offset;
+		}
 
 	private:
 		bool is_promotion() const { return (board_state >> promotion_offset) & promotion_bits; }
 
-		void set_en_passant_file(file file) { board_state |= uint32_t(file) << en_passant_file_offset; }
-		void set_white_can_castle_ks(uint32_t arg) { board_state |= arg << white_can_castle_ks_offset; }
-		void set_white_can_castle_qs(uint32_t arg) { board_state |= arg << white_can_castle_qs_offset; }
-		void set_black_can_castle_ks(uint32_t arg) { board_state |= arg << black_can_castle_ks_offset; }
-		void set_black_can_castle_qs(uint32_t arg) { board_state |= arg << black_can_castle_qs_offset; }
-		void white_cant_castle_ks() { board_state &= ~(1 << white_can_castle_ks_offset); }
-		void white_cant_castle_qs() { board_state &= ~(1 << white_can_castle_qs_offset); }
-		void black_cant_castle_ks() { board_state &= ~(1 << black_can_castle_ks_offset); }
-		void black_cant_castle_qs() { board_state &= ~(1 << black_can_castle_qs_offset); }
-		void set_fifty_move_counter(uint32_t arg) { board_state |= arg << fifty_move_counter_offset; }
-
-		template <color_t update_color>
-		inline_toggle_member void update_key_castling_rights_for(tt_key& incremental_key, const board& parent_board)
-		{
-			if constexpr (update_color == white)
-			{
-				if (white_can_castle_ks() != parent_board.white_can_castle_ks()) incremental_key ^= tt_keys.w_castle_ks;
-				if (white_can_castle_qs() != parent_board.white_can_castle_qs()) incremental_key ^= tt_keys.w_castle_qs;
-			}
-			else
-			{
-				if (black_can_castle_ks() != parent_board.black_can_castle_ks()) incremental_key ^= tt_keys.b_castle_ks;
-				if (black_can_castle_qs() != parent_board.black_can_castle_qs()) incremental_key ^= tt_keys.b_castle_qs;
-			}
-		}
-
-		template <color_t color_to_move, piece_t moving_piece_type, move_type move_type, piece_t promotion_type>
+		template <color color_to_move, piece moving_piece, move_type move_type, piece promoted_piece>
 		consteval static uint32_t get_copy_mask()
 		{
-			constexpr color_t moving_color = other_color(color_to_move);
+			constexpr color moving_color = other_color(color_to_move);
 
 			uint32_t copy_mask = 0;
 
 			// Always copy the opponent's castling rights.
 			if constexpr (moving_color == white)
 			{
-				copy_mask |= 1ull << black_can_castle_ks_offset;
-				copy_mask |= 1ull << black_can_castle_qs_offset;
+				copy_mask |= 1 << black_can_castle_ks_offset;
+				copy_mask |= 1 << black_can_castle_qs_offset;
 			}
 			else
 			{
-				copy_mask |= 1ull << white_can_castle_ks_offset;
-				copy_mask |= 1ull << white_can_castle_qs_offset;
+				copy_mask |= 1 << white_can_castle_ks_offset;
+				copy_mask |= 1 << white_can_castle_qs_offset;
 			}
 
 			// If the move is not a king move, copy the moving player's castling rights.
-			if constexpr (moving_piece_type != king)
+			if constexpr (moving_piece != king)
 			{
 				if constexpr (moving_color == white)
 				{
-					copy_mask |= 1ull << white_can_castle_ks_offset;
-					copy_mask |= 1ull << white_can_castle_qs_offset;
+					copy_mask |= 1 << white_can_castle_ks_offset;
+					copy_mask |= 1 << white_can_castle_qs_offset;
 				}
 				else
 				{
-					copy_mask |= 1ull << black_can_castle_ks_offset;
-					copy_mask |= 1ull << black_can_castle_qs_offset;
+					copy_mask |= 1 << black_can_castle_ks_offset;
+					copy_mask |= 1 << black_can_castle_qs_offset;
 				}
 			}
 
 			// If the move is not a capture or pawn move, copy the fifty-move counter.
-			if constexpr (moving_piece_type != pawn && move_type != move_type::capture)
+			if constexpr (moving_piece != pawn && move_type != move_type::capture)
 			{
 				copy_mask |= fifty_move_counter_mask << fifty_move_counter_offset;
 			}
 
 			return copy_mask;
+		}
+
+		void set_en_passant_file(const file file) { board_state |= uint32_t(file) << en_passant_file_offset; }
+		void set_white_can_castle_ks(const uint32_t arg) { board_state |= arg << white_can_castle_ks_offset; }
+		void set_white_can_castle_qs(const uint32_t arg) { board_state |= arg << white_can_castle_qs_offset; }
+		void set_black_can_castle_ks(const uint32_t arg) { board_state |= arg << black_can_castle_ks_offset; }
+		void set_black_can_castle_qs(const uint32_t arg) { board_state |= arg << black_can_castle_qs_offset; }
+		void white_cant_castle_ks() { board_state &= ~(1 << white_can_castle_ks_offset); }
+		void white_cant_castle_qs() { board_state &= ~(1 << white_can_castle_qs_offset); }
+		void black_cant_castle_ks() { board_state &= ~(1 << black_can_castle_ks_offset); }
+		void black_cant_castle_qs() { board_state &= ~(1 << black_can_castle_qs_offset); }
+		void set_fifty_move_counter(const uint32_t arg) { board_state |= arg << fifty_move_counter_offset; }
+
+		template <color update_color>
+		inline_toggle_member void update_key_castling_rights_for(tt_key& incremental_key, const board& parent_board)
+		{
+			if constexpr (update_color == white)
+			{
+				if (white_can_castle_ks() != parent_board.white_can_castle_ks()) incremental_key ^= w_castle_ks_key();
+				if (white_can_castle_qs() != parent_board.white_can_castle_qs()) incremental_key ^= w_castle_qs_key();
+			}
+			else
+			{
+				if (black_can_castle_ks() != parent_board.black_can_castle_ks()) incremental_key ^= b_castle_ks_key();
+				if (black_can_castle_qs() != parent_board.black_can_castle_qs()) incremental_key ^= b_castle_qs_key();
+			}
 		}
 
 		// bitfield sizes

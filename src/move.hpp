@@ -5,7 +5,7 @@
 
 namespace chess
 {
-	template <color_t attacker_color>
+	template <color attacker_color>
 	[[clang::always_inline]] static bool square_is_attacked_by_pawn(const bitboards& bitboards, const size_t target_idx)
 	{
 		const bitboard opp_pawns = bitboards.get<attacker_color, pawn>();
@@ -19,7 +19,7 @@ namespace chess
 		return checkers_to_lower_file | checkers_to_higher_file;
 	}
 
-	template <color_t attacker_color>
+	template <color attacker_color>
 	[[clang::always_inline]] static bool square_is_attacked_by_knight(
 	    const bitboards& bitboards, const size_t target_idx)
 	{
@@ -27,7 +27,7 @@ namespace chess
 		return opp_knights & knight_attack_masks[target_idx];
 	}
 
-	template <color_t attacker_color>
+	template <color attacker_color>
 	[[clang::always_inline]] static bool square_is_attacked_by_king(const bitboards& bitboards, const size_t target_idx)
 	{
 		const bitboard opp_king = bitboards.get<attacker_color, king>();
@@ -47,10 +47,10 @@ namespace chess
 		sliders
 	};
 
-	template <color_t king_color, check_type check_type>
+	template <color king_color, check_type check_type>
 	force_inline_toggle bool is_king_in_check(const bitboards& bitboards, const size_t king_idx)
 	{
-		constexpr color_t opp_color = other_color(king_color);
+		constexpr color opp_color = other_color(king_color);
 
 		if constexpr (check_type == check_type::all)
 		{
@@ -79,6 +79,6 @@ namespace chess
 		noncaptures
 	};
 
-	template <color_t color_to_move, gen_moves gen_moves = gen_moves::all, bool perft = false>
+	template <color color_to_move, gen_moves gen_moves = gen_moves::all, bool perft = false>
 	size_t generate_child_boards(const size_t parent_idx);
 }

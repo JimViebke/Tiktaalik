@@ -46,7 +46,7 @@ namespace chess
 		return false;
 	}
 
-	template <color_t color_to_move, bool quiescing, bool full_window>
+	template <color color_to_move, bool quiescing, bool full_window>
 	eval_t alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta)
 	{
 		++nodes;

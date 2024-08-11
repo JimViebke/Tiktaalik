@@ -3,12 +3,11 @@
 
 #include "move.hpp"
 #include "perft.hpp"
-#include "piece_defines.hpp"
 #include "util/util.hpp"
 
 namespace chess
 {
-	template <color_t color_to_move>
+	template <color color_to_move>
 	size_t perft(size_t idx, const depth_t depth)
 	{
 		const size_t begin_idx = first_child_index(idx);
@@ -27,7 +26,7 @@ namespace chess
 		return count;
 	}
 
-	template <color_t color_to_move>
+	template <color color_to_move>
 	void divide(const depth_t max_depth)
 	{
 		if (max_depth < 1)

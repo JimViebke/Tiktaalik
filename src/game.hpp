@@ -113,7 +113,7 @@ namespace chess
 			util::log("pondering " + move);
 		}
 
-		template <color_t color_to_move>
+		template <color color_to_move>
 		eval_t search(const size_t end_idx, const depth_t depth);
 
 		void worker_thread()
@@ -232,7 +232,7 @@ namespace chess
 
 		std::mutex game_mutex;
 
-		color_t color_to_move;
+		color color_to_move;
 
 		depth_t engine_depth = 0;
 		util::timepoint engine_start_time = 0;
