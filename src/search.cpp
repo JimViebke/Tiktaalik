@@ -118,6 +118,8 @@ namespace chess
 			}
 		}
 
+		if (idx >= boards.size() - max_n_of_moves) return board.get_eval();
+
 		const size_t begin_idx = first_child_index(idx);
 		size_t end_idx{};
 		gen_moves generated_moves{};
