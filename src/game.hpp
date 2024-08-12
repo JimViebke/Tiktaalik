@@ -206,6 +206,27 @@ namespace chess
 						send_move(best_move);
 						best_move = "";
 					}
+					else if (engine_depth >= depth_t{eval::max_ply})
+					{
+						if (pondering)
+						{
+							util::log("Reached max ply while pondering. Stopping.");
+						}
+						else if (best_move != "")
+						{
+							apply_move(best_move);
+							send_move(best_move);
+							util::log("Reached max ply while searching, and played best move. Stopping.");
+						}
+						else
+						{
+							util::log("Reached max ply while searching, but no best move to play?");
+						}
+
+						best_move = "";
+						pondering = false;
+						searching = false;
+					}
 				}
 				else if (util::time_in_ms() >= scheduled_turn_end)
 				{
