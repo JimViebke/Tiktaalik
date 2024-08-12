@@ -4,7 +4,7 @@
 namespace chess
 {
 	size_t root_ply{0};
-	std::array<tt_key, eval::max_ply * 2> history{};
+	std::array<tt_key, eval::max_ply * 4> history{};
 	std::atomic_bool searching{false};
 	std::atomic_bool pondering{false};
 	util::timepoint scheduled_turn_end{0};
