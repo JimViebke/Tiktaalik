@@ -97,6 +97,7 @@ namespace chess
 			std::stringstream ss;
 			ss << "Illegal move: [" << move << ']';
 			util::log(ss.str());
+			std::cout << ss.str() << '\n';
 		}
 
 		void send_move(const std::string& move)
