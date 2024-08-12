@@ -117,7 +117,7 @@ namespace chess
 		}
 
 		color_to_move = boards[0].load_fen(fen);
-		update_info_for_new_root_position();
+		generate_child_boards_for_root();
 
 		history[0] = boards[0].get_key();
 

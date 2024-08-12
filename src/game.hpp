@@ -25,7 +25,7 @@ namespace chess
 	public:
 		Game() : color_to_move{boards[0].load_fen(start_pos)}
 		{
-			update_info_for_new_root_position();
+			generate_child_boards_for_root();
 
 			std::thread([this] { worker_thread(); }).detach();
 		}
@@ -48,8 +48,6 @@ namespace chess
 
 			n_legal_moves = end_idx - first_child_index(0);
 		}
-
-		void update_info_for_new_root_position() { generate_child_boards_for_root(); }
 
 		// Index must be a ply-1 child of the root position.
 		// The calling thread must own the game mutex.
@@ -75,7 +73,7 @@ namespace chess
 				pv_length = 0;
 			}
 
-			update_info_for_new_root_position();
+			generate_child_boards_for_root();
 
 			// Decrement the current depth because we're advancing down the tree by one node.
 			if (engine_depth > 0) --engine_depth;
