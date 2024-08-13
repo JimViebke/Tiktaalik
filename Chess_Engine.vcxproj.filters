@@ -14,9 +14,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\types.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\util\strong_alias.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -30,12 +27,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\game.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\piece.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\piece_defines.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\search.hpp">
@@ -60,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\uci.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\defines.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
