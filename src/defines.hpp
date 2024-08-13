@@ -23,23 +23,23 @@ namespace chess
 	using piece = uint8_t;
 	using color = uint8_t;
 
-	static constexpr color white = 0;
-	static constexpr color black = 1;
+	constexpr color white = 0;
+	constexpr color black = 1;
 
 	constexpr inline color other_color(const color color) { return (color == white) ? black : white; }
 
-	static constexpr piece pawn = 0;
-	static constexpr piece knight = 1;
-	static constexpr piece bishop = 2;
-	static constexpr piece rook = 3;
-	static constexpr piece queen = 4;
-	static constexpr piece king = 5;
+	constexpr piece pawn = 0;
+	constexpr piece knight = 1;
+	constexpr piece bishop = 2;
+	constexpr piece rook = 3;
+	constexpr piece queen = 4;
+	constexpr piece king = 5;
 
-	static constexpr size_t n_of_piece_types = 6;
+	constexpr size_t n_of_piece_types = 6;
 
-	static constexpr piece empty = king + 1;
+	constexpr piece empty = king + 1;
 
-	static constexpr file no_ep_file = 8;
+	constexpr file no_ep_file = 8;
 
 	using uint128_t = __m128i;
 	using uint256_t = __m256i;

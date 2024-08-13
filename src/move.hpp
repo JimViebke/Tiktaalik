@@ -6,7 +6,7 @@
 namespace chess
 {
 	template <color attacker_color>
-	[[clang::always_inline]] static bool square_is_attacked_by_pawn(const bitboards& bitboards, const size_t target_idx)
+	[[clang::always_inline]] bool square_is_attacked_by_pawn(const bitboards& bitboards, const size_t target_idx)
 	{
 		const bitboard opp_pawns = bitboards.get<attacker_color, pawn>();
 		const bitboard index_bb = 1ull << target_idx;
@@ -20,15 +20,14 @@ namespace chess
 	}
 
 	template <color attacker_color>
-	[[clang::always_inline]] static bool square_is_attacked_by_knight(
-	    const bitboards& bitboards, const size_t target_idx)
+	[[clang::always_inline]] bool square_is_attacked_by_knight(const bitboards& bitboards, const size_t target_idx)
 	{
 		const bitboard opp_knights = bitboards.get<attacker_color, knight>();
 		return opp_knights & knight_attack_masks[target_idx];
 	}
 
 	template <color attacker_color>
-	[[clang::always_inline]] static bool square_is_attacked_by_king(const bitboards& bitboards, const size_t target_idx)
+	[[clang::always_inline]] bool square_is_attacked_by_king(const bitboards& bitboards, const size_t target_idx)
 	{
 		const bitboard opp_king = bitboards.get<attacker_color, king>();
 		return opp_king & king_attack_masks[target_idx];

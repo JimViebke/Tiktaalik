@@ -10,10 +10,10 @@ namespace chess
 {
 	namespace eval
 	{
-		static constexpr size_t max_ply = 256;
+		constexpr size_t max_ply = 256;
 
-		static constexpr eval_t mate = std::numeric_limits<eval_t>::max() - max_ply;
-		static constexpr eval_t mate_threshold = mate - max_ply;
+		constexpr eval_t mate = std::numeric_limits<eval_t>::max() - max_ply;
+		constexpr eval_t mate_threshold = mate - max_ply;
 
 		inline bool found_mate(const eval_t eval)
 		{
