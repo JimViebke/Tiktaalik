@@ -9,7 +9,7 @@
 namespace chess
 {
 	extern size_t root_ply;
-	extern std::array<tt_key, eval::max_ply * 4> history;
+	extern std::array<tt_key, max_ply * 4> history;
 	extern std::atomic_bool searching;
 	extern std::atomic_bool pondering;
 	extern util::timepoint scheduled_turn_end;
@@ -17,8 +17,8 @@ namespace chess
 
 	extern transposition_table tt;
 
-	extern std::array<std::array<board, eval::max_ply>, eval::max_ply> pv_moves;
-	extern std::array<size_t, eval::max_ply> pv_lengths;
+	extern std::array<std::array<board, max_ply>, max_ply> pv_moves;
+	extern std::array<size_t, max_ply> pv_lengths;
 
 	void update_pv(const size_t ply, const board& board);
 

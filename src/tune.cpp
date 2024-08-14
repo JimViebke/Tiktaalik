@@ -100,7 +100,7 @@ namespace chess
 #endif
 
 #if tuning
-	void Game::load_games()
+	void game::load_games()
 	{
 		const auto start_time = util::time_in_ms();
 
@@ -376,7 +376,7 @@ namespace chess
 #endif
 
 #if tuning
-	void Game::tune(const std::vector<std::string>& args)
+	void game::tune(const std::vector<std::string>& args)
 	{
 		if (args.size() < 2 || args[1] == "help")
 		{

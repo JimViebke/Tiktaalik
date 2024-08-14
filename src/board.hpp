@@ -28,7 +28,7 @@ namespace chess
 	class board;
 
 	constexpr size_t max_n_of_moves = 256;
-	constexpr size_t boards_size = eval::max_ply * max_n_of_moves;
+	constexpr size_t boards_size = max_ply * max_n_of_moves;
 	extern std::array<board, boards_size> boards;
 
 	inline constexpr size_t first_child_index(const size_t parent_index)

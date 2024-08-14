@@ -11,8 +11,6 @@ namespace chess
 {
 	namespace eval
 	{
-		constexpr size_t max_ply = 256;
-
 		constexpr eval_t mate = std::numeric_limits<eval_t>::max() - max_ply;
 		constexpr eval_t mate_threshold = mate - max_ply;
 

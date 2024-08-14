@@ -21,6 +21,8 @@ namespace chess
 	using depth_t = ::util::strong_alias<int16_t, struct depth_tag>;
 	using packed_move = ::util::strong_alias<uint16_t, struct packed_move_tag>;
 
+	constexpr size_t max_ply = 256;
+
 	using piece = uint8_t;
 	using color = uint8_t;
 

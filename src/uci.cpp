@@ -21,7 +21,7 @@ namespace chess
 		std::cout << command << std::endl;
 	}
 
-	void Game::send_info(const eval_t eval)
+	void game::send_info(const eval_t eval)
 	{
 		if (pondering) return; // Don't emit info while pondering.
 
@@ -69,7 +69,7 @@ namespace chess
 		send_command(ss.str());
 	}
 
-	void Game::apply_moves(const std::vector<std::string>& args, size_t move_idx)
+	void game::apply_moves(const std::vector<std::string>& args, size_t move_idx)
 	{
 		for (; move_idx < args.size(); ++move_idx)
 		{
@@ -77,7 +77,7 @@ namespace chess
 		}
 	}
 
-	void Game::process_position_command(const std::vector<std::string>& args)
+	void game::process_position_command(const std::vector<std::string>& args)
 	{
 		if (args.size() < 2)
 		{
@@ -127,7 +127,7 @@ namespace chess
 		}
 	}
 
-	void Game::process_go_command(const std::vector<std::string>& args)
+	void game::process_go_command(const std::vector<std::string>& args)
 	{
 		if (args.size() < 2)
 		{
@@ -243,7 +243,7 @@ namespace chess
 		searching.notify_one();
 	}
 
-	void Game::process_uci_commands()
+	void game::process_uci_commands()
 	{
 		std::string command;
 		while (std::getline(std::cin, command, '\n'))

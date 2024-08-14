@@ -4,7 +4,7 @@
 namespace chess
 {
 	size_t root_ply{0};
-	std::array<tt_key, eval::max_ply * 4> history{};
+	std::array<tt_key, max_ply * 4> history{};
 	std::atomic_bool searching{false};
 	std::atomic_bool pondering{false};
 	util::timepoint scheduled_turn_end{0};
@@ -12,8 +12,8 @@ namespace chess
 
 	transposition_table tt;
 
-	std::array<size_t, eval::max_ply> pv_lengths;
-	std::array<std::array<board, eval::max_ply>, eval::max_ply> pv_moves;
+	std::array<size_t, max_ply> pv_lengths;
+	std::array<std::array<board, max_ply>, max_ply> pv_moves;
 
 	void update_pv(const size_t ply, const board& board)
 	{

@@ -450,10 +450,12 @@ namespace chess
 	template size_t generate_child_boards<white, gen_moves::all>(const size_t);
 	template size_t generate_child_boards<white, gen_moves::captures>(const size_t);
 	template size_t generate_child_boards<white, gen_moves::noncaptures>(const size_t);
-	template size_t generate_child_boards<white, gen_moves::all, true>(const size_t);
 
 	template size_t generate_child_boards<black, gen_moves::all>(const size_t);
 	template size_t generate_child_boards<black, gen_moves::captures>(const size_t);
 	template size_t generate_child_boards<black, gen_moves::noncaptures>(const size_t);
+
+	// For perft:
+	template size_t generate_child_boards<white, gen_moves::all, true>(const size_t);
 	template size_t generate_child_boards<black, gen_moves::all, true>(const size_t);
 }

@@ -7,6 +7,6 @@ June 15 2014
 
 int main()
 {
-	chess::Game game;
+	chess::game game;
 	game.process_uci_commands();
 }
