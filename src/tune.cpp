@@ -31,7 +31,7 @@ namespace chess
 	// During tuning, instead provide it here.
 	namespace eval
 	{
-		std::array<int8_t, pse_size> ps_evals;
+		std::array<int16_t, pse_size> ps_evals;
 	}
 #endif
 
