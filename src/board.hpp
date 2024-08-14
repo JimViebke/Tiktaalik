@@ -62,7 +62,7 @@ namespace chess
 		void verify_key_and_eval(const color color_to_move);
 
 		template <color moving_color, piece piece, move_type move_type, chess::piece promoted_piece>
-		inline_toggle_member void copy_make_bitboards(
+		force_inline_toggle void copy_make_bitboards(
 		    const board& parent_board, const bitboard from, const bitboard to, chess::piece& captured_piece)
 		{
 			const class bitboards& parent_bbs = parent_board.get_bitboards();
@@ -189,8 +189,8 @@ namespace chess
 		}
 
 		template <color moving_color, piece piece, move_type move_type, chess::piece promoted_piece>
-		inline_toggle_member void copy_make_board(const board& parent_board, tt_key incremental_key,
-		    const bitboard from, const bitboard to, const chess::piece captured_piece)
+		force_inline_toggle void copy_make_board(const board& parent_board, tt_key incremental_key, const bitboard from,
+		    const bitboard to, const chess::piece captured_piece)
 		{
 			// Generate a mask at compile time to selectively copy parent state.
 			constexpr uint32_t copy_mask = get_copy_mask<moving_color, piece, move_type, promoted_piece>();
