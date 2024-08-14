@@ -19,12 +19,18 @@ namespace chess
 	const std::string start_pos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 	void send_command(const std::string& command); // Forward-declare.
+#if tuning
+	bool load_weights(); // Forward-declare.
+#endif
 
 	class Game
 	{
 	public:
 		Game() : color_to_move{boards[0].load_fen(start_pos)}
 		{
+#if tuning
+			load_weights();
+#endif
 			generate_child_boards_for_root();
 
 			std::thread([this] { worker_thread(); }).detach();
@@ -249,6 +255,9 @@ namespace chess
 				}
 			}
 		}
+
+		void load_games();
+		void tune(const std::vector<std::string>& args);
 
 		std::mutex game_mutex;
 

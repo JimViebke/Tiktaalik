@@ -34,6 +34,7 @@
     <ClCompile Include="src\move.cpp" />
     <ClCompile Include="src\perft.cpp" />
     <ClCompile Include="src\search.cpp" />
+    <ClCompile Include="src\tune.cpp" />
     <ClCompile Include="src\uci.cpp" />
     <ClCompile Include="src\util\util.cpp" />
   </ItemGroup>

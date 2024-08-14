@@ -139,7 +139,7 @@ namespace chess
 		// - Add last moved info for check detection.
 		set_last_moved_info(color_to_move);
 		// - Generate the Zobrist hash key and static evaluation from scratch.
-		generate_key_and_eval(color_to_move);
+		generate_key_eval_phase(color_to_move);
 
 		return color_to_move;
 	}
@@ -193,75 +193,41 @@ namespace chess
 		set_moved_piece<empty>();
 	}
 
-	void board::generate_key_and_eval(const color color_to_move)
-	{
-		tt_key new_key = 0;
-		eval_t new_eval = 0;
-
-		auto hash_and_eval_piece = [&]<color color, piece piece>()
-		{
-			bitboard bb = bitboards.get<color, piece>();
-
-			if constexpr (piece != king)
-			{
-				new_eval += eval::piece_eval<color>(piece) * ::util::popcount(bb);
-			}
-
-			while (bb)
-			{
-				const size_t piece_idx = get_next_bit_index(bb);
-				bb = clear_next_bit(bb);
-
-				new_key ^= piece_square_key<color, piece>(piece_idx);
-				new_eval += eval::piece_square_eval_mg<color, piece>(piece_idx);
-			}
-		};
-
-		auto hash_and_eval_color = [=]<color color>()
-		{
-			hash_and_eval_piece.operator()<color, pawn>();
-			hash_and_eval_piece.operator()<color, knight>();
-			hash_and_eval_piece.operator()<color, bishop>();
-			hash_and_eval_piece.operator()<color, rook>();
-			hash_and_eval_piece.operator()<color, queen>();
-			hash_and_eval_piece.operator()<color, king>();
-		};
-
-		hash_and_eval_color.operator()<white>();
-		hash_and_eval_color.operator()<black>();
-
-		const file ep_file = get_en_passant_file();
-		if (ep_file != no_ep_file)
-		{
-			new_key ^= en_passant_key(ep_file);
-		}
-
-		if (color_to_move == black)
-		{
-			new_key ^= black_to_move_key();
-		}
-
-		new_key ^= (w_castle_ks_key() * white_can_castle_ks());
-		new_key ^= (w_castle_qs_key() * white_can_castle_qs());
-		new_key ^= (b_castle_ks_key() * black_can_castle_ks());
-		new_key ^= (b_castle_qs_key() * black_can_castle_qs());
-
-		key = new_key;
-		eval = new_eval;
-	}
+	void board::generate_eval() { generate_key_eval_phase<false, true, false>(0); }
 
 	void board::verify_key_and_eval(const color color_to_move)
 	{
 		const auto expected_key = key;
+		const auto expected_phase = phase;
 		const auto expected_eval = eval;
-		generate_key_and_eval(color_to_move);
+		const auto expected_mg_eval = mg_eval;
+		const auto expected_eg_eval = eg_eval;
+
+		generate_key_eval_phase(color_to_move);
+
 		if (key != expected_key)
 		{
 			std::cout << "Incremental and generated keys mismatch\n";
 		}
+
+		if (phase != expected_phase)
+		{
+			std::cout << "Incremental and generated phases mismatch\n";
+		}
+
 		if (eval != expected_eval)
 		{
 			std::cout << "Incremental and generated evals mismatch\n";
+		}
+
+		if (mg_eval != expected_mg_eval)
+		{
+			std::cout << "Incremental and generated mg_evals mismatch\n";
+		}
+
+		if (eg_eval != expected_eg_eval)
+		{
+			std::cout << "Incremental and generated eg_evals mismatch\n";
 		}
 	}
 }

@@ -17,6 +17,7 @@ namespace chess
 	static_assert(!std::is_assignable<rank, file>());
 
 	using eval_t = ::util::strong_alias<int16_t, struct eval_tag>;
+	using phase_t = ::util::strong_alias<uint16_t, struct phase_tag>;
 	using depth_t = ::util::strong_alias<int16_t, struct depth_tag>;
 	using packed_move = ::util::strong_alias<uint16_t, struct packed_move_tag>;
 

@@ -39,6 +39,17 @@ namespace chess
 		return (parent_index + max_n_of_moves) & ply_mask;
 	}
 
+	inline eval_t taper(const phase_t phase, const int64_t mg_eval, const int64_t eg_eval)
+	{
+		return (mg_eval * phase + eg_eval * (eval::total_phase - phase)) / eval::total_phase;
+	}
+
+	enum class gen
+	{
+		key_phase_eval,
+		eval
+	};
+
 	class board
 	{
 	public:
@@ -47,7 +58,7 @@ namespace chess
 		// Simple, nonvalidating FEN parser
 		color load_fen(const std::string& fen);
 		void set_last_moved_info(const color color_to_move);
-		void generate_key_and_eval(const color color_to_move);
+		void generate_eval();
 		void verify_key_and_eval(const color color_to_move);
 
 		template <color color_to_move, piece moving_piece, move_type move_type, piece promoted_piece>
@@ -291,12 +302,15 @@ namespace chess
 			constexpr piece piece_before = moving_piece;
 			constexpr piece piece_after = (promoted_piece == empty) ? piece_before : promoted_piece;
 
-			eval_t incremental_eval = parent_board.get_eval();
+			eval_t incremental_mg_eval = parent_board.get_mg_eval();
+			eval_t incremental_eg_eval = parent_board.get_eg_eval();
 
 			if constexpr (promoted_piece != empty)
 			{
-				incremental_eval -= eval::piece_eval<moving_color, piece_before>();
-				incremental_eval += eval::piece_eval<moving_color, piece_after>();
+				incremental_mg_eval -= eval::piece_eval<moving_color, piece_before>();
+				incremental_eg_eval -= eval::piece_eval<moving_color, piece_before>();
+				incremental_mg_eval += eval::piece_eval<moving_color, piece_after>();
+				incremental_eg_eval += eval::piece_eval<moving_color, piece_after>();
 			}
 
 			const size_t start_idx = get_next_bit_index(start);
@@ -306,8 +320,10 @@ namespace chess
 			incremental_key ^= piece_square_key<moving_color, piece_after>(end_idx);
 
 			// update square eval for the piece
-			incremental_eval -= eval::piece_square_eval_mg<moving_color, piece_before>(start_idx);
-			incremental_eval += eval::piece_square_eval_mg<moving_color, piece_after>(end_idx);
+			incremental_mg_eval -= eval::piece_square_eval_mg<moving_color, piece_before>(start_idx);
+			incremental_eg_eval -= eval::piece_square_eval_eg<moving_color, piece_before>(start_idx);
+			incremental_mg_eval += eval::piece_square_eval_mg<moving_color, piece_after>(end_idx);
+			incremental_eg_eval += eval::piece_square_eval_eg<moving_color, piece_after>(end_idx);
 
 			constexpr color opp_color = other_color(moving_color);
 
@@ -316,16 +332,18 @@ namespace chess
 				// add en passant rights for the opponent
 				incremental_key ^= en_passant_key(end_idx % 8);
 			}
-			else if (move_type == move_type::en_passant_capture)
+			else if constexpr (move_type == move_type::en_passant_capture)
 			{
 				const size_t captured_pawn_idx = end_idx + ((moving_color == white) ? 8 : -8);
 				// remove key for the captured pawn
 				incremental_key ^= piece_square_key<opp_color, pawn>(captured_pawn_idx);
 				// udpate eval for the captured pawn
-				incremental_eval -= eval::piece_eval<opp_color, pawn>();
-				incremental_eval -= eval::piece_square_eval_mg<opp_color, pawn>(captured_pawn_idx);
+				incremental_mg_eval -= eval::piece_eval<opp_color, pawn>();
+				incremental_eg_eval -= eval::piece_eval<opp_color, pawn>();
+				incremental_mg_eval -= eval::piece_square_eval_mg<opp_color, pawn>(captured_pawn_idx);
+				incremental_eg_eval -= eval::piece_square_eval_eg<opp_color, pawn>(captured_pawn_idx);
 			}
-			else if (move_type == move_type::castle_kingside || move_type == move_type::castle_queenside)
+			else if constexpr (move_type == move_type::castle_kingside || move_type == move_type::castle_queenside)
 			{
 				constexpr size_t rook_start_file = (move_type == move_type::castle_kingside ? 7 : 0);
 				constexpr size_t rook_start_rank = (moving_color == white ? 7 : 0);
@@ -336,18 +354,22 @@ namespace chess
 				incremental_key ^= piece_square_key<moving_color, rook>(rook_start_index);
 				incremental_key ^= piece_square_key<moving_color, rook>(rook_end_index);
 				// update eval for the moving rook
-				incremental_eval -= eval::piece_square_eval_mg<moving_color, rook>(rook_start_index);
-				incremental_eval += eval::piece_square_eval_mg<moving_color, rook>(rook_end_index);
+				incremental_mg_eval -= eval::piece_square_eval_mg<moving_color, rook>(rook_start_index);
+				incremental_eg_eval -= eval::piece_square_eval_eg<moving_color, rook>(rook_start_index);
+				incremental_mg_eval += eval::piece_square_eval_mg<moving_color, rook>(rook_end_index);
+				incremental_eg_eval += eval::piece_square_eval_eg<moving_color, rook>(rook_end_index);
 			}
-			else if (move_type == move_type::capture) // non-en passant capture
+			else if constexpr (move_type == move_type::capture) // non-en passant capture
 			{
 				// remove the key for the captured piece
 				incremental_key ^= piece_square_key<opp_color>(captured_piece, end_idx);
 				// update our opponent's castling rights
 				update_key_castling_rights_for<opp_color>(incremental_key, parent_board);
 				// update eval for the captured piece
-				incremental_eval -= eval::piece_eval<opp_color>(captured_piece);
-				incremental_eval -= eval::piece_square_eval_mg<opp_color>(captured_piece, end_idx);
+				incremental_mg_eval -= eval::piece_eval<opp_color>(captured_piece);
+				incremental_eg_eval -= eval::piece_eval<opp_color>(captured_piece);
+				incremental_mg_eval -= eval::piece_square_eval_mg<opp_color>(captured_piece, end_idx);
+				incremental_eg_eval -= eval::piece_square_eval_eg<opp_color>(captured_piece, end_idx);
 			}
 
 			if constexpr (moving_piece == king || moving_piece == rook)
@@ -356,12 +378,39 @@ namespace chess
 				update_key_castling_rights_for<moving_color>(incremental_key, parent_board);
 			}
 
-			eval = incremental_eval;
 			key = incremental_key;
+
+			phase_t incremental_phase = parent_board.get_phase();
+
+			if constexpr (move_type == move_type::capture)
+			{
+				incremental_phase -= eval::phase_weights[captured_piece];
+			}
+			else if constexpr (move_type == move_type::en_passant_capture)
+			{
+				incremental_phase -= eval::phase_weights[pawn];
+			}
+
+			if constexpr (promoted_piece != empty)
+			{
+				incremental_phase -= eval::phase_weights[pawn];
+				incremental_phase += eval::phase_weights[promoted_piece];
+			}
+
+			eval = taper(incremental_phase, incremental_mg_eval, incremental_eg_eval);
+
+			phase = incremental_phase;
+			mg_eval = incremental_mg_eval;
+			eg_eval = incremental_eg_eval;
 		}
 
 		tt_key get_key() const { return key; }
+
 		eval_t get_eval() const { return eval; }
+		uint16_t get_phase() const { return phase; }
+		eval_t get_mg_eval() const { return mg_eval; }
+		eval_t get_eg_eval() const { return eg_eval; }
+
 		packed_move get_packed_move() const { return board_state & packed_move(-1); }
 		rank get_start_rank() const { return (board_state >> start_rank_offset) & square_mask; }
 		file get_start_file() const { return (board_state >> start_file_offset) & square_mask; }
@@ -484,6 +533,85 @@ namespace chess
 			}
 		}
 
+		template <bool gen_key = true, bool gen_eval = true, bool gen_phase = true>
+		void generate_key_eval_phase(const color color_to_move)
+		{
+			tt_key new_key = 0;
+
+			phase_t new_phase = 0;
+			eval_t new_mg_eval = 0;
+			eval_t new_eg_eval = 0;
+
+			auto iterate_squares = [&]<color color, piece piece>()
+			{
+				bitboard bb = bitboards.get<color, piece>();
+
+				if constexpr (piece != king)
+				{
+					const auto count = ::util::popcount(bb);
+					if constexpr (gen_phase) new_phase += count * eval::phase_weights[piece];
+					if constexpr (gen_eval) new_mg_eval += count * eval::piece_eval<color>(piece);
+					if constexpr (gen_eval) new_eg_eval += count * eval::piece_eval<color>(piece);
+				}
+
+				while (bb)
+				{
+					const size_t piece_idx = get_next_bit_index(bb);
+					bb = clear_next_bit(bb);
+
+					if constexpr (gen_key) new_key ^= piece_square_key<color, piece>(piece_idx);
+					if constexpr (gen_eval) new_mg_eval += eval::piece_square_eval_mg<color, piece>(piece_idx);
+					if constexpr (gen_eval) new_eg_eval += eval::piece_square_eval_eg<color, piece>(piece_idx);
+				}
+			};
+
+			auto iterate_pieces = [=]<color color>()
+			{
+				iterate_squares.template operator()<color, pawn>();
+				iterate_squares.template operator()<color, knight>();
+				iterate_squares.template operator()<color, bishop>();
+				iterate_squares.template operator()<color, rook>();
+				iterate_squares.template operator()<color, queen>();
+				iterate_squares.template operator()<color, king>();
+			};
+
+			iterate_pieces.template operator()<white>();
+			iterate_pieces.template operator()<black>();
+
+			if constexpr (gen_key)
+			{
+				const file ep_file = get_en_passant_file();
+				if (ep_file != no_ep_file)
+				{
+					new_key ^= en_passant_key(ep_file);
+				}
+
+				if (color_to_move == black)
+				{
+					new_key ^= black_to_move_key();
+				}
+
+				new_key ^= (w_castle_ks_key() * white_can_castle_ks());
+				new_key ^= (w_castle_qs_key() * white_can_castle_qs());
+				new_key ^= (b_castle_ks_key() * black_can_castle_ks());
+				new_key ^= (b_castle_qs_key() * black_can_castle_qs());
+
+				key = new_key;
+			}
+
+			if constexpr (gen_phase)
+			{
+				phase = new_phase;
+			}
+
+			if constexpr (gen_eval)
+			{
+				mg_eval = new_mg_eval;
+				eg_eval = new_eg_eval;
+				eval = taper(phase, new_mg_eval, new_eg_eval);
+			}
+		}
+
 		// bitfield sizes
 		static constexpr size_t square_bits = 3;
 		static constexpr size_t moved_piece_bits = 3;
@@ -520,9 +648,13 @@ namespace chess
 		// Check that we're using the expected number of bits.
 		static_assert(fifty_move_counter_bits + fifty_move_counter_offset + 1 == 32);
 
-		uint32_t board_state{};
-		eval_t eval{};
 		tt_key key{};
 		bitboards bitboards{};
+		uint32_t board_state{};
+
+		eval_t eval{};
+		uint16_t phase{};
+		eval_t mg_eval{};
+		eval_t eg_eval{};
 	};
 }

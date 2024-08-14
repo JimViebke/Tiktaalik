@@ -293,6 +293,14 @@ namespace chess
 			{
 				break;
 			}
+			else if (args[0] == "tune")
+			{
+#if tuning
+				tune(args);
+#else
+				std::cout << "Tuning not enabled.\n";
+#endif
+			}
 			else
 			{
 				util::log("(command unrecognized or invalid)");

@@ -34,3 +34,18 @@ as "inline/force_inline/(unspecified), unless specified otherwise". In the "othe
 	#define inline_toggle_member noinline_directive
 	#define force_inline_toggle noinline_directive [[maybe_unused]] static
 #endif
+
+/*
+Toggle between accessing evals at compile time (when not tuning),
+and modifying evals at runtime (when tuning).
+*/
+
+#define tuning 0
+
+#if tuning
+	#define constexpr_if_not_tuning
+	#define consteval_if_not_tuning
+#else
+	#define constexpr_if_not_tuning constexpr
+	#define consteval_if_not_tuning consteval
+#endif
