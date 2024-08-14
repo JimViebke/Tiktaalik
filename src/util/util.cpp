@@ -43,4 +43,12 @@ namespace chess::util
 
 		return tokens;
 	}
+
+	void to_lower(std::string& str)
+	{
+		for (auto& c : str)
+		{
+			c = std::tolower(c);
+		}
+	}
 }

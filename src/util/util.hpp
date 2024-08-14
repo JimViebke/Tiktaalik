@@ -10,4 +10,5 @@ namespace chess::util
 	void log(const std::string& output);
 
 	std::vector<std::string> tokenize(const std::string& str);
+	void to_lower(std::string& str);
 }
