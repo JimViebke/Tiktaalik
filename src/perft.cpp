@@ -1,5 +1,5 @@
 #include <iostream>
-#include <map>
+#include <utility>
 
 #include "move.hpp"
 #include "perft.hpp"
@@ -52,8 +52,10 @@ namespace chess
 			total_nodes += count;
 		}
 
+		const auto elapsed_ms = std::max(util::timepoint{1}, util::time_in_ms() - start_time);
 		std::cout << "\nLeaf nodes: " << total_nodes << '\n';
-		std::cout << "Elapsed: " << util::time_in_ms() - start_time << " ms\n\n";
+		// Divide by 1'000 to convert nodes/ms to Mnodes/s.
+		std::cout << std::format("{} ms ({:.1f} Mnps)\n\n", elapsed_ms, (float(total_nodes) / elapsed_ms) / 1'000);
 	}
 
 	template void divide<white>(const depth_t);
