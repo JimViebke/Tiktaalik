@@ -78,6 +78,7 @@ namespace chess
 		}
 
 		void print() const;
+		void print_bits() const;
 	};
 
 	inline size_t get_next_bit_index(const bitboard bitboard) { return ::util::tzcnt(bitboard); }

@@ -23,6 +23,30 @@ namespace chess
 
 	void bitboards::print() const
 	{
+		bitboard bit = 1;
+
+		for (size_t i = 0; i < 64; ++i, bit = bit << 1)
+		{
+			if (bit & pawns)
+				std::cout << ((bit & white) ? 'P' : 'p');
+			else if (bit & knights)
+				std::cout << ((bit & white) ? 'N' : 'n');
+			else if (bit & bishops)
+				std::cout << ((bit & white) ? 'B' : 'b');
+			else if (bit & rooks)
+				std::cout << ((bit & white) ? 'R' : 'r');
+			else if (bit & queens)
+				std::cout << ((bit & white) ? 'Q' : 'q');
+			else if (bit & kings)
+				std::cout << ((bit & white) ? 'K' : 'k');
+			else
+				std::cout << '.';
+			if ((i + 1) % 8 == 0) std::cout << '\n';
+		}
+	}
+
+	void bitboards::print_bits() const
+	{
 		std::cout << "white:\n";
 		print_bitboard(white);
 		std::cout << "black:\n";
