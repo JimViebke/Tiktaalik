@@ -27,12 +27,12 @@ as "inline/force_inline/(unspecified), unless specified otherwise". In the "othe
 	#define inline_unspecified
 	#define inline_toggle inline
 	#define inline_toggle_member inline
-	#define force_inline_toggle force_inline_directive [[maybe_unused]] static
+	#define force_inline_toggle force_inline_directive [[maybe_unused]]
 #else
 	#define inline_unspecified noinline_directive static
 	#define inline_toggle noinline_directive [[maybe_unused]] static
 	#define inline_toggle_member noinline_directive
-	#define force_inline_toggle noinline_directive [[maybe_unused]] static
+	#define force_inline_toggle noinline_directive [[maybe_unused]]
 #endif
 
 /*
