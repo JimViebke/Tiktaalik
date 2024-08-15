@@ -18,7 +18,7 @@ namespace chess
 
 	const std::string weights_file = base_dir + "engines/tiktaalik weights.txt";
 	const std::string formatted_weights_files = base_dir + "engines/tiktaalik weights formatted.txt";
-	const std::string games_file = base_dir + "games/CCRL-2024-Jan-July-rated-2500-no-mate.uci";
+	const std::string games_file = base_dir + "games/CCRL-4040.[1913795]-rated-2500-no-mate-1M.uci";
 
 	std::vector<board> test_positions;
 	std::vector<color> side_to_move;
