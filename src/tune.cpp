@@ -5,7 +5,6 @@
 #include <iostream>
 #include <random>
 #include <string>
-#include <string_view>
 #include <vector>
 
 #include "board.hpp"
@@ -177,7 +176,7 @@ namespace chess
 			color_to_move = white;
 			generate_child_boards_for_root();
 
-			// Given a game of N moves, select a random position between 13 and N inclusive.
+			// Get a position from the game by appling a random number of moves between 13 and N inclusive.
 			const int position = std::uniform_int_distribution(13, int(moves.size()))(rng);
 			for (int i = 0; i < position; ++i)
 			{
