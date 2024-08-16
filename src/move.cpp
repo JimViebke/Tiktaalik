@@ -61,7 +61,11 @@ namespace chess
 				const bitboard start = get_next_bit(capture_to_lower_file_promotion);
 				capture_to_lower_file_promotion = clear_next_bit(capture_to_lower_file_promotion);
 
-				const tt_key incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				tt_key incremental_key{};
+				if constexpr (!quiescing && !perft)
+				{
+					incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				}
 
 				append_if_legal<moving_color, quiescing, perft, check_type, in_check, pawn, move_type::capture, queen>(
 				    end_idx, parent_idx, bitboards, blockers, king_idx, incremental_key, start,
@@ -83,7 +87,11 @@ namespace chess
 				const bitboard start = get_next_bit(capture_to_lower_file);
 				capture_to_lower_file = clear_next_bit(capture_to_lower_file);
 
-				const tt_key incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				tt_key incremental_key{};
+				if constexpr (!quiescing && !perft)
+				{
+					incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				}
 
 				append_if_legal<moving_color, quiescing, perft, check_type, in_check, pawn, move_type::capture>(end_idx,
 				    parent_idx, bitboards, blockers, king_idx, incremental_key, start,
@@ -101,7 +109,11 @@ namespace chess
 				const bitboard start = get_next_bit(capture_to_higher_file_promotion);
 				capture_to_higher_file_promotion = clear_next_bit(capture_to_higher_file_promotion);
 
-				const tt_key incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				tt_key incremental_key{};
+				if constexpr (!quiescing && !perft)
+				{
+					incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				}
 
 				append_if_legal<moving_color, quiescing, perft, check_type, in_check, pawn, move_type::capture, queen>(
 				    end_idx, parent_idx, bitboards, blockers, king_idx, incremental_key, start,
@@ -123,7 +135,11 @@ namespace chess
 				const bitboard start = get_next_bit(capture_to_higher_file);
 				capture_to_higher_file = clear_next_bit(capture_to_higher_file);
 
-				const tt_key incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				tt_key incremental_key{};
+				if constexpr (!quiescing && !perft)
+				{
+					incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				}
 
 				append_if_legal<moving_color, quiescing, perft, check_type, in_check, pawn, move_type::capture>(end_idx,
 				    parent_idx, bitboards, blockers, king_idx, incremental_key, start,
@@ -145,7 +161,11 @@ namespace chess
 					const bitboard start = get_next_bit(ep_capturers);
 					ep_capturers = clear_next_bit(ep_capturers);
 
-					const tt_key incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+					tt_key incremental_key{};
+					if constexpr (!quiescing && !perft)
+					{
+						incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+					}
 
 					append_if_legal<moving_color, quiescing, perft, check_type, in_check, pawn,
 					    move_type::en_passant_capture>(end_idx, parent_idx, bitboards, blockers, king_idx,
@@ -168,7 +188,11 @@ namespace chess
 				const bitboard start = get_next_bit(noncapture_promotions);
 				noncapture_promotions = clear_next_bit(noncapture_promotions);
 
-				const tt_key incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				tt_key incremental_key{};
+				if constexpr (!quiescing && !perft)
+				{
+					incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				}
 
 				append_if_legal<moving_color, quiescing, perft, check_type, in_check, pawn, move_type::other, queen>(
 				    end_idx, parent_idx, bitboards, blockers, king_idx, incremental_key, start,
@@ -193,7 +217,11 @@ namespace chess
 				const bitboard start = get_next_bit(move_two_squares);
 				move_two_squares = clear_next_bit(move_two_squares);
 
-				const tt_key incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				tt_key incremental_key{};
+				if constexpr (!quiescing && !perft)
+				{
+					incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				}
 
 				append_if_legal<moving_color, quiescing, perft, check_type, in_check, pawn,
 				    move_type::pawn_two_squares>(end_idx, parent_idx, bitboards, blockers, king_idx, incremental_key,
@@ -206,7 +234,11 @@ namespace chess
 				const bitboard start = get_next_bit(move_one_square);
 				move_one_square = clear_next_bit(move_one_square);
 
-				const tt_key incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				tt_key incremental_key{};
+				if constexpr (!quiescing && !perft)
+				{
+					incremental_key = key ^ piece_square_key<moving_color, pawn>(start_idx);
+				}
 
 				append_if_legal<moving_color, quiescing, perft, check_type, in_check, pawn>(end_idx, parent_idx,
 				    bitboards, blockers, king_idx, incremental_key, start,
@@ -287,7 +319,11 @@ namespace chess
 	force_inline_toggle static void find_king_moves(size_t& end_idx, const size_t parent_idx,
 	    const bitboards& bitboards, const bitboard blockers, const size_t king_idx, const tt_key key)
 	{
-		const tt_key incremental_key = key ^ piece_square_key<moving_color, king>(king_idx);
+		tt_key incremental_key{};
+		if constexpr (!quiescing && !perft)
+		{
+			incremental_key = key ^ piece_square_key<moving_color, king>(king_idx);
+		}
 
 		const bitboard moves = king_attack_masks[king_idx];
 
@@ -366,8 +402,12 @@ namespace chess
 			const size_t piece_idx = get_next_bit_index(pieces);
 			pieces = clear_next_bit(pieces);
 
-			// XOR the key for the leaving piece once for all of its moves.
-			const tt_key incremental_key = key ^ piece_square_key<moving_color, piece>(piece_idx);
+			tt_key incremental_key{};
+			if constexpr (!quiescing && !perft)
+			{
+				// XOR the key for the leaving piece once for all of its moves.
+				incremental_key = key ^ piece_square_key<moving_color, piece>(piece_idx);
+			}
 
 			if constexpr (piece == knight)
 			{
@@ -407,12 +447,17 @@ namespace chess
 	size_t generate_child_boards(const size_t parent_idx)
 	{
 		const board& parent_board = boards[parent_idx];
-		tt_key key = parent_board.get_key() ^ black_to_move_key();
 
-		const file parent_ep_file = parent_board.get_en_passant_file();
-		if (parent_ep_file != no_ep_file)
+		tt_key incremental_key{};
+		if constexpr (!quiescing && !perft)
 		{
-			key ^= en_passant_key(parent_ep_file);
+			incremental_key = parent_board.get_key() ^ black_to_move_key();
+
+			const file parent_ep_file = parent_board.get_en_passant_file();
+			if (parent_ep_file != no_ep_file)
+			{
+				incremental_key ^= en_passant_key(parent_ep_file);
+			}
 		}
 
 		// Filter which types of checks we need to look for during move generation,
@@ -429,25 +474,25 @@ namespace chess
 		if (last_moved_piece == pawn && square_is_attacked_by_pawn<opp_color>(bitboards, king_idx))
 		{
 			find_moves<moving_color, gen_moves, quiescing, perft, check_type::pawn, true>(
-			    end_idx, parent_idx, bitboards, bitboard{}, king_idx, key);
+			    end_idx, parent_idx, bitboards, bitboard{}, king_idx, incremental_key);
 		}
 		else if (last_moved_piece == knight && square_is_attacked_by_knight<opp_color>(bitboards, king_idx))
 		{
 			find_moves<moving_color, gen_moves, quiescing, perft, check_type::knight, true>(
-			    end_idx, parent_idx, bitboards, bitboard{}, king_idx, key);
+			    end_idx, parent_idx, bitboards, bitboard{}, king_idx, incremental_key);
 		}
 		else // the nominal path
 		{
 			if (is_king_in_check<moving_color, check_type::sliders>(bitboards, king_idx))
 			{
 				find_moves<moving_color, gen_moves, quiescing, perft, check_type::sliders, true>(
-				    end_idx, parent_idx, bitboards, bitboard{}, king_idx, key);
+				    end_idx, parent_idx, bitboards, bitboard{}, king_idx, incremental_key);
 			}
 			else
 			{
 				const bitboard blockers = get_blockers<moving_color>(bitboards);
 				find_moves<moving_color, gen_moves, quiescing, perft, check_type::sliders, false>(
-				    end_idx, parent_idx, bitboards, blockers, king_idx, key);
+				    end_idx, parent_idx, bitboards, blockers, king_idx, incremental_key);
 			}
 		}
 
