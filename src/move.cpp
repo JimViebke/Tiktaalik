@@ -15,7 +15,7 @@ namespace chess
 	{
 		board& child_board = boards[end_idx];
 		const board& parent_board = boards[parent_idx];
-		chess::piece captured_piece;
+		chess::piece captured_piece{};
 		child_board.copy_make_bitboards<moving_color, quiescing, perft, piece, move_type, promoted_piece>(
 		    parent_board, from, to, captured_piece);
 
