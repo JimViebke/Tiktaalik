@@ -11,7 +11,7 @@ namespace chess
 	size_t perft(size_t idx, const depth_t depth)
 	{
 		const size_t begin_idx = first_child_index(idx);
-		const size_t end_idx = generate_child_boards<color_to_move, gen_moves::all, true>(idx);
+		const size_t end_idx = generate_child_boards<color_to_move, gen_moves::all, false, true>(idx);
 
 		if (depth == 0)
 		{
@@ -37,7 +37,7 @@ namespace chess
 
 		const auto start_time = util::time_in_ms();
 		size_t total_nodes = 0;
-		const size_t end_idx = generate_child_boards<color_to_move, gen_moves::all, true>(0);
+		const size_t end_idx = generate_child_boards<color_to_move, gen_moves::all, false, true>(0);
 
 		for (size_t idx = first_child_index(0); idx != end_idx; ++idx)
 		{

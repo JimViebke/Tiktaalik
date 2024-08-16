@@ -126,7 +126,7 @@ namespace chess
 
 		if (quiescing || tt_move == 0 || is_capture(idx, tt_move))
 		{
-			end_idx = generate_child_boards<color_to_move, gen_moves::captures>(idx);
+			end_idx = generate_child_boards<color_to_move, gen_moves::captures, quiescing>(idx);
 			generated_moves = gen_moves::captures;
 		}
 		else // We have a non-capture tt_move.

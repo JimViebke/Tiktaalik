@@ -78,6 +78,6 @@ namespace chess
 		noncaptures
 	};
 
-	template <color color_to_move, gen_moves gen_moves = gen_moves::all, bool perft = false>
+	template <color color_to_move, gen_moves gen_moves = gen_moves::all, bool quiescing = false, bool perft = false>
 	size_t generate_child_boards(const size_t parent_idx);
 }
