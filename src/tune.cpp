@@ -341,6 +341,7 @@ namespace chess
 		std::cout << "Tuning piece-square evals.\n";
 
 		double best_error = evaluate();
+		std::cout << std::format("Starting error: {:1.9f}\n", best_error);
 
 		bool improving = true;
 		while (improving)
