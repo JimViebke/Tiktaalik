@@ -18,7 +18,7 @@ namespace chess
 
 	const std::string weights_file = base_dir + "engines/tiktaalik weights.txt";
 	const std::string formatted_weights_files = base_dir + "engines/tiktaalik weights formatted.txt";
-	const std::string games_file = base_dir + "games/CCRL-4040.[1913795]-rated-2500-no-mate-1M.uci";
+	const std::string games_file = base_dir + "games/CCRL-4040.[1913795]-rated-2500-no-mate.uci";
 
 	std::vector<board> test_positions;
 	std::vector<color> side_to_move;
@@ -376,13 +376,20 @@ namespace chess
 #endif
 
 #if tuning
+	static void show_tune_help()
+	{
+		std::cout << "\ttune help\n";
+		std::cout << "\ttune evals\n";
+		std::cout << "\ttune k\n";
+	}
+#endif
+
+#if tuning
 	void game::tune(const std::vector<std::string>& args)
 	{
 		if (args.size() < 2 || args[1] == "help")
 		{
-			std::cout << "\ttune help\n";
-			std::cout << "\ttune evals\n";
-			std::cout << "\ttune k\n";
+			show_tune_help();
 			return;
 		}
 
@@ -391,11 +398,15 @@ namespace chess
 			load_games();
 			tune_k();
 		}
-
-		if (args[1] == "evals")
+		else if (args[1] == "evals")
 		{
 			load_games();
 			tune_ps_evals();
+		}
+		else
+		{
+			std::cout << "Tune command unrecognized/invalid.\n";
+			show_tune_help();
 		}
 	}
 #endif
