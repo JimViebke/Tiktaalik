@@ -9,9 +9,8 @@ namespace chess
 	template <color moving_color, bool quiescing, bool perft, check_type check_type, bool in_check, piece piece,
 	    move_type move_type = move_type::other, chess::piece promoted_piece = empty>
 	force_inline_toggle static void append_if_legal(size_t& end_idx, const size_t parent_idx,
-	    const bitboards& bitboards, const bitboard blockers, const size_t king_idx,
-
-	    const tt_key key, const bitboard from, const bitboard to)
+	    const bitboards& bitboards, const bitboard blockers, const size_t king_idx, const tt_key key,
+	    const bitboard from, const bitboard to)
 	{
 		board& child_board = boards[end_idx];
 		const board& parent_board = boards[parent_idx];
