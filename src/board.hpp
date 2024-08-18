@@ -306,14 +306,6 @@ namespace chess
 			eval_t incremental_mg_eval = parent_board.get_mg_eval();
 			eval_t incremental_eg_eval = parent_board.get_eg_eval();
 
-			if constexpr (promoted_piece != empty)
-			{
-				incremental_mg_eval -= eval::piece_eval<moving_color, piece>();
-				incremental_eg_eval -= eval::piece_eval<moving_color, piece>();
-				incremental_mg_eval += eval::piece_eval<moving_color, piece_after>();
-				incremental_eg_eval += eval::piece_eval<moving_color, piece_after>();
-			}
-
 			// Don't update keys during quiescence.
 			if constexpr (!quiescing)
 			{
@@ -345,8 +337,6 @@ namespace chess
 				}
 
 				// Update eval for the captured pawn.
-				incremental_mg_eval -= eval::piece_eval<opp_color, pawn>();
-				incremental_eg_eval -= eval::piece_eval<opp_color, pawn>();
 				incremental_mg_eval -= eval::piece_square_eval_mg<opp_color, pawn>(captured_pawn_idx);
 				incremental_eg_eval -= eval::piece_square_eval_eg<opp_color, pawn>(captured_pawn_idx);
 			}
@@ -382,8 +372,6 @@ namespace chess
 				}
 
 				// Update eval for the captured piece.
-				incremental_mg_eval -= eval::piece_eval<opp_color>(captured_piece);
-				incremental_eg_eval -= eval::piece_eval<opp_color>(captured_piece);
 				incremental_mg_eval -= eval::piece_square_eval_mg<opp_color>(captured_piece, end_idx);
 				incremental_eg_eval -= eval::piece_square_eval_eg<opp_color>(captured_piece, end_idx);
 			}
@@ -566,8 +554,6 @@ namespace chess
 				{
 					const auto count = ::util::popcount(bb);
 					if constexpr (gen_phase) new_phase += count * eval::phase_weights[piece];
-					if constexpr (gen_eval) new_mg_eval += count * eval::piece_eval<color>(piece);
-					if constexpr (gen_eval) new_eg_eval += count * eval::piece_eval<color>(piece);
 				}
 
 				while (bb)
