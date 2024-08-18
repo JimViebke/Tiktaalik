@@ -99,6 +99,58 @@ namespace chess
 #endif
 
 #if tuning
+	static void store_weights_formatted()
+	{
+		std::stringstream ss;
+		ss << "ps_evals = {\n";
+
+		for (size_t i = 0; i < ps_evals.size(); ++i)
+		{
+			if (i % 64 == 0)
+			{
+				/*
+				64 * 0 -> "// pawn midgame"
+				64 * 1 -> "// pawn endgame"
+				64 * 2 -> "// knight midgame"
+				64 * 3 -> "// knight endgame"
+				64 * 4 -> "// bishop midgame"
+				64 * 5 -> "// bishop endgame"
+				...
+				64 * 10 -> "// king midgame"
+				64 * 11 -> "// king endgame"
+				*/
+
+				switch (i / 128)
+				{
+				case pawn: ss << "// pawn "; break;
+				case knight: ss << "// knight "; break;
+				case bishop: ss << "// bishop "; break;
+				case rook: ss << "// rook "; break;
+				case queen: ss << "// queen "; break;
+				case king: ss << "// king "; break;
+				}
+
+				if (i % 128 == 0)
+					ss << "midgame:\n";
+				else
+					ss << "endgame:\n";
+			}
+
+			ss << std::setw(5);
+			ss << std::right;
+			ss << int(eval::ps_evals[i]) << ',';
+
+			if (i % 8 == 7) ss << "   //\n";
+		}
+
+		ss << "};\n";
+
+		std::ofstream ofs(formatted_weights_files, std::ios_base::out);
+		ofs << ss.str();
+	}
+#endif
+
+#if tuning
 	void game::load_games()
 	{
 		const auto start_time = util::time_in_ms();
