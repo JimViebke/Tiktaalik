@@ -87,9 +87,9 @@ namespace chess
 
 		util::log("Got position command, stopping any search...");
 		searching = false;
-		pondering = false;
 		util::log("Locking mutex...");
 		const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
+		pondering = false;
 		util::log("Setting up new position.");
 
 		engine_depth = 0;
@@ -137,9 +137,9 @@ namespace chess
 
 		util::log("Got a go command, stopping any search...");
 		searching = false;
-		pondering = false;
 		util::log("Locking mutex...");
 		const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
+		pondering = false;
 		util::log("Processing go command.");
 
 		size_t time_left = 0;
@@ -287,6 +287,7 @@ namespace chess
 			else if (args[0] == "stop")
 			{
 				searching = false;
+				const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
 				pondering = false;
 			}
 			else if (args[0] == "quit")
