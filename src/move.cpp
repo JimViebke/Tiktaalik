@@ -439,9 +439,6 @@ namespace chess
 		    end_idx, parent_idx, bitboards, blockers, king_idx, key);
 	}
 
-	size_t nq_nodes{0};
-	size_t q_nodes{0};
-
 	template <color moving_color, gen_moves gen_moves, bool quiescing, bool perft>
 	size_t generate_child_boards(const size_t parent_idx)
 	{
