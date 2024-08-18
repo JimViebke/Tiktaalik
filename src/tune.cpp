@@ -108,23 +108,32 @@ namespace chess
 #if tuning
 	static void store_weights_formatted()
 	{
+		constexpr std::string left_indent = "\t";
+		constexpr std::string left_align = "  ";
+
 		std::stringstream ss;
-		ss << "ps_evals = {\n";
+
+		ss << left_indent << "// clang-format off\n";
+		ss << left_indent << "constexpr std::array<int16_t, pse_size> ps_evals = {\n";
 
 		for (size_t i = 0; i < ps_evals.size(); ++i)
 		{
+			// If we're starting a new piece type, add an extra newline.
+			if (i % 128 == 0) ss << '\n';
+
+			// If we're starting a new piece-square table, note the type.
 			if (i % 64 == 0)
 			{
+				ss << left_indent;
+
 				/*
-				64 * 0 -> "// pawn midgame"
-				64 * 1 -> "// pawn endgame"
-				64 * 2 -> "// knight midgame"
-				64 * 3 -> "// knight endgame"
-				64 * 4 -> "// bishop midgame"
-				64 * 5 -> "// bishop endgame"
+				64 * 0 -> "// pawn midgame:"
+				64 * 1 -> "// pawn endgame:"
+				64 * 2 -> "// knight midgame:"
+				64 * 3 -> "// knight endgame:"
 				...
-				64 * 10 -> "// king midgame"
-				64 * 11 -> "// king endgame"
+				64 * 10 -> "// king midgame:"
+				64 * 11 -> "// king endgame:"
 				*/
 
 				switch (i / 128)
@@ -143,14 +152,21 @@ namespace chess
 					ss << "endgame:\n";
 			}
 
+			// If we're starting a new line, indent and align.
+			if (i % 8 == 0)
+			{
+				ss << left_indent << left_align;
+			}
+
 			ss << std::setw(5);
 			ss << std::right;
 			ss << int(eval::ps_evals[i]) << ',';
 
-			if (i % 8 == 7) ss << "   //\n";
+			if (i % 8 == 7) ss << '\n';
 		}
 
-		ss << "};\n";
+		ss << left_indent << "};\n";
+		ss << left_indent << "// clang-format on\n";
 
 		std::ofstream ofs(formatted_weights_files, std::ios_base::out);
 		ofs << ss.str();
