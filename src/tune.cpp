@@ -153,6 +153,12 @@ namespace chess
 #if tuning
 	void game::load_games()
 	{
+		if (extended_positions.size() != 0)
+		{
+			std::cout << std::format("{} positions already loaded.\n", extended_positions.size());
+			return;
+		}
+
 		const auto start_time = util::time_in_ms();
 
 		// Make sure we're starting in a clean state.
