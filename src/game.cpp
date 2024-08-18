@@ -42,7 +42,7 @@ namespace chess
 		// If the PV move was played, the rest of the PV is valid. Shift it up.
 		auto& pv = pv_moves[0];
 		auto& pv_length = pv_lengths[0];
-		if (pv_length > 0 && pv[0].move_to_string() == boards[0].move_to_string())
+		if (pv_length > 0 && pv[0].get_packed_move() == boards[0].get_packed_move())
 		{
 			std::copy(pv.begin() + 1, pv.begin() + pv_length, pv.begin());
 			--pv_length;
@@ -154,31 +154,25 @@ namespace chess
 		std::unique_lock<decltype(game_mutex)> lock(game_mutex); // constructs and locks
 		util::log("Worker ready.");
 
-		std::string best_move;
-
 		while (1)
 		{
 			if (!searching)
 			{
 				// Stop searching and release the mutex until the main thread tells us to resume.
-				util::log("Worker stopped searching, releasing mutex...");
+				util::log("Worker stopping...");
 				lock.unlock();
-				util::log("Worker released mutex, sleeping.");
+				util::log("Worker sleeping.");
 				searching.wait(false);
-				util::log("Worker awakened, locking mutex...");
+				util::log("Worker resuming...");
 				lock.lock();
-				util::log("Worker locked mutex.");
-
-				// Since we've just woken up, assume we know nothing about the position until
-				// we learn otherwise.
-				best_move = "";
+				util::log("Worker running.");
 			}
 
 			if (n_legal_moves == 0)
 			{
 				searching = false;
 				pondering = false;
-				util::log("Position is terminal, search thread stopping.");
+				util::log("Position is terminal.");
 				continue;
 			}
 
@@ -215,26 +209,28 @@ namespace chess
 			// If searching is still true, we finished another round of iterative deepening.
 			if (searching)
 			{
-				if (pv_lengths[0] > 0)
-				{
-					best_move = pv_moves[0][0].move_to_string();
-				}
-				else // We stopped searching before finding any line.
-				{
-					best_move = "";
-				}
-
 				++engine_depth;
 
-				util::log(std::format("Finished depth {}, {} ms, {} nodes.", engine_depth, engine_time, nodes));
+				util::log(std::format("Finished depth {} in {} ms, {} nodes.", engine_depth, engine_time, nodes));
 
 				// Move immediately if we've found mate and it's our turn.
-				if (eval::found_mate(eval) && !pondering && best_move != "")
+				if (eval::found_mate(eval) && !pondering)
 				{
 					util::log("Found mate.");
-					apply_move(best_move);
-					send_move(best_move);
-					best_move = "";
+
+					std::string move;
+					if (pv_lengths[0] > 0)
+					{
+						move = pv_moves[0][0].move_to_string();
+					}
+					else
+					{
+						move = boards[first_child_index(0)].move_to_string();
+						util::log("Error: found mate, but no PV move.");
+					}
+
+					apply_move(move);
+					send_move(move);
 				}
 				else if (engine_depth >= depth_t{max_ply})
 				{
@@ -242,18 +238,14 @@ namespace chess
 					{
 						util::log("Reached max ply while pondering. Stopping.");
 					}
-					else if (best_move != "")
-					{
-						apply_move(best_move);
-						send_move(best_move);
-						util::log("Reached max ply while searching, and played best move. Stopping.");
-					}
 					else
 					{
-						util::log("Reached max ply while searching, but no best move to play?");
+						const auto move = pv_moves[0][0].move_to_string();
+						apply_move(move);
+						send_move(move);
+						util::log("Reached max ply while searching, and played best move. Stopping.");
 					}
 
-					best_move = "";
 					pondering = false;
 					searching = false;
 				}
@@ -261,21 +253,23 @@ namespace chess
 			else if (util::time_in_ms() >= scheduled_turn_end)
 			{
 				// We stopped searching because we used up the planned time.
-				// Send the best move if we have one.
-				if (best_move.size() != 0)
+				// Play the best move we have.
+				std::string move;
+				if (pv_lengths[0] > 0)
 				{
-					apply_move(best_move);
-					send_move(best_move);
-					best_move = "";
+					move = pv_moves[0][0].move_to_string();
 				}
 				else
 				{
-					util::log("Ran out of search time, but no PV move to send (?).");
+					move = boards[first_child_index(0)].move_to_string();
+					util::log("Error: ran out of search time, but no PV move.");
 				}
+
+				apply_move(move);
+				send_move(move);
 			}
 			else // We were stopped by the main thread.
 			{
-				best_move = "";
 			}
 		}
 	}
