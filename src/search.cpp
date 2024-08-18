@@ -26,7 +26,7 @@ namespace chess
 		pv_lengths[ply] = pv_lengths[ply + 1];
 	}
 
-	bool is_capture(const size_t parent_idx, const packed_move move)
+	static bool is_capture(const size_t parent_idx, const packed_move move)
 	{
 		// A move is a capture move if:
 		// - the destination square is occupied, or
