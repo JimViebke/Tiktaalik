@@ -335,9 +335,6 @@ namespace chess
 #if tuning
 	static void tune_ps_evals()
 	{
-		// Make sure we won't exit alpha_beta early.
-		scheduled_turn_end = util::time_in_ms() + 1'000'000'000;
-
 		std::cout << "Tuning piece-square evals.\n";
 
 		double best_error = evaluate();
@@ -392,6 +389,9 @@ namespace chess
 			show_tune_help();
 			return;
 		}
+
+		// Make sure we won't exit alpha_beta early.
+		scheduled_turn_end = util::time_in_ms() + 1'000'000'000;
 
 		if (args[1] == "k")
 		{
