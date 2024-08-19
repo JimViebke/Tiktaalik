@@ -4,7 +4,7 @@
 
 namespace chess::config
 {
-	constexpr bool verify_key_and_eval = false;
+	constexpr bool verify_key_phase_eval = false;
 
 	constexpr size_t tt_size_in_mb = 1024 * 1;
 	constexpr bool tt_require_exact_depth_match = false;

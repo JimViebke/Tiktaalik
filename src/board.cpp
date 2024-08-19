@@ -138,8 +138,8 @@ namespace chess
 		// Finish setting up the board:
 		// - Add last moved info for check detection.
 		set_last_moved_info(color_to_move);
-		// - Generate the Zobrist hash key and static evaluation from scratch.
-		generate_key_eval_phase(color_to_move);
+		// - Generate the Zobrist hash key, game phase, and static evaluation from scratch.
+		generate_key_phase_eval(color_to_move);
 
 		return color_to_move;
 	}
@@ -193,41 +193,65 @@ namespace chess
 		set_moved_piece<empty>();
 	}
 
-	void board::generate_eval() { generate_key_eval_phase<false, true, false>(0); }
+	void board::generate_eval() { generate_key_phase_eval<false, false, true>(0); }
 
-	void board::verify_key_and_eval(const color color_to_move)
+	template <bool verify_key, bool verify_phase, bool verify_eval>
+	void board::verify_key_phase_eval(const color color_to_move)
 	{
-		const auto expected_key = key;
-		const auto expected_phase = phase;
-		const auto expected_eval = eval;
-		const auto expected_mg_eval = mg_eval;
-		const auto expected_eg_eval = eg_eval;
+		tt_key expected_key{};
+		uint16_t expected_phase{};
+		eval_t expected_eval{};
+		eval_t expected_mg_eval{};
+		eval_t expected_eg_eval{};
 
-		generate_key_eval_phase(color_to_move);
+		if constexpr (verify_key)
+		{
+			expected_key = key;
+		}
 
-		if (key != expected_key)
+		if constexpr (verify_phase)
+		{
+			expected_phase = phase;
+		}
+
+		if constexpr (verify_eval)
+		{
+			expected_eval = eval;
+			expected_mg_eval = mg_eval;
+			expected_eg_eval = eg_eval;
+		}
+
+		generate_key_phase_eval<verify_key, verify_phase, verify_eval>(color_to_move);
+
+		if (verify_key && key != expected_key)
 		{
 			std::cout << "Incremental and generated keys mismatch\n";
 		}
 
-		if (phase != expected_phase)
+		if (verify_phase && phase != expected_phase)
 		{
 			std::cout << "Incremental and generated phases mismatch\n";
 		}
 
-		if (eval != expected_eval)
-		{
-			std::cout << "Incremental and generated evals mismatch\n";
-		}
-
-		if (mg_eval != expected_mg_eval)
+		if (verify_eval && mg_eval != expected_mg_eval)
 		{
 			std::cout << "Incremental and generated mg_evals mismatch\n";
 		}
 
-		if (eg_eval != expected_eg_eval)
+		if (verify_eval && eg_eval != expected_eg_eval)
 		{
 			std::cout << "Incremental and generated eg_evals mismatch\n";
 		}
+
+		if (verify_eval && eval != expected_eval)
+		{
+			std::cout << "Incremental and generated evals mismatch\n";
+		}
 	}
+
+	template void board::verify_key_phase_eval(const color);        // For searching.
+	template void board::verify_key_phase_eval<false>(const color); // For quiescing.
+#if tuning
+	template void board::verify_key_phase_eval<false, false, true>(const color);
+#endif
 }

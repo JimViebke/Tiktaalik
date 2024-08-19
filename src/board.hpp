@@ -59,7 +59,8 @@ namespace chess
 		color load_fen(const std::string& fen);
 		void set_last_moved_info(const color color_to_move);
 		void generate_eval();
-		void verify_key_and_eval(const color color_to_move);
+		template <bool verify_key = true, bool verify_phase = true, bool verify_eval = true>
+		void verify_key_phase_eval(const color color_to_move);
 
 		template <color moving_color, bool quiescing, bool perft, piece piece, move_type move_type,
 		    chess::piece promoted_piece>
@@ -537,8 +538,8 @@ namespace chess
 			}
 		}
 
-		template <bool gen_key = true, bool gen_eval = true, bool gen_phase = true>
-		void generate_key_eval_phase(const color color_to_move)
+		template <bool gen_key = true, bool gen_phase = true, bool gen_eval = true>
+		void generate_key_phase_eval(const color color_to_move)
 		{
 			tt_key new_key = 0;
 

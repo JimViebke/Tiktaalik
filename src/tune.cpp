@@ -266,9 +266,9 @@ namespace chess
 				apply_move(moves[i]);
 			}
 
-			if constexpr (config::verify_key_and_eval)
+			if constexpr (config::verify_key_phase_eval)
 			{
-				boards[0].verify_key_and_eval(color_to_move);
+				boards[0].verify_key_phase_eval(color_to_move);
 			}
 
 			// Save the position and side to move.
@@ -359,9 +359,9 @@ namespace chess
 			boards[0] = ep.board;
 			boards[0].generate_eval();
 
-			if constexpr (config::verify_key_and_eval)
+			if constexpr (config::verify_key_phase_eval)
 			{
-				boards[0].verify_key_and_eval(ep.side_to_move);
+				boards[0].verify_key_phase_eval(ep.side_to_move);
 			}
 
 			const eval_t eval = (ep.side_to_move == white) ? alpha_beta<white, true>(0, 0, 0, -eval::mate, eval::mate)

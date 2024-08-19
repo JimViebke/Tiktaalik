@@ -34,7 +34,8 @@ namespace chess
 
 		++end_idx;
 
-		if constexpr (config::verify_key_and_eval) child_board.verify_key_and_eval(other_color(moving_color));
+		if constexpr (config::verify_key_phase_eval)
+			child_board.verify_key_phase_eval<!quiescing>(other_color(moving_color));
 	}
 
 	template <color moving_color, gen_moves gen_moves, bool quiescing, bool perft, check_type check_type, bool in_check>
