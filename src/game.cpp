@@ -97,7 +97,7 @@ namespace chess
 
 		eval_t alpha = -eval::mate;
 		eval_t beta = eval::mate;
-		eval_t eval = (color_to_move == white ? -eval::mate : eval::mate);
+		eval_t eval = -eval::mate;
 
 		eval_t tt_eval = 0; // ignored
 		packed_move tt_move = 0;
@@ -109,32 +109,18 @@ namespace chess
 
 		for (size_t child_idx = begin_idx; child_idx != end_idx; ++child_idx)
 		{
-			eval_t ab = alpha_beta<other_color(color_to_move)>(child_idx, 1, depth - 1, alpha, beta);
+			const eval_t ab = -alpha_beta<other_color(color_to_move)>(child_idx, 1, depth - 1, -beta, -alpha);
 
 			if (!searching) return eval;
 
-			if constexpr (color_to_move == white)
+			if (ab > eval)
 			{
-				if (ab > eval)
-				{
-					eval = ab;
-					update_pv(0, boards[child_idx]);
-					send_info(eval);
-					tt_move = boards[child_idx].get_packed_move();
-				}
-				alpha = std::max(alpha, eval);
+				eval = ab;
+				update_pv(0, boards[child_idx]);
+				send_info(eval * (color_to_move == white ? 1 : -1));
+				tt_move = boards[child_idx].get_packed_move();
 			}
-			else
-			{
-				if (ab < eval)
-				{
-					eval = ab;
-					update_pv(0, boards[child_idx]);
-					send_info(eval);
-					tt_move = boards[child_idx].get_packed_move();
-				}
-				beta = std::min(beta, eval);
-			}
+			alpha = std::max(alpha, eval);
 
 			swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
 		}
@@ -151,7 +137,7 @@ namespace chess
 		util::log("Worker started, waiting for search to start.");
 		searching.wait(false);
 		util::log("Worker starting search, getting initial mutex lock...");
-		std::unique_lock<decltype(game_mutex)> lock(game_mutex); // constructs and locks
+		std::unique_lock<decltype(game_mutex)> lock(game_mutex);
 		util::log("Worker ready.");
 
 		while (1)

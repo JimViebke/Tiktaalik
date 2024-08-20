@@ -417,6 +417,11 @@ namespace chess
 		eval_t get_eg_eval() const { return eg_eval; }
 		uint16_t get_phase() const { return phase; }
 		eval_t get_eval() const { return eval; }
+		template <color color_to_move>
+		eval_t get_eval() const
+		{
+			return color_to_move == white ? eval : -eval;
+		}
 
 		packed_move get_packed_move() const { return board_state & packed_move(-1); }
 		rank get_start_rank() const { return (board_state >> start_rank_offset) & square_mask; }
