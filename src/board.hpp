@@ -44,12 +44,6 @@ namespace chess
 		return (mg_eval * phase + eg_eval * (eval::total_phase - phase)) / eval::total_phase;
 	}
 
-	enum class gen
-	{
-		key_phase_eval,
-		eval
-	};
-
 	class board
 	{
 	public:
