@@ -3,3 +3,4 @@
 // For more information see https://go.microsoft.com/fwlink/?linkid=865984
 #define force_inline_toggle
 #define inline_toggle_member
+#define tuning
