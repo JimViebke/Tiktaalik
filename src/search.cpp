@@ -46,7 +46,7 @@ namespace chess
 		return false;
 	}
 
-	static inline_toggle bool check_repetition(const board& board, const size_t ply)
+	inline_toggle static bool check_repetition(const board& board, const size_t ply)
 	{
 		// If this position is a repetition, evaluate it as an (unfavorable) draw.
 		// Todo: Scale contempt from large to small, so we don't try to draw over small disadvantages

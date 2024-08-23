@@ -22,7 +22,8 @@ namespace chess
 
 	void update_pv(const size_t ply, const board& board);
 
-	inline_toggle void swap_tt_move_to_front(const packed_move tt_move, const size_t begin_idx, const size_t end_idx)
+	inline_toggle static void swap_tt_move_to_front(
+	    const packed_move tt_move, const size_t begin_idx, const size_t end_idx)
 	{
 		for (size_t idx = begin_idx; idx < end_idx; ++idx)
 		{
@@ -35,7 +36,7 @@ namespace chess
 	}
 
 	template <color color_to_move>
-	inline_toggle void swap_best_to_front(const size_t begin_idx, const size_t end_idx)
+	inline_toggle static void swap_best_to_front(const size_t begin_idx, const size_t end_idx)
 	{
 		size_t best_index = begin_idx;
 		eval_t best_eval = boards[begin_idx].get_eval();
