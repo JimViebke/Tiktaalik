@@ -365,7 +365,7 @@ namespace chess
 			}
 
 			const eval_t eval = (ep.side_to_move == white) ? alpha_beta<white, true>(0, 0, 0, -eval::mate, eval::mate)
-			                                               : alpha_beta<black, true>(0, 0, 0, -eval::mate, eval::mate);
+			                                               : -alpha_beta<black, true>(0, 0, 0, -eval::mate, eval::mate);
 
 			const double error = ep.result - sigmoid((double)eval);
 			error_sum += (error * error);
