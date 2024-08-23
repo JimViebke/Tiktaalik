@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include <memory>
+#include <bit>
 
 #include "config.hpp"
 #include "defines.hpp"
@@ -75,6 +75,17 @@ namespace chess
 			                          : (piece == rook)   ? rooks
 			                          : (piece == queen)  ? queens
 			                                              : kings);
+		}
+
+		template <color color, piece piece>
+		size_t count() const
+		{
+			return ::util::popcount(get<color, piece>());
+		}
+		template <color color>
+		size_t count(const piece piece) const
+		{
+			return ::util::popcount((&pawns)[piece] & get<color>());
 		}
 
 		void print() const;
