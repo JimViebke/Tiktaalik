@@ -6,12 +6,14 @@
 #include <vector>
 
 #include "board.hpp"
+#include "config.hpp"
 #include "game.hpp"
 #include "search.hpp"
 
+#if tuning
+
 namespace chess
 {
-#if tuning
 	const std::string base_dir = "D:/Games/chess/";
 
 	const std::string weights_file = base_dir + "engines/tiktaalik weights.txt";
@@ -30,22 +32,16 @@ namespace chess
 
 	std::vector<extended_position> training_set;
 	std::vector<extended_position> test_set;
-#endif
 
-#if tuning
 	// ps_evals is usually static constexpr, and visible from evaluation.hpp.
 	// During tuning, instead provide it here.
 	namespace eval
 	{
 		std::array<int16_t, pse_size> ps_evals;
 	}
-#endif
 
-#if tuning
 	using namespace eval;
-#endif
 
-#if tuning
 	bool load_weights()
 	{
 		std::cout << "Loading weights from " << weights_file << '\n';
@@ -86,9 +82,7 @@ namespace chess
 		std::cout << std::format("Loaded {} weights.\n", eval::ps_evals.size());
 		return true;
 	}
-#endif
 
-#if tuning
 	static void store_weights()
 	{
 		std::stringstream ss;
@@ -103,17 +97,14 @@ namespace chess
 		std::ofstream file(weights_file, std::ios_base::app);
 		file << ss.str();
 	}
-#endif
 
-#if tuning
 	static void store_weights_formatted()
 	{
-		constexpr std::string left_indent = "\t";
-		constexpr std::string left_align = "  ";
+		const char left_indent = '\t';
+		const std::string left_align = "  ";
 
 		std::stringstream ss;
 
-		ss << left_indent << "// clang-format off\n";
 		ss << left_indent << "constexpr std::array<int16_t, pse_size> ps_evals = {\n";
 
 		for (size_t i = 0; i < ps_evals.size(); ++i)
@@ -166,14 +157,11 @@ namespace chess
 		}
 
 		ss << left_indent << "};\n";
-		ss << left_indent << "// clang-format on\n";
 
 		std::ofstream ofs(formatted_weights_files, std::ios_base::out);
 		ofs << ss.str();
 	}
-#endif
 
-#if tuning
 	void game::load_games()
 	{
 		if (extended_positions.size() != 0)
@@ -190,9 +178,7 @@ namespace chess
 		const board start_board = boards[0];
 		generate_child_boards_for_root();
 
-		// Seed rng with a constant so we select a deterministic set of positions
-		// given the same set of games.
-		std::mt19937_64 rng{0xcafe0123456789};
+		std::mt19937_64 rng{std::mt19937_64::result_type(util::time_in_ms())};
 
 		std::ifstream fs(games_file);
 		std::cout << "Loading games from " << games_file << ".\n";
@@ -259,8 +245,8 @@ namespace chess
 			color_to_move = white;
 			generate_child_boards_for_root();
 
-			// Get a position from the game by appling a random number of moves between 13 and N inclusive.
-			const int position = std::uniform_int_distribution(13, int(moves.size()))(rng);
+			// Get a position from the game by appling a random number of moves between 12 and N inclusive.
+			const int position = std::uniform_int_distribution(12, int(moves.size()))(rng);
 			for (int i = 0; i < position; ++i)
 			{
 				apply_move(moves[i]);
@@ -286,9 +272,7 @@ namespace chess
 		std::cout << std::format(
 		    "Parsed {} games in {} seconds.\n", games_parsed, (util::time_in_ms() - start_time) / 1'000);
 	}
-#endif
 
-#if tuning
 	static void generate_training_and_test_sets(size_t set_size, std::mt19937_64& rng)
 	{
 		if (extended_positions.size() == 0)
@@ -332,23 +316,17 @@ namespace chess
 
 		std::cout << std::format("done ({} ms)\n", util::time_in_ms() - start);
 	}
-#endif
 
-#if tuning
 	/*constexpr*/ double K = 0.7644;
 
 	static_assert(sizeof(double) == 8);
-#endif
 
-#if tuning
 	static double sigmoid(const double eval)
 	{
 		const double exp = -K * eval / 400;
 		return 1 / (1 + pow(10, exp));
 	}
-#endif
 
-#if tuning
 	// Get the mean squared error for a quiescence search of all positions in a set.
 	static double evaluate(std::vector<extended_position>& set)
 	{
@@ -373,9 +351,7 @@ namespace chess
 
 		return error_sum / set.size();
 	}
-#endif
 
-#if tuning
 	static void tune_k()
 	{
 		double best_error = evaluate(extended_positions);
@@ -404,9 +380,7 @@ namespace chess
 
 		std::cout << "Finished tuning K.\n";
 	}
-#endif
 
-#if tuning
 	static void tune_ps_evals()
 	{
 		std::cout << "Tuning piece-square evals.\n";
@@ -426,7 +400,7 @@ namespace chess
 			store_weights();
 			store_weights_formatted();
 
-			generate_training_and_test_sets(100'000, rng);
+			generate_training_and_test_sets(extended_positions.size() / 2, rng);
 
 			// Evaluate both sets using the existing weights.
 			// We will be tuning using the training set, and keeping the changes.
@@ -469,22 +443,21 @@ namespace chess
 
 			util::log(ss.str());
 			std::cout << ss.str() << '\n';
-		} while (test_error_after <= test_error_before);
+		} while (test_error_after < test_error_before);
+
+		std::cout << "Rolling back to previous best weights.\n";
+		load_weights();
 
 		std::cout << "Finished tuning.\n";
 	}
-#endif
 
-#if tuning
 	static void show_tune_help()
 	{
 		std::cout << "\ttune help\n";
 		std::cout << "\ttune evals\n";
 		std::cout << "\ttune k\n";
 	}
-#endif
 
-#if tuning
 	void game::tune(const std::vector<std::string>& args)
 	{
 		if (args.size() < 2 || args[1] == "help")
@@ -512,5 +485,6 @@ namespace chess
 			show_tune_help();
 		}
 	}
-#endif
 }
+
+#endif // tuning
