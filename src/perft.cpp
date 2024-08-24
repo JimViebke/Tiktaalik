@@ -1,7 +1,7 @@
 #include <iostream>
 #include <utility>
 
-#include "move.hpp"
+#include "movegen.hpp"
 #include "perft.hpp"
 #include "util/util.hpp"
 

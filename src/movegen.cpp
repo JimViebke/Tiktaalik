@@ -1,7 +1,7 @@
 
 #include "bitboard.hpp"
 #include "config.hpp"
-#include "move.hpp"
+#include "movegen.hpp"
 #include "transposition_table.hpp"
 
 namespace chess

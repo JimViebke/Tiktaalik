@@ -16,7 +16,7 @@
     <ClInclude Include="src\config.hpp" />
     <ClInclude Include="src\evaluation.hpp" />
     <ClInclude Include="src\game.hpp" />
-    <ClInclude Include="src\move.hpp" />
+    <ClInclude Include="src\movegen.hpp" />
     <ClInclude Include="src\perft.hpp" />
     <ClInclude Include="src\search.hpp" />
     <ClInclude Include="src\transposition_table.hpp" />
@@ -31,7 +31,7 @@
     <ClCompile Include="src\board.cpp" />
     <ClCompile Include="src\game.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\move.cpp" />
+    <ClCompile Include="src\movegen.cpp" />
     <ClCompile Include="src\perft.cpp" />
     <ClCompile Include="src\search.cpp" />
     <ClCompile Include="src\tune.cpp" />

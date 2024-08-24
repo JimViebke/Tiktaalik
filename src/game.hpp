@@ -8,7 +8,7 @@
 #include <thread>
 #include <variant>
 
-#include "move.hpp"
+#include "movegen.hpp"
 #include "perft.hpp"
 #include "search.hpp"
 #include "uci.hpp"

@@ -32,7 +32,7 @@
     <ClInclude Include="src\search.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\move.hpp">
+    <ClInclude Include="src\movegen.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\transposition_table.hpp">
@@ -79,7 +79,7 @@
     <ClCompile Include="src\perft.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\move.cpp">
+    <ClCompile Include="src\movegen.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\uci.cpp">

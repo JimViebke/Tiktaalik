@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "move.hpp"
+#include "movegen.hpp"
 #include "transposition_table.hpp"
 #include "util/util.hpp"
 

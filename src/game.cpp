@@ -2,7 +2,7 @@
 
 #include "bitboard.hpp"
 #include "game.hpp"
-#include "move.hpp"
+#include "movegen.hpp"
 #include "search.hpp"
 
 namespace chess
