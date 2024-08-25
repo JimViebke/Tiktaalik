@@ -48,7 +48,7 @@ namespace chess
 				count = perft<other_color(color_to_move)>(idx, max_depth - 2);
 			}
 
-			std::cout << boards[idx].move_to_string() << ": " << count << '\n';
+			std::cout << boards[idx].get_move() << ": " << count << '\n';
 			total_nodes += count;
 		}
 

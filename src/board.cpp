@@ -170,14 +170,14 @@ namespace chess
 
 			if (bounds_check(king_file - 1) && (opp_pawns & (1ull << pawn_lo_idx)))
 			{
-				set_moved_piece<pawn>();
-				set_end_index(pawn_lo_idx);
+				move.set_moved_piece<pawn>();
+				move.set_end_index(pawn_lo_idx);
 				return;
 			}
 			else if (bounds_check(king_file + 1) && (opp_pawns & (1ull << pawn_hi_idx)))
 			{
-				set_moved_piece<pawn>();
-				set_end_index(pawn_hi_idx);
+				move.set_moved_piece<pawn>();
+				move.set_end_index(pawn_hi_idx);
 				return;
 			}
 		}
@@ -185,12 +185,12 @@ namespace chess
 		const bitboard attacking_knights = opp_pieces & bitboards.knights & knight_attack_masks[king_idx];
 		if (attacking_knights != 0u)
 		{
-			set_moved_piece<knight>();
-			set_end_index(get_next_bit_index(attacking_knights));
+			move.set_moved_piece<knight>();
+			move.set_end_index(get_next_bit_index(attacking_knights));
 			return;
 		}
 
-		set_moved_piece<empty>();
+		move.set_moved_piece<empty>();
 	}
 
 	void board::generate_eval() { generate_key_phase_eval<false, false, true>(0); }

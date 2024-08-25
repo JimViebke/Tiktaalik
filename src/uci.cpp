@@ -62,7 +62,7 @@ namespace chess
 			ss << " pv";
 			for (size_t i = 0; i < pv_lengths[0]; ++i)
 			{
-				ss << ' ' << pv_moves[0][i].move_to_string();
+				ss << ' ' << pv_moves[0][i];
 			}
 		}
 
@@ -73,7 +73,7 @@ namespace chess
 	{
 		for (; move_idx < args.size(); ++move_idx)
 		{
-			apply_move(args[move_idx]);
+			apply_move(move{args[move_idx], boards[0].get_bitboards()});
 		}
 	}
 

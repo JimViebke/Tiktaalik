@@ -13,11 +13,11 @@ namespace chess
 	transposition_table tt;
 
 	std::array<size_t, max_ply> pv_lengths;
-	std::array<std::array<board, max_ply>, max_ply> pv_moves;
+	std::array<std::array<move, max_ply>, max_ply> pv_moves;
 
 	void update_pv(const size_t ply, const board& board)
 	{
-		pv_moves[ply][ply] = board;
+		pv_moves[ply][ply] = board.get_move();
 		for (size_t next_ply = ply + 1; next_ply < pv_lengths[ply + 1]; ++next_ply)
 		{
 			pv_moves[ply][next_ply] = pv_moves[ply + 1][next_ply];
@@ -26,7 +26,7 @@ namespace chess
 		pv_lengths[ply] = pv_lengths[ply + 1];
 	}
 
-	static bool is_capture(const size_t parent_idx, const packed_move move)
+	static bool is_capture(const size_t parent_idx, const move move)
 	{
 		// A move is a capture move if:
 		// - the destination square is occupied, or
@@ -34,11 +34,10 @@ namespace chess
 
 		const bitboards& bitboards = boards[parent_idx].get_bitboards();
 
-		constexpr size_t idx_mask = 0b111111;
-		const size_t end_idx = (move >> 6) & idx_mask;
+		const size_t end_idx = move.get_end_index();
 		if (bitboards.occupied() & (1ull << end_idx)) return true;
 
-		const size_t start_idx = move & idx_mask;
+		const size_t start_idx = move.get_start_index();
 		const file start_file = start_idx % 8;
 		const file end_file = end_idx % 8;
 		if ((bitboards.pawns & (1ull << start_idx)) && start_file != end_file) return true;
@@ -103,8 +102,8 @@ namespace chess
 		const tt_key key = board.get_key();
 
 		// If we already have an evaluation that is valid for this node at this depth, return it.
-		packed_move tt_move = 0;
-		eval_t tt_eval = 0;
+		move tt_move{};
+		eval_t tt_eval{};
 		if (!quiescing && tt.probe(tt_eval, tt_move, key, depth, alpha, beta, ply)) return tt_eval;
 
 		// If we have reached our max depth (ie, if we could not generate child boards for this position)
@@ -115,7 +114,7 @@ namespace chess
 		size_t end_idx{};
 		gen_moves generated_moves{};
 
-		if (quiescing || tt_move == 0 || is_capture(idx, tt_move))
+		if (quiescing || !tt_move || is_capture(idx, tt_move))
 		{
 			end_idx = generate_child_boards<color_to_move, gen_moves::captures, quiescing>(idx);
 			generated_moves = gen_moves::captures;
@@ -126,7 +125,7 @@ namespace chess
 			generated_moves = gen_moves::all;
 		}
 
-		if (!quiescing && tt_move != 0)
+		if (!quiescing && tt_move)
 			swap_tt_move_to_front(tt_move, begin_idx, end_idx);
 		else
 			swap_best_to_front<color_to_move>(begin_idx, end_idx);
@@ -150,14 +149,14 @@ namespace chess
 				if (eval >= beta)
 				{
 					if constexpr (!quiescing && full_window)
-						tt.store(key, depth, tt_eval_type::beta, beta, ply, boards[child_idx].get_packed_move());
+						tt.store(key, depth, tt_eval_type::beta, beta, ply, boards[child_idx].get_move());
 					return beta;
 				}
 				if (eval > alpha)
 				{
 					alpha = eval;
 					node_eval_type = tt_eval_type::exact;
-					tt_move = boards[child_idx].get_packed_move();
+					tt_move = boards[child_idx].get_move();
 					if constexpr (!quiescing && full_window) update_pv(ply, boards[child_idx]);
 				}
 

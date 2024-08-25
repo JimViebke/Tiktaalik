@@ -9,6 +9,7 @@
 #include "config.hpp"
 #include "defines.hpp"
 #include "evaluation.hpp"
+#include "move.hpp"
 #include "transposition_table.hpp"
 #include "util/intrinsics.hpp"
 #include "util/util.hpp"
@@ -193,26 +194,13 @@ namespace chess
 		    const bitboard to, const chess::piece captured_piece)
 		{
 			// Generate a mask at compile time to selectively copy parent state.
-			constexpr uint32_t copy_mask = get_copy_mask<moving_color, piece, move_type, promoted_piece>();
-			uint32_t bitfield = parent_board.board_state & copy_mask;
+			constexpr uint16_t copy_mask = get_copy_mask<moving_color, piece, move_type, promoted_piece>();
+			uint16_t bitfield = parent_board.board_state & copy_mask;
 
 			// Record the move that resulted in this position.
 			const size_t start_idx = get_next_bit_index(from);
 			const size_t end_idx = get_next_bit_index(to);
-			bitfield |= start_idx;
-			bitfield |= end_idx << end_file_offset;
-
-			// Record the type of piece that was moved, or in the case of promotion,
-			// record the promoted-to type.
-			if constexpr (promoted_piece == empty)
-			{
-				bitfield |= uint32_t(piece) << moved_piece_offset;
-			}
-			else
-			{
-				bitfield |= uint32_t(promoted_piece) << moved_piece_offset;
-				bitfield |= 1 << promotion_offset;
-			}
+			move = move::make_move<piece, promoted_piece>(start_idx, end_idx);
 
 			// If the move is not a capture or pawn move, increment the fifty-move counter.
 			if constexpr (move_type != move_type::capture && piece != pawn)
@@ -416,13 +404,9 @@ namespace chess
 		{
 			return color_to_move == white ? eval : -eval;
 		}
-
-		packed_move get_packed_move() const { return board_state & packed_move(-1); }
-		rank get_start_rank() const { return (board_state >> start_rank_offset) & square_mask; }
-		file get_start_file() const { return (board_state >> start_file_offset) & square_mask; }
-		rank get_end_rank() const { return (board_state >> end_rank_offset) & square_mask; }
-		file get_end_file() const { return (board_state >> end_file_offset) & square_mask; }
-		piece get_moved_piece() const { return (board_state >> moved_piece_offset) & moved_piece_mask; }
+		move get_move() const { return move; }
+		bool move_is(const move passed_move) const { return move == passed_move; }
+		piece get_moved_piece() const { return move.get_moved_piece(); }
 		file get_en_passant_file() const { return (board_state >> en_passant_file_offset) & en_passant_mask; }
 		bool white_can_castle_ks() const { return (board_state >> white_can_castle_ks_offset) & castling_right_mask; }
 		bool white_can_castle_qs() const { return (board_state >> white_can_castle_qs_offset) & castling_right_mask; }
@@ -434,46 +418,11 @@ namespace chess
 		}
 		const class bitboards& get_bitboards() const { return bitboards; }
 
-		bool move_is(const packed_move best_move) const { return best_move == get_packed_move(); }
-
-		const std::string move_to_string() const
-		{
-			std::string result;
-			result += get_start_file() + 'a';
-			result += (get_start_rank() * -1) + 8 + '0';
-			result += get_end_file() + 'a';
-			result += (get_end_rank() * -1) + 8 + '0';
-
-			if (is_promotion())
-			{
-				switch (get_moved_piece()) // Append one of "qrbk".
-				{
-				case knight: result += 'n'; break;
-				case bishop: result += 'b'; break;
-				case rook: result += 'r'; break;
-				case queen: result += 'q'; break;
-				default: result += '?';
-				}
-			}
-
-			return result;
-		}
-
-		void set_end_index(const size_t idx) { board_state |= uint32_t(idx) << end_file_offset; }
-
-		template <piece piece>
-		void set_moved_piece()
-		{
-			board_state |= uint32_t(piece) << moved_piece_offset;
-		}
-
 	private:
-		bool is_promotion() const { return (board_state >> promotion_offset) & promotion_bits; }
-
 		template <color moving_color, piece piece, move_type move_type, chess::piece promoted_piece>
-		consteval static uint32_t get_copy_mask()
+		consteval static uint16_t get_copy_mask()
 		{
-			uint32_t copy_mask = 0;
+			uint16_t copy_mask = 0;
 
 			// Always copy the opponent's castling rights.
 			if constexpr (moving_color == white)
@@ -511,16 +460,16 @@ namespace chess
 			return copy_mask;
 		}
 
-		void set_en_passant_file(const file file) { board_state |= uint32_t(file) << en_passant_file_offset; }
-		void set_white_can_castle_ks(const uint32_t arg) { board_state |= arg << white_can_castle_ks_offset; }
-		void set_white_can_castle_qs(const uint32_t arg) { board_state |= arg << white_can_castle_qs_offset; }
-		void set_black_can_castle_ks(const uint32_t arg) { board_state |= arg << black_can_castle_ks_offset; }
-		void set_black_can_castle_qs(const uint32_t arg) { board_state |= arg << black_can_castle_qs_offset; }
+		void set_en_passant_file(const file file) { board_state |= uint16_t(file) << en_passant_file_offset; }
+		void set_white_can_castle_ks(const uint16_t arg) { board_state |= arg << white_can_castle_ks_offset; }
+		void set_white_can_castle_qs(const uint16_t arg) { board_state |= arg << white_can_castle_qs_offset; }
+		void set_black_can_castle_ks(const uint16_t arg) { board_state |= arg << black_can_castle_ks_offset; }
+		void set_black_can_castle_qs(const uint16_t arg) { board_state |= arg << black_can_castle_qs_offset; }
 		void white_cant_castle_ks() { board_state &= ~(1 << white_can_castle_ks_offset); }
 		void white_cant_castle_qs() { board_state &= ~(1 << white_can_castle_qs_offset); }
 		void black_cant_castle_ks() { board_state &= ~(1 << black_can_castle_ks_offset); }
 		void black_cant_castle_qs() { board_state &= ~(1 << black_can_castle_qs_offset); }
-		void set_fifty_move_counter(const uint32_t arg) { board_state |= arg << fifty_move_counter_offset; }
+		void set_fifty_move_counter(const uint16_t arg) { board_state |= arg << fifty_move_counter_offset; }
 
 		template <color update_color>
 		inline_toggle_member void update_key_castling_rights_for(tt_key& incremental_key, const board& parent_board)
@@ -615,22 +564,12 @@ namespace chess
 		}
 
 		// bitfield sizes
-		static constexpr size_t square_bits = 3;
-		static constexpr size_t moved_piece_bits = 3;
-		static constexpr size_t promotion_bits = 1;
 		static constexpr size_t en_passant_bits = 4;
 		static constexpr size_t castling_right_bits = 1;
 		static constexpr size_t fifty_move_counter_bits = std::bit_width(50u * 2);
 
 		// bitfield positions
-		static constexpr size_t start_file_offset = 0;
-		static constexpr size_t start_rank_offset =
-		    start_file_offset + square_bits; // the move that resulted in this position
-		static constexpr size_t end_file_offset = start_rank_offset + square_bits;
-		static constexpr size_t end_rank_offset = end_file_offset + square_bits;
-		static constexpr size_t moved_piece_offset = end_rank_offset + square_bits;
-		static constexpr size_t promotion_offset = moved_piece_offset + moved_piece_bits;
-		static constexpr size_t en_passant_file_offset = promotion_offset + promotion_bits;
+		static constexpr size_t en_passant_file_offset = 0;
 		static constexpr size_t white_can_castle_ks_offset = en_passant_file_offset + en_passant_bits;
 		static constexpr size_t white_can_castle_qs_offset = white_can_castle_ks_offset + castling_right_bits;
 		static constexpr size_t black_can_castle_ks_offset = white_can_castle_qs_offset + castling_right_bits;
@@ -639,20 +578,17 @@ namespace chess
 		    black_can_castle_qs_offset + castling_right_bits; // counts ply
 
 		// bitfield masks, not including offsets
-		static constexpr uint64_t square_mask = (1ull << square_bits) - 1;
-		static constexpr uint64_t index_mask = (square_mask << square_bits) | square_mask;
-		static constexpr uint64_t moved_piece_mask = (1ull << moved_piece_bits) - 1;
-		static constexpr uint64_t promotion_mask = (1ull << promotion_bits) - 1;
 		static constexpr uint64_t en_passant_mask = (1ull << en_passant_bits) - 1;
 		static constexpr uint64_t castling_right_mask = (1ull << castling_right_bits) - 1;
 		static constexpr uint64_t fifty_move_counter_mask = (1ull << fifty_move_counter_bits) - 1;
 
 		// Check that we're using the expected number of bits.
-		static_assert(fifty_move_counter_bits + fifty_move_counter_offset + 1 == 32);
+		static_assert(fifty_move_counter_bits + fifty_move_counter_offset + 1 == 16);
 
 		tt_key key{};
 		bitboards bitboards{};
-		uint32_t board_state{};
+		move move{};
+		uint16_t board_state{};
 
 		eval_t mg_eval{};
 		eval_t eg_eval{};

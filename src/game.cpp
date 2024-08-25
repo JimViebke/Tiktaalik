@@ -31,18 +31,18 @@ namespace chess
 		n_legal_moves = end_idx - first_child_index(0);
 	}
 
-	void game::apply_move(const size_t index)
+	void game::apply_move(const board& board)
 	{
 		// Update root color and board.
 		color_to_move = other_color(color_to_move);
-		boards[0] = boards[index];
+		boards[0] = board;
 		++root_ply;
 		history[root_ply] = boards[0].get_key();
 
 		// If the PV move was played, the rest of the PV is valid. Shift it up.
 		auto& pv = pv_moves[0];
 		auto& pv_length = pv_lengths[0];
-		if (pv_length > 0 && pv[0].get_packed_move() == boards[0].get_packed_move())
+		if (pv_length > 0 && boards[0].move_is(pv[0]))
 		{
 			std::copy(pv.begin() + 1, pv.begin() + pv_length, pv.begin());
 			--pv_length;
@@ -59,14 +59,14 @@ namespace chess
 		if (engine_depth > 0) --engine_depth;
 	}
 
-	void game::apply_move(const std::string& move)
+	void game::apply_move(const move move)
 	{
 		// Find and apply the move.
 		for (size_t i = first_child_index(0); i < first_child_index(0) + n_legal_moves; ++i)
 		{
-			if (boards[i].move_to_string() == move)
+			if (boards[i].move_is(move))
 			{
-				apply_move(i);
+				apply_move(boards[i]);
 				return;
 			}
 		}
@@ -78,16 +78,18 @@ namespace chess
 		std::cout << ss.str() << '\n';
 	}
 
-	void game::send_move(const std::string& move)
+	void game::send_move(const move move)
 	{
-		send_command("info pv " + move); // En Croissant workaround: try send the best move as a pv.
-		send_command("bestmove " + move);
+		const std::string move_string = move.to_string();
+
+		send_command("info pv " + move_string); // En Croissant workaround: try send the best move as a pv.
+		send_command("bestmove " + move_string);
 
 		// Ponder after playing the move.
 		searching = true;
 		pondering = true;
 		scheduled_turn_end = util::time_in_ms() + 1'000'000'000;
-		util::log("pondering " + move);
+		util::log("pondering " + move_string);
 	}
 
 	template <color color_to_move>
@@ -99,8 +101,8 @@ namespace chess
 		eval_t beta = eval::mate;
 		eval_t eval = -eval::mate;
 
-		eval_t tt_eval = 0; // ignored
-		packed_move tt_move = 0;
+		eval_t tt_eval{}; // ignored
+		move tt_move{};
 		tt.probe(tt_eval, tt_move, boards[0].get_key(), depth, alpha, beta, 0);
 
 		const size_t begin_idx = first_child_index(0);
@@ -118,7 +120,7 @@ namespace chess
 				eval = ab;
 				update_pv(0, boards[child_idx]);
 				send_info(eval * (color_to_move == white ? 1 : -1));
-				tt_move = boards[child_idx].get_packed_move();
+				tt_move = boards[child_idx].get_move();
 			}
 			alpha = std::max(alpha, eval);
 
@@ -165,9 +167,9 @@ namespace chess
 			// If there is only one legal move, and it's our turn, play it.
 			if (n_legal_moves == 1 && !pondering)
 			{
-				const std::string move = boards[first_child_index(0)].move_to_string();
-				util::log("Playing only legal move: " + move);
-				apply_move(first_child_index(0));
+				const move move = boards[first_child_index(0)].get_move();
+				util::log("Playing only legal move: " + move.to_string());
+				apply_move(move);
 				send_move(move);
 				continue;
 			}
@@ -204,14 +206,14 @@ namespace chess
 				{
 					util::log("Found mate.");
 
-					std::string move;
+					move move{};
 					if (pv_lengths[0] > 0)
 					{
-						move = pv_moves[0][0].move_to_string();
+						move = pv_moves[0][0];
 					}
 					else
 					{
-						move = boards[first_child_index(0)].move_to_string();
+						move = boards[first_child_index(0)].get_move();
 						util::log("Error: found mate, but no PV move.");
 					}
 
@@ -226,7 +228,7 @@ namespace chess
 					}
 					else
 					{
-						const auto move = pv_moves[0][0].move_to_string();
+						const move move = pv_moves[0][0];
 						apply_move(move);
 						send_move(move);
 						util::log("Reached max ply while searching, and played best move. Stopping.");
@@ -240,14 +242,14 @@ namespace chess
 			{
 				// We stopped searching because we used up the planned time.
 				// Play the best move we have.
-				std::string move;
+				move move{};
 				if (pv_lengths[0] > 0)
 				{
-					move = pv_moves[0][0].move_to_string();
+					move = pv_moves[0][0];
 				}
 				else
 				{
-					move = boards[first_child_index(0)].move_to_string();
+					move = boards[first_child_index(0)].get_move();
 					util::log("Error: ran out of search time, but no PV move.");
 				}
 

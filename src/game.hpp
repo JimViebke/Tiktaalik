@@ -37,15 +37,12 @@ namespace chess
 
 		void generate_child_boards_for_root();
 
-		// Index must be a ply-1 child of the root position.
+		// The specified move must be a ply-1 child of the root position.
 		// The caller must own the game mutex.
-		void apply_move(const size_t index);
+		void apply_move(const board& board);
+		void apply_move(const move move);
 
-		// `move` is either in the form "e4f5", or "c7c8q" in the case of promotion.
-		// The caller must own the game mutex.
-		void apply_move(const std::string& move);
-
-		void send_move(const std::string& move);
+		void send_move(const move move);
 
 		template <color color_to_move>
 		eval_t search(const size_t end_idx, const depth_t depth);

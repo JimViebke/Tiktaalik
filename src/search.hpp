@@ -17,13 +17,12 @@ namespace chess
 
 	extern transposition_table tt;
 
-	extern std::array<std::array<board, max_ply>, max_ply> pv_moves;
+	extern std::array<std::array<move, max_ply>, max_ply> pv_moves;
 	extern std::array<size_t, max_ply> pv_lengths;
 
 	void update_pv(const size_t ply, const board& board);
 
-	inline_toggle static void swap_tt_move_to_front(
-	    const packed_move tt_move, const size_t begin_idx, const size_t end_idx)
+	inline_toggle static void swap_tt_move_to_front(const move tt_move, const size_t begin_idx, const size_t end_idx)
 	{
 		for (size_t idx = begin_idx; idx < end_idx; ++idx)
 		{

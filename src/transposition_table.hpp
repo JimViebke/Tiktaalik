@@ -7,6 +7,7 @@
 #include "config.hpp"
 #include "defines.hpp"
 #include "evaluation.hpp"
+#include "move.hpp"
 
 namespace chess
 {
@@ -31,7 +32,7 @@ namespace chess
 		depth_t eval_depth{invalid_depth};
 		tt_eval_type eval_type{};
 		eval_t eval{};
-		packed_move best_move{};
+		move best_move{};
 
 		bool is_valid() const { return eval_depth != invalid_depth; }
 	};
@@ -112,7 +113,7 @@ namespace chess
 
 		template <bool terminal = false>
 		inline_toggle_member void store(const tt_key key, const depth_t eval_depth, const tt_eval_type eval_type,
-		    eval_t eval, const size_t ply, const packed_move best_move)
+		    eval_t eval, const size_t ply, const move best_move)
 		{
 			tt_entry& entry = get_entry(key);
 
@@ -144,11 +145,11 @@ namespace chess
 		inline_toggle_member void store(
 		    const tt_key key, const depth_t eval_depth, const tt_eval_type eval_type, const eval_t eval)
 		{
-			store<true>(key, eval_depth, eval_type, eval, 0, 0);
+			store<true>(key, eval_depth, eval_type, eval, 0, move{});
 		}
 
-		inline_toggle_member bool probe(eval_t& eval, packed_move& best_move, const tt_key key,
-		    const depth_t eval_depth, const eval_t alpha, const eval_t beta, const size_t ply)
+		inline_toggle_member bool probe(eval_t& eval, move& best_move, const tt_key key, const depth_t eval_depth,
+		    const eval_t alpha, const eval_t beta, const size_t ply)
 		{
 			const tt_entry& entry = get_entry(key);
 
