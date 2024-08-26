@@ -20,6 +20,10 @@ namespace chess
 	const std::string formatted_weights_files = base_dir + "engines/tiktaalik weights formatted.txt";
 	const std::string games_file = base_dir + "games/CCRL-4040.[1913795]-rated-2500-no-mate.uci";
 
+	// 1: Use the original Texel's Tuning Method.
+	// 0: Use a modified tuning method.
+	#define texels_method 1
+
 	struct extended_position
 	{
 		board board;
@@ -30,17 +34,22 @@ namespace chess
 
 	std::vector<extended_position> extended_positions;
 
+	#if texels_method
+	// For Texel's tuning method, the training set is the full set of
+	// extended positions.
+	std::vector<extended_position>& training_set = extended_positions;
+	#else
+	// For the modified tuning method, a training set and test set are
+	// generated for each iteration of tuning.
 	std::vector<extended_position> training_set;
 	std::vector<extended_position> test_set;
-
-	// ps_evals is usually static constexpr, and visible from evaluation.hpp.
-	// During tuning, instead provide it here.
-	namespace eval
-	{
-		std::array<int16_t, pse_size> ps_evals;
-	}
+	#endif
 
 	using namespace eval;
+
+	// weights is usually available at compile time in evaluation.hpp.
+	// During tuning, instead provide it here.
+	std::array<int16_t, pse_size + pce_size> eval::weights;
 
 	bool load_weights()
 	{
@@ -48,38 +57,38 @@ namespace chess
 
 		std::fstream file(weights_file);
 
-		std::string weights;
+		std::string loaded_weights;
 		std::string line;
 		while (std::getline(file, line))
 		{
 			if (line.size() > 0)
 			{
-				weights = line;
+				loaded_weights = line;
 			}
 		}
 
-		std::stringstream ss{weights};
-		eval_t eval = 0;
-		for (size_t i = 0; i < eval::ps_evals.size(); ++i)
+		std::stringstream ss{loaded_weights};
+		eval_t weight = 0;
+		for (size_t i = 0; i < weights.size(); ++i)
 		{
-			if (ss >> eval)
+			if (ss >> weight)
 			{
-				eval::ps_evals[i] = eval;
+				weights[i] = weight;
 			}
 			else
 			{
-				std::cout << std::format("Failed to read weight for ps_evals[{}].\n", i);
+				std::cout << std::format("Failed to read weight for weights[{}].\n", i);
 				return false;
 			}
 		}
 
-		if (ss >> eval)
+		if (ss >> weight)
 		{
 			std::cout << "Found at least one extra weight (?).\n";
 			return false;
 		}
 
-		std::cout << std::format("Loaded {} weights.\n", eval::ps_evals.size());
+		std::cout << std::format("Loaded {} weights.\n", eval::weights.size());
 		return true;
 	}
 
@@ -87,10 +96,10 @@ namespace chess
 	{
 		std::stringstream ss;
 
-		ss << int(eval::ps_evals[0]);
-		for (size_t i = 1; i < ps_evals.size(); ++i)
+		ss << int(eval::weights[0]);
+		for (size_t i = 1; i < weights.size(); ++i)
 		{
-			ss << ' ' << int(ps_evals[i]);
+			ss << ' ' << int(weights[i]);
 		}
 		ss << '\n';
 
@@ -105,9 +114,9 @@ namespace chess
 
 		std::stringstream ss;
 
-		ss << left_indent << "constexpr std::array<int16_t, pse_size> ps_evals = {\n";
+		ss << "weights = {\n";
 
-		for (size_t i = 0; i < ps_evals.size(); ++i)
+		for (size_t i = 0; i < pse_size; ++i)
 		{
 			// If we're starting a new piece type, add an extra newline.
 			if (i % 128 == 0) ss << '\n';
@@ -151,7 +160,7 @@ namespace chess
 
 			ss << std::setw(5);
 			ss << std::right;
-			ss << int(eval::ps_evals[i]) << ',';
+			ss << int(eval::weights[i]) << ',';
 
 			if (i % 8 == 7) ss << '\n';
 		}
@@ -249,7 +258,7 @@ namespace chess
 			const int position = std::uniform_int_distribution(12, int(moves.size()))(rng);
 			for (int i = 0; i < position; ++i)
 			{
-				apply_move(moves[i]);
+				apply_move(move{moves[i], boards[0].get_bitboards()});
 			}
 
 			if constexpr (config::verify_key_phase_eval)
@@ -273,6 +282,7 @@ namespace chess
 		    "Parsed {} games in {} seconds.\n", games_parsed, (util::time_in_ms() - start_time) / 1'000);
 	}
 
+	#if !texels_method
 	static void generate_training_and_test_sets(size_t set_size, std::mt19937_64& rng)
 	{
 		if (extended_positions.size() == 0)
@@ -316,10 +326,9 @@ namespace chess
 
 		std::cout << std::format("done ({} ms)\n", util::time_in_ms() - start);
 	}
+	#endif
 
-	/*constexpr*/ double K = 0.7644;
-
-	static_assert(sizeof(double) == 8);
+	double K = 0.7644;
 
 	static double sigmoid(const double eval)
 	{
@@ -381,18 +390,38 @@ namespace chess
 		std::cout << "Finished tuning K.\n";
 	}
 
-	static void tune_ps_evals()
+	static void tune_weights(const std::string& message, const size_t begin, const size_t size, const eval_t delta)
 	{
-		std::cout << "Tuning piece-square evals.\n";
+		{
+			std::stringstream ss;
+			ss << std::format("Tuning {} ({} weights, at indexes {} through {}) using delta = +/-{}.\n", message, size,
+			    begin, begin + size - 1, delta);
+	#if texels_method
+			ss << "Using Texel's Tuning Method.";
+	#else
+			ss << "Using modified tuning method.";
+	#endif
+			util::log(ss.str());
+			std::cout << ss.str() << '\n';
+		}
 
 		std::mt19937_64 rng{0x0123456789abcdef};
+		const auto start = util::time_in_ms();
+		size_t pass = 1;
 
+	#if texels_method
+		// For Texel's Tuning Method, continue tuning as long as we find
+		// changes that reduce the error in the training set.
+		const double training_error_before = evaluate(training_set);
+		double training_error_after = training_error_before;
+		bool improving = true;
+	#else
+		// For the modified tuning method, continue tuning as long as we
+		// find changes that also reduce the error in a test set.
 		double test_error_before{};
 		double test_error_after{};
+	#endif
 
-		const auto start = util::time_in_ms();
-
-		size_t pass = 1;
 		do
 		{
 			const auto pass_start = util::time_in_ms();
@@ -400,62 +429,88 @@ namespace chess
 			store_weights();
 			store_weights_formatted();
 
+	#if texels_method
+			improving = false;
+	#else
+			// Generate a new training and test set for this iteration.
 			generate_training_and_test_sets(extended_positions.size() / 2, rng);
-
-			// Evaluate both sets using the existing weights.
-			// We will be tuning using the training set, and keeping the changes.
-			const double training_error_before = evaluate(training_set);
 			test_error_before = evaluate(test_set);
+			const double training_error_before = evaluate(training_set);
 			double training_error_after = training_error_before;
+	#endif
 
-			for (size_t i = 0; i < eval::ps_evals.size(); ++i)
+			for (size_t i = begin; i < begin + size; ++i)
 			{
-				for (int8_t delta : {5, -5})
+				for (const eval_t d : {delta, -delta})
 				{
-					eval::ps_evals[i] += delta;
+					weights[i] += d;
 
 					const double new_error = evaluate(training_set);
+
 					if (new_error < training_error_after)
 					{
-						std::cout << std::format("Improved ps_evals[{:>3}] from {:>4} to {:>4}. New error: {:1.9f}\n",
-						    i, int(eval::ps_evals[i] - delta), int(eval::ps_evals[i]), training_error_after);
+						std::cout << std::format("Improved weights[{:>3}] from {:>4} to {:>4}. New error: {:1.9f}\n", i,
+						    int(weights[i] - d), int(weights[i]), new_error);
 						training_error_after = new_error;
+	#if texels_method
+						improving = true;
+	#endif
 						break;
 					}
 
-					eval::ps_evals[i] -= delta;
+					weights[i] -= d;
 				}
 			}
 
+	#if texels_method
+	#else
 			test_error_after = evaluate(test_set);
+	#endif
 
 			const auto now = util::time_in_ms();
 
 			std::stringstream ss;
-			ss << std::format("Finished pass {} in {} ms ({} minutes elapsed).\n", pass++, now - pass_start,
-			    (now - start + 30'000) / 60'000);
+			ss << std::format("Finished pass {} in {} seconds ({} minutes elapsed).", pass++,
+			    (now - pass_start) / 1'000, (now - start) / 60'000);
+	#if texels_method
+	#else
+			ss << '\n';
 			ss << std::format("Training set error before: {:1.9f}\n", training_error_before);
 			ss << std::format("Training set error after:  {:1.9f} ({:+1.9f})\n", training_error_after,
 			    training_error_after - training_error_before);
 			ss << std::format("Test set error before:     {:1.9f}\n", test_error_before);
 			ss << std::format("Test set error after:      {:1.9f} ({:+1.9f})", test_error_after,
 			    test_error_after - test_error_before);
+	#endif
 
 			util::log(ss.str());
 			std::cout << ss.str() << '\n';
-		} while (test_error_after < test_error_before);
+		} while (
+	#if texels_method
+		    improving
+	#else
+		    test_error_after < test_error_before
+	#endif
+		);
 
+	#if texels_method
+		std::cout << "Storing final weights.\n";
+		store_weights();
+		store_weights_formatted();
+	#else
 		std::cout << "Rolling back to previous best weights.\n";
 		load_weights();
+	#endif
 
 		std::cout << "Finished tuning.\n";
 	}
 
 	static void show_tune_help()
 	{
-		std::cout << "\ttune help\n";
-		std::cout << "\ttune evals\n";
-		std::cout << "\ttune k\n";
+		std::cout << "\ttune help          Display this message.\n";
+		std::cout << "\ttune k             Tune the scaling constant K used in sigmoid(eval).\n";
+		std::cout << "\ttune all [delta]   Tune all weights using the provided delta.\n";
+		std::cout << "\ttune pse [delta]   Tune piece-square evals using the provided delta.\n";
 	}
 
 	void game::tune(const std::vector<std::string>& args)
@@ -473,11 +528,32 @@ namespace chess
 		{
 			load_games();
 			tune_k();
+			return;
 		}
-		else if (args[1] == "evals")
+
+		eval_t delta = 0;
+		if (args.size() == 3)
+		{
+			std::stringstream ss;
+			ss << args[2];
+			ss >> delta;
+		}
+
+		if (delta <= 0)
+		{
+			std::cout << std::format("Invalid delta: {}\n", int(delta));
+			return;
+		}
+
+		if (args[1] == "all")
 		{
 			load_games();
-			tune_ps_evals();
+			tune_weights("all weights", 0, weights.size(), delta);
+		}
+		else if (args[1] == "pse")
+		{
+			load_games();
+			tune_weights("piece-square evals", pse_start, pse_size, delta);
 		}
 		else
 		{

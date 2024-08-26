@@ -23,11 +23,13 @@ namespace chess::eval
 	                               2 * phase_weights[queen];   //
 	static_assert(std::popcount(total_phase) == 1);
 
+	// Piece-square evals.
+	constexpr size_t pse_start = 0;
 	constexpr size_t pse_size = 64 * n_of_piece_types * 2;
 
-#if !tuning
 	// clang-format off
 	constexpr std::array<int16_t, pse_size> ps_evals = {
+#if !tuning
 
 	// pawn midgame:
 	      0,    0,    0,    0,    0,    0,    0,    0,
@@ -143,14 +145,13 @@ namespace chess::eval
 	     -5,  -10,  -15,  -10,   -5,  -10,  -15,  -35,
 	     15,   -5,  -20,  -50,  -45,  -40,  -35,  -25,
 	};
-	// clang-format on
 
 #else
-	// The ps_evals array will be mutable, unavailable at compile time,
-	// and provided by tuning.cpp.
 	extern std::array<int16_t, pse_size> ps_evals;
+	// In tuning builds, the weights array is mutable, unavailable at
+	// compile time, and defined in tuning.cpp.
 #endif
-	static_assert(ps_evals.size() == 64 * n_of_piece_types * 2);
+	// clang-format on
 
 	namespace detail
 	{
@@ -158,14 +159,14 @@ namespace chess::eval
 		inline constexpr_if_not_tuning eval_t piece_square_eval(const piece piece, size_t index)
 		{
 			if constexpr_if_not_tuning (color == black) index ^= 0b111000;
-			const eval_t eval = ps_evals[piece * 128 + index];
+			const eval_t eval = weights[pse_start + piece * 128 + index];
 			return (color == white) ? eval : -eval;
 		}
 		template <color color, piece piece>
 		inline constexpr_if_not_tuning eval_t piece_square_eval(size_t index)
 		{
 			if constexpr_if_not_tuning (color == black) index ^= 0b111000;
-			const eval_t eval = ps_evals[piece * 128 + index];
+			const eval_t eval = weights[pse_start + piece * 128 + index];
 			return (color == white) ? eval : -eval;
 		}
 	}
