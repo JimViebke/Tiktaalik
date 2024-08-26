@@ -52,7 +52,6 @@ namespace chess
 
 		// Simple, nonvalidating FEN parser
 		color load_fen(const std::string& fen);
-		void set_last_moved_info(const color color_to_move);
 		void generate_eval();
 		template <bool verify_key = true, bool verify_phase = true, bool verify_eval = true>
 		void verify_key_phase_eval(const color color_to_move);
@@ -434,6 +433,8 @@ namespace chess
 		const class bitboards& get_bitboards() const { return bitboards; }
 
 	private:
+		void set_previous_move_info(const color color_to_move);
+
 		template <color moving_color, piece piece, move_type move_type, chess::piece promoted_piece>
 		consteval static uint64_t get_copy_mask()
 		{

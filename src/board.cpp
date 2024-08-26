@@ -137,61 +137,12 @@ namespace chess
 		// (ignored)
 
 		// Finish setting up the board:
-		// - Add last moved info for check detection.
-		set_last_moved_info(color_to_move);
+		// - Add previous move info for check detection.
+		set_previous_move_info(color_to_move);
 		// - Generate the Zobrist hash key, game phase, and static evaluation from scratch.
 		generate_key_phase_eval(color_to_move);
 
 		return color_to_move;
-	}
-
-	void board::set_last_moved_info(const color color_to_move)
-	{
-		// During move generation, we optimize by noting that the only way a player can
-		// start their turn in check from a knight or pawn is if the opponent moved a
-		// knight or pawn, putting us into check. This is determined during move generation
-		// by reading the type and position of the last moved piece from `board`.
-		// However, this information is absent at the original root. Generate it here so
-		// that generate_child_boards() doesn't need to handle the root edge case.
-
-		const bitboard our_pieces = (color_to_move == white) ? bitboards.get<white>() : bitboards.get<black>();
-		const bitboard opp_pieces = (color_to_move == white) ? bitboards.get<black>() : bitboards.get<white>();
-
-		const size_t king_idx = get_next_bit_index(our_pieces & bitboards.kings);
-		const rank king_rank = king_idx / 8;
-		const file king_file = king_idx % 8;
-
-		const rank attacking_pawn_rank = king_rank + ((color_to_move == white) ? -1 : 1);
-		if (bounds_check(attacking_pawn_rank))
-		{
-			const bitboard opp_pawns = opp_pieces & bitboards.pawns;
-
-			const size_t pawn_lo_idx = to_index(attacking_pawn_rank, king_file - 1);
-			const size_t pawn_hi_idx = to_index(attacking_pawn_rank, king_file + 1);
-
-			if (bounds_check(king_file - 1) && (opp_pawns & (1ull << pawn_lo_idx)))
-			{
-				move.set_moved_piece<pawn>();
-				move.set_end_index(pawn_lo_idx);
-				return;
-			}
-			else if (bounds_check(king_file + 1) && (opp_pawns & (1ull << pawn_hi_idx)))
-			{
-				move.set_moved_piece<pawn>();
-				move.set_end_index(pawn_hi_idx);
-				return;
-			}
-		}
-
-		const bitboard attacking_knights = opp_pieces & bitboards.knights & knight_attack_masks[king_idx];
-		if (attacking_knights != 0u)
-		{
-			move.set_moved_piece<knight>();
-			move.set_end_index(get_next_bit_index(attacking_knights));
-			return;
-		}
-
-		move.set_moved_piece<empty>();
 	}
 
 	void board::generate_eval() { generate_key_phase_eval<false, false, true>(0); }
@@ -265,4 +216,53 @@ namespace chess
 #if tuning
 	template void board::verify_key_phase_eval<false, false, true>(const color);
 #endif
+
+	void board::set_previous_move_info(const color color_to_move)
+	{
+		// During move generation, we optimize by noting that the only way a player can
+		// start their turn in check from a knight or pawn is if the opponent moved a
+		// knight or pawn, putting us into check. This is determined during move generation
+		// by reading the type and position of the last moved piece from `board`.
+		// However, this information is absent at the original root. Generate it here so
+		// that generate_child_boards() doesn't need to handle the root edge case.
+
+		const bitboard our_pieces = (color_to_move == white) ? bitboards.get<white>() : bitboards.get<black>();
+		const bitboard opp_pieces = (color_to_move == white) ? bitboards.get<black>() : bitboards.get<white>();
+
+		const size_t king_idx = get_next_bit_index(our_pieces & bitboards.kings);
+		const rank king_rank = king_idx / 8;
+		const file king_file = king_idx % 8;
+
+		const rank attacking_pawn_rank = king_rank + ((color_to_move == white) ? -1 : 1);
+		if (bounds_check(attacking_pawn_rank))
+		{
+			const bitboard opp_pawns = opp_pieces & bitboards.pawns;
+
+			const size_t pawn_lo_idx = to_index(attacking_pawn_rank, king_file - 1);
+			const size_t pawn_hi_idx = to_index(attacking_pawn_rank, king_file + 1);
+
+			if (bounds_check(king_file - 1) && (opp_pawns & (1ull << pawn_lo_idx)))
+			{
+				move.set_moved_piece<pawn>();
+				move.set_end_index(pawn_lo_idx);
+				return;
+			}
+			else if (bounds_check(king_file + 1) && (opp_pawns & (1ull << pawn_hi_idx)))
+			{
+				move.set_moved_piece<pawn>();
+				move.set_end_index(pawn_hi_idx);
+				return;
+			}
+		}
+
+		const bitboard attacking_knights = opp_pieces & bitboards.knights & knight_attack_masks[king_idx];
+		if (attacking_knights != 0u)
+		{
+			move.set_moved_piece<knight>();
+			move.set_end_index(get_next_bit_index(attacking_knights));
+			return;
+		}
+
+		move.set_moved_piece<empty>();
+	}
 }
