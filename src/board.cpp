@@ -200,9 +200,10 @@ namespace chess
 	{
 		tt_key expected_key{};
 		uint16_t expected_phase{};
-		eval_t expected_eval{};
 		eval_t expected_mg_eval{};
 		eval_t expected_eg_eval{};
+		eval_t expected_piece_count_eval{};
+		eval_t expected_eval{};
 
 		if constexpr (verify_key)
 		{
@@ -216,9 +217,10 @@ namespace chess
 
 		if constexpr (verify_eval)
 		{
-			expected_eval = eval;
 			expected_mg_eval = mg_eval;
 			expected_eg_eval = eg_eval;
+			expected_piece_count_eval = piece_count_eval;
+			expected_eval = eval;
 		}
 
 		generate_key_phase_eval<verify_key, verify_phase, verify_eval>(color_to_move);
@@ -233,19 +235,27 @@ namespace chess
 			std::cout << "Incremental and generated phases mismatch\n";
 		}
 
-		if (verify_eval && mg_eval != expected_mg_eval)
+		if constexpr (verify_eval)
 		{
-			std::cout << "Incremental and generated mg_evals mismatch\n";
-		}
+			if (mg_eval != expected_mg_eval)
+			{
+				std::cout << "Incremental and generated mg_evals mismatch\n";
+			}
 
-		if (verify_eval && eg_eval != expected_eg_eval)
-		{
-			std::cout << "Incremental and generated eg_evals mismatch\n";
-		}
+			if (eg_eval != expected_eg_eval)
+			{
+				std::cout << "Incremental and generated eg_evals mismatch\n";
+			}
 
-		if (verify_eval && eval != expected_eval)
-		{
-			std::cout << "Incremental and generated evals mismatch\n";
+			if (piece_count_eval != expected_piece_count_eval)
+			{
+				std::cout << "Incremental and generated piece_count_evals mismatch\n";
+			}
+
+			if (eval != expected_eval)
+			{
+				std::cout << "Incremental and generated evals mismatch\n";
+			}
 		}
 	}
 

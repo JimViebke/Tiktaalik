@@ -165,6 +165,34 @@ namespace chess
 			if (i % 8 == 7) ss << '\n';
 		}
 
+		ss << '\n';
+		ss << left_indent << "// Piece count evals:\n";
+
+		for (size_t i = 0; i < pce_size; ++i)
+		{
+			// If we're starting a new line, indent and align.
+			if (i % 10 == 0)
+			{
+				ss << left_indent << left_align;
+			}
+
+			ss << std::setw(4);
+			ss << std::right;
+			ss << int(eval::weights[pce_start + i]) << ',';
+
+			if (i % 10 == 9)
+			{
+				switch (i / 10)
+				{
+				case pawn: ss << " // 0-8 pawns\n"; break;
+				case knight: ss << " // 0-10 knights\n"; break;
+				case bishop: ss << " // 0-10 bishops\n"; break;
+				case rook: ss << " // 0-10 rooks\n"; break;
+				case queen: ss << " // 0-9 queens\n"; break;
+				}
+			}
+		}
+
 		ss << left_indent << "};\n";
 
 		std::ofstream ofs(formatted_weights_files, std::ios_base::out);
@@ -511,6 +539,8 @@ namespace chess
 		std::cout << "\ttune k             Tune the scaling constant K used in sigmoid(eval).\n";
 		std::cout << "\ttune all [delta]   Tune all weights using the provided delta.\n";
 		std::cout << "\ttune pse [delta]   Tune piece-square evals using the provided delta.\n";
+		std::cout << "\ttune pce [delta]   Tune piece count evals using the provided delta.\n";
+		std::cout << "\t                   (eg, bishop pair, knight pair, last pawn, etc.)\n";
 	}
 
 	void game::tune(const std::vector<std::string>& args)
@@ -554,6 +584,11 @@ namespace chess
 		{
 			load_games();
 			tune_weights("piece-square evals", pse_start, pse_size, delta);
+		}
+		else if (args[1] == "pce")
+		{
+			load_games();
+			tune_weights("piece count evals", pce_start, pce_size, delta);
 		}
 		else
 		{

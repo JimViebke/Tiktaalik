@@ -4,6 +4,7 @@
 #include <iostream>
 #include <limits>
 
+#include "bitboard.hpp"
 #include "config.hpp"
 #include "defines.hpp"
 
@@ -27,9 +28,13 @@ namespace chess::eval
 	constexpr size_t pse_start = 0;
 	constexpr size_t pse_size = 64 * n_of_piece_types * 2;
 
+	// Piece count evals (bishop pair, knight pair, last pawn, etc).
+	constexpr size_t pce_start = pse_size;
+	constexpr size_t pce_size = 10 * (n_of_piece_types - 1);
+
 	// clang-format off
-	constexpr std::array<int16_t, pse_size> ps_evals = {
 #if !tuning
+	constexpr std::array<int16_t, pse_size + pce_size> weights = {
 
 	// pawn midgame:
 	      0,    0,    0,    0,    0,    0,    0,    0,
@@ -144,12 +149,19 @@ namespace chess::eval
 	    -10,    0,    0,   -5,    0,  -10,  -20,  -15,
 	     -5,  -10,  -15,  -10,   -5,  -10,  -15,  -35,
 	     15,   -5,  -20,  -50,  -45,  -40,  -35,  -25,
+
+	// Piece count evals:
+	   140, 100, 110, 110, 100,  85,  65,  25,   0,   0, // 0-8 pawns
+	   280, 290, 325,   0,   0,   0,   0,   0,   0,   0, // 0-10 knights
+	   295, 335, 190,   0,   0,   0,   0,   0,   0,   0, // 0-10 bishops
+	   500, 435, -20,   0,   0,   0,   0,   0,   0,   0, // 0-10 rooks
+	   930, 520,   0,   0,   0,   0,   0,   0,   0,   0, // 0-9 queens
 	};
 
 #else
-	extern std::array<int16_t, pse_size> ps_evals;
 	// In tuning builds, the weights array is mutable, unavailable at
 	// compile time, and defined in tuning.cpp.
+	extern std::array<int16_t, pse_size + pce_size> weights;
 #endif
 	// clang-format on
 
@@ -190,6 +202,29 @@ namespace chess::eval
 	inline constexpr_if_not_tuning eval_t piece_square_eval_eg(const size_t index)
 	{
 		return detail::piece_square_eval<color, piece>(index + 64);
+	}
+
+	template <color color>
+	inline constexpr_if_not_tuning eval_t piece_count_eval(const piece piece, const size_t count)
+	{
+		const eval_t eval = weights[pce_start + piece * 10 + count];
+		return (color == white) ? eval : -eval;
+	}
+	template <color color, piece piece>
+	inline constexpr_if_not_tuning eval_t piece_count_eval(const size_t count)
+	{
+		const eval_t eval = weights[pce_start + piece * 10 + count];
+		return (color == white) ? eval : -eval;
+	}
+	template <color color>
+	inline constexpr_if_not_tuning eval_t piece_count_eval(const piece piece, const bitboards& bbs)
+	{
+		return piece_count_eval<color>(piece, bbs.count<color>(piece));
+	}
+	template <color color, piece piece>
+	inline constexpr_if_not_tuning eval_t piece_count_eval(const bitboards& bbs)
+	{
+		return piece_count_eval<color, piece>(bbs.count<color, piece>());
 	}
 
 #if !tuning

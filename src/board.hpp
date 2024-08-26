@@ -194,8 +194,8 @@ namespace chess
 		    const bitboard to, const chess::piece captured_piece)
 		{
 			// Generate a mask at compile time to selectively copy parent state.
-			constexpr uint16_t copy_mask = get_copy_mask<moving_color, piece, move_type, promoted_piece>();
-			uint16_t bitfield = parent_board.board_state & copy_mask;
+			constexpr uint64_t copy_mask = get_copy_mask<moving_color, piece, move_type, promoted_piece>();
+			uint64_t bitfield = *(uint64_t*)&parent_board.board_state & copy_mask;
 
 			// Record the move that resulted in this position.
 			const size_t start_idx = get_next_bit_index(from);
@@ -205,7 +205,7 @@ namespace chess
 			// If the move is not a capture or pawn move, increment the fifty-move counter.
 			if constexpr (move_type != move_type::capture && piece != pawn)
 			{
-				bitfield += 1 << fifty_move_counter_offset;
+				bitfield += 1ull << fifty_move_counter_offset;
 			}
 
 			// Record any en passant right for the opponent.
@@ -215,7 +215,7 @@ namespace chess
 			}
 			else
 			{
-				bitfield |= uint32_t(no_ep_file) << en_passant_file_offset;
+				bitfield |= uint64_t(no_ep_file) << en_passant_file_offset;
 			}
 
 			// If a rook moves, it cannot be used to castle.
@@ -230,9 +230,9 @@ namespace chess
 					if (start_rank == 7)
 					{
 						if (start_file == 0)
-							bitfield &= ~(1 << white_can_castle_qs_offset);
+							bitfield &= ~(1ull << white_can_castle_qs_offset);
 						else if (start_file == 7)
-							bitfield &= ~(1 << white_can_castle_ks_offset);
+							bitfield &= ~(1ull << white_can_castle_ks_offset);
 					}
 				}
 				else
@@ -240,9 +240,9 @@ namespace chess
 					if (start_rank == 0)
 					{
 						if (start_file == 0)
-							bitfield &= ~(1 << black_can_castle_qs_offset);
+							bitfield &= ~(1ull << black_can_castle_qs_offset);
 						else if (start_file == 7)
-							bitfield &= ~(1 << black_can_castle_ks_offset);
+							bitfield &= ~(1ull << black_can_castle_ks_offset);
 					}
 				}
 			}
@@ -259,9 +259,9 @@ namespace chess
 					if (end_rank == 0)
 					{
 						if (end_file == 0)
-							bitfield &= ~(1 << black_can_castle_qs_offset);
+							bitfield &= ~(1ull << black_can_castle_qs_offset);
 						else if (end_file == 7)
-							bitfield &= ~(1 << black_can_castle_ks_offset);
+							bitfield &= ~(1ull << black_can_castle_ks_offset);
 					}
 				}
 				else
@@ -269,14 +269,14 @@ namespace chess
 					if (end_rank == 7)
 					{
 						if (end_file == 0)
-							bitfield &= ~(1 << white_can_castle_qs_offset);
+							bitfield &= ~(1ull << white_can_castle_qs_offset);
 						else if (end_file == 7)
-							bitfield &= ~(1 << white_can_castle_ks_offset);
+							bitfield &= ~(1ull << white_can_castle_ks_offset);
 					}
 				}
 			}
 
-			board_state = bitfield;
+			*(uint64_t*)&board_state = bitfield;
 
 			// Don't update keys, phases, or evals during perft.
 			if constexpr (perft) return;
@@ -286,15 +286,15 @@ namespace chess
 
 			constexpr chess::piece piece_after = (promoted_piece == empty) ? piece : promoted_piece;
 
-			eval_t incremental_mg_eval = parent_board.get_mg_eval();
-			eval_t incremental_eg_eval = parent_board.get_eg_eval();
-
 			// Don't update keys during quiescence.
 			if constexpr (!quiescing)
 			{
 				// Add the key for the arriving piece.
 				incremental_key ^= piece_square_key<moving_color, piece_after>(end_idx);
 			}
+
+			eval_t incremental_mg_eval = parent_board.get_mg_eval();
+			eval_t incremental_eg_eval = parent_board.get_eg_eval();
 
 			// Update square eval for the moving piece.
 			incremental_mg_eval -= eval::piece_square_eval_mg<moving_color, piece>(start_idx);
@@ -371,32 +371,47 @@ namespace chess
 			}
 
 			phase_t incremental_phase = parent_board.get_phase();
+			eval_t incremental_piece_count_eval = parent_board.get_piece_count_eval();
 
 			if constexpr (move_type == move_type::capture)
 			{
 				incremental_phase -= eval::phase_weights[captured_piece];
+				incremental_piece_count_eval -= eval::piece_count_eval<opp_color>(captured_piece, bitboards);
 			}
 			else if constexpr (move_type == move_type::en_passant_capture)
 			{
 				incremental_phase -= eval::phase_weights[pawn];
+				incremental_piece_count_eval -= eval::piece_count_eval<opp_color, pawn>(bitboards);
 			}
 
 			if constexpr (promoted_piece != empty)
 			{
 				incremental_phase -= eval::phase_weights[pawn];
 				incremental_phase += eval::phase_weights[promoted_piece];
+				incremental_piece_count_eval -= eval::piece_count_eval<moving_color, pawn>(bitboards);
+				incremental_piece_count_eval += eval::piece_count_eval<moving_color, promoted_piece>(
+				    bitboards.count<moving_color, promoted_piece>() - 1);
 			}
 
-			eval = taper(incremental_phase, incremental_mg_eval, incremental_eg_eval);
+			// If the move is a capture, en passant capture, or promotion, phase and piece count
+			// eval were modified and must be stored. Otherwise, the unmodified values were already
+			// copied over with the parent board state.
+			if constexpr (move_type == move_type::capture || move_type == move_type::en_passant_capture ||
+			              promoted_piece != empty)
+			{
+				phase = incremental_phase;
+				piece_count_eval = incremental_piece_count_eval;
+			}
 
-			phase = incremental_phase;
 			mg_eval = incremental_mg_eval;
 			eg_eval = incremental_eg_eval;
+			eval = incremental_piece_count_eval + taper(incremental_phase, incremental_mg_eval, incremental_eg_eval);
 		}
 
 		tt_key get_key() const { return key; }
 		eval_t get_mg_eval() const { return mg_eval; }
 		eval_t get_eg_eval() const { return eg_eval; }
+		eval_t get_piece_count_eval() const { return piece_count_eval; }
 		uint16_t get_phase() const { return phase; }
 		eval_t get_eval() const { return eval; }
 		template <color color_to_move>
@@ -420,20 +435,20 @@ namespace chess
 
 	private:
 		template <color moving_color, piece piece, move_type move_type, chess::piece promoted_piece>
-		consteval static uint16_t get_copy_mask()
+		consteval static uint64_t get_copy_mask()
 		{
-			uint16_t copy_mask = 0;
+			uint64_t copy_mask = 0;
 
 			// Always copy the opponent's castling rights.
 			if constexpr (moving_color == white)
 			{
-				copy_mask |= 1 << black_can_castle_ks_offset;
-				copy_mask |= 1 << black_can_castle_qs_offset;
+				copy_mask |= 1ull << black_can_castle_ks_offset;
+				copy_mask |= 1ull << black_can_castle_qs_offset;
 			}
 			else
 			{
-				copy_mask |= 1 << white_can_castle_ks_offset;
-				copy_mask |= 1 << white_can_castle_qs_offset;
+				copy_mask |= 1ull << white_can_castle_ks_offset;
+				copy_mask |= 1ull << white_can_castle_qs_offset;
 			}
 
 			// If the move is not a king move, copy the moving player's castling rights.
@@ -441,13 +456,13 @@ namespace chess
 			{
 				if constexpr (moving_color == white)
 				{
-					copy_mask |= 1 << white_can_castle_ks_offset;
-					copy_mask |= 1 << white_can_castle_qs_offset;
+					copy_mask |= 1ull << white_can_castle_ks_offset;
+					copy_mask |= 1ull << white_can_castle_qs_offset;
 				}
 				else
 				{
-					copy_mask |= 1 << black_can_castle_ks_offset;
-					copy_mask |= 1 << black_can_castle_qs_offset;
+					copy_mask |= 1ull << black_can_castle_ks_offset;
+					copy_mask |= 1ull << black_can_castle_qs_offset;
 				}
 			}
 
@@ -455,6 +470,14 @@ namespace chess
 			if constexpr (move_type != move_type::capture && piece != pawn)
 			{
 				copy_mask |= fifty_move_counter_mask << fifty_move_counter_offset;
+			}
+
+			// If the move is not a capture, en passant capture, or promotion, the phase and
+			// piece count eval will not change. Copy them unmodified from the parent.
+			if constexpr (move_type != move_type::capture && move_type != move_type::en_passant_capture &&
+			              promoted_piece == empty)
+			{
+				copy_mask |= 0x00'00'FF'FF'FF'FF'00'00;
 			}
 
 			return copy_mask;
@@ -492,6 +515,7 @@ namespace chess
 			tt_key new_key = 0;
 
 			phase_t new_phase = 0;
+			eval_t new_piece_count_eval = 0;
 			eval_t new_mg_eval = 0;
 			eval_t new_eg_eval = 0;
 
@@ -503,6 +527,9 @@ namespace chess
 				{
 					const auto count = ::util::popcount(bb);
 					if constexpr (gen_phase) new_phase += count * eval::phase_weights[piece];
+					if constexpr (gen_eval)
+						for (size_t i = 0; i < count; ++i)
+							new_piece_count_eval += eval::piece_count_eval<color>(piece, i);
 				}
 
 				while (bb)
@@ -559,7 +586,8 @@ namespace chess
 			{
 				mg_eval = new_mg_eval;
 				eg_eval = new_eg_eval;
-				eval = taper(phase, new_mg_eval, new_eg_eval);
+				piece_count_eval = new_piece_count_eval;
+				eval = new_piece_count_eval + taper(phase, new_mg_eval, new_eg_eval);
 			}
 		}
 
@@ -587,12 +615,14 @@ namespace chess
 
 		tt_key key{};
 		bitboards bitboards{};
-		move move{};
-		uint16_t board_state{};
 
+		move move{};
 		eval_t mg_eval{};
 		eval_t eg_eval{};
-		uint16_t phase{};
 		eval_t eval{};
+
+		uint16_t board_state{};
+		uint16_t phase{};
+		eval_t piece_count_eval{};
 	};
 }
