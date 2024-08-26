@@ -11,6 +11,7 @@ namespace chess
 	{
 		board_state = uint32_t{}; // Reset the fields we'll be modifying.
 		bitboards = chess::bitboards{};
+		move = chess::move{};
 
 		auto fen_it = fen.cbegin();
 		size_t idx = 0;
