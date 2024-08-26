@@ -207,14 +207,10 @@ namespace chess
 				bitfield += 1ull << fifty_move_counter_offset;
 			}
 
-			// Record any en passant right for the opponent.
+			// Record any en passant rights for the opponent.
 			if constexpr (move_type == move_type::pawn_two_squares)
 			{
-				bitfield |= (start_idx % 8) << en_passant_file_offset;
-			}
-			else
-			{
-				bitfield |= uint64_t(no_ep_file) << en_passant_file_offset;
+				bitfield |= 1ull << en_passant_offset;
 			}
 
 			// If a rook moves, it cannot be used to castle.
@@ -421,7 +417,7 @@ namespace chess
 		move get_move() const { return move; }
 		bool move_is(const move passed_move) const { return move == passed_move; }
 		piece get_moved_piece() const { return move.get_moved_piece(); }
-		file get_en_passant_file() const { return (board_state >> en_passant_file_offset) & en_passant_mask; }
+		bool can_capture_ep() const { return (board_state >> en_passant_offset) & en_passant_mask; }
 		bool white_can_castle_ks() const { return (board_state >> white_can_castle_ks_offset) & castling_right_mask; }
 		bool white_can_castle_qs() const { return (board_state >> white_can_castle_qs_offset) & castling_right_mask; }
 		bool black_can_castle_ks() const { return (board_state >> black_can_castle_ks_offset) & castling_right_mask; }
@@ -484,7 +480,7 @@ namespace chess
 			return copy_mask;
 		}
 
-		void set_en_passant_file(const file file) { board_state |= uint16_t(file) << en_passant_file_offset; }
+		void set_ep_capture() { board_state |= 1ull << en_passant_offset; }
 		void set_white_can_castle_ks(const uint16_t arg) { board_state |= arg << white_can_castle_ks_offset; }
 		void set_white_can_castle_qs(const uint16_t arg) { board_state |= arg << white_can_castle_qs_offset; }
 		void set_black_can_castle_ks(const uint16_t arg) { board_state |= arg << black_can_castle_ks_offset; }
@@ -559,10 +555,9 @@ namespace chess
 
 			if constexpr (gen_key)
 			{
-				const file ep_file = get_en_passant_file();
-				if (ep_file != no_ep_file)
+				if (can_capture_ep())
 				{
-					new_key ^= en_passant_key(ep_file);
+					new_key ^= en_passant_key(move.get_end_file());
 				}
 
 				if (color_to_move == black)
@@ -593,13 +588,13 @@ namespace chess
 		}
 
 		// bitfield sizes
-		static constexpr size_t en_passant_bits = 4;
+		static constexpr size_t en_passant_bits = 1;
 		static constexpr size_t castling_right_bits = 1;
 		static constexpr size_t fifty_move_counter_bits = std::bit_width(50u * 2);
 
 		// bitfield positions
-		static constexpr size_t en_passant_file_offset = 0;
-		static constexpr size_t white_can_castle_ks_offset = en_passant_file_offset + en_passant_bits;
+		static constexpr size_t en_passant_offset = 0;
+		static constexpr size_t white_can_castle_ks_offset = en_passant_offset + en_passant_bits;
 		static constexpr size_t white_can_castle_qs_offset = white_can_castle_ks_offset + castling_right_bits;
 		static constexpr size_t black_can_castle_ks_offset = white_can_castle_qs_offset + castling_right_bits;
 		static constexpr size_t black_can_castle_qs_offset = black_can_castle_ks_offset + castling_right_bits;
@@ -612,7 +607,7 @@ namespace chess
 		static constexpr uint64_t fifty_move_counter_mask = (1ull << fifty_move_counter_bits) - 1;
 
 		// Check that we're using the expected number of bits.
-		static_assert(fifty_move_counter_bits + fifty_move_counter_offset + 1 == 16);
+		static_assert(fifty_move_counter_bits + fifty_move_counter_offset + 4 == 16);
 
 		tt_key key{};
 		bitboards bitboards{};

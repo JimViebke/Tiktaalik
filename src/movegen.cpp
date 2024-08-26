@@ -146,11 +146,10 @@ namespace chess
 				    (moving_color == white) ? start >> 7 : start << 9);
 			}
 
-			const file ep_file = boards[parent_idx].get_en_passant_file();
-
-			if (ep_file != no_ep_file)
+			if (boards[parent_idx].can_capture_ep())
 			{
 				constexpr bitboard ep_capture_start_rank = (moving_color == white) ? rank_5 : rank_4;
+				const file ep_file = boards[parent_idx].get_move().get_end_file();
 
 				bitboard ep_capturers =
 				    pawns & ep_capture_start_rank & (ep_capture_mask << (ep_file + (moving_color == white ? 0 : 8)));
@@ -450,10 +449,10 @@ namespace chess
 		{
 			incremental_key = parent_board.get_key() ^ black_to_move_key();
 
-			const file parent_ep_file = parent_board.get_en_passant_file();
-			if (parent_ep_file != no_ep_file)
+			// Remove any ep capture rights from the key.
+			if (parent_board.can_capture_ep())
 			{
-				incremental_key ^= en_passant_key(parent_ep_file);
+				incremental_key ^= en_passant_key(parent_board.get_move().get_end_file());
 			}
 		}
 

@@ -115,12 +115,10 @@ namespace chess
 
 		if (*fen_it != '-')
 		{
-			set_en_passant_file(*fen_it++ - 'a'); // convert letter file a-h to index 0-7
-			++fen_it;                             // step past the rank
-		}
-		else
-		{
-			set_en_passant_file(no_ep_file);
+			const file ep_file = *fen_it++ - 'a'; // convert letter file a-h to index 0-7
+			move.set_end_index(ep_file);
+			set_ep_capture();
+			++fen_it; // step past the rank
 		}
 		++fen_it; // step past the space
 

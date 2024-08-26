@@ -41,8 +41,6 @@ namespace chess
 
 	constexpr piece empty = king + 1;
 
-	constexpr file no_ep_file = 8;
-
 	using uint128_t = __m128i;
 	using uint256_t = __m256i;
 
