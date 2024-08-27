@@ -20,9 +20,12 @@ namespace chess
 	const std::string formatted_weights_files = base_dir + "engines/tiktaalik weights formatted.txt";
 	const std::string games_file = base_dir + "games/CCRL-4040.[1913795]-rated-2500-no-mate.uci";
 
-	// 1: Use the original Texel's Tuning Method.
-	// 0: Use a modified tuning method.
-	#define texels_method 1
+	// Toggle the tuning method.
+	#if 1
+		#define texel_tuning
+	#else
+		#define modified_texel_tuning
+	#endif
 
 	struct extended_position
 	{
@@ -34,7 +37,7 @@ namespace chess
 
 	std::vector<extended_position> extended_positions;
 
-	#if texels_method
+	#ifdef texel_tuning
 	// For Texel's tuning method, the training set is the full set of
 	// extended positions.
 	std::vector<extended_position>& training_set = extended_positions;
@@ -227,21 +230,21 @@ namespace chess
 		{
 			// Skip empty lines.
 			if (line.size() == 0) continue;
-			// Skip lines containing tags.
+			// Skip lines containing PGN tags.
 			if (line[0] == '[') continue;
 
-			std::vector<std::string> moves = util::tokenize(line);
+			std::vector<std::string> tokens = util::tokenize(line);
 
-			if (moves.size() < 1)
+			if (tokens.size() < 1)
 			{
 				std::cout << "Tried to tokenize a line, but got nothing. Stopping.\n";
 				std::cout << "line: [" << line << "]\n";
 				return;
 			}
 
-			if (moves.size() < 29)
+			if (tokens.size() < 29)
 			{
-				std::cout << "Line is " << moves.size()
+				std::cout << "Line is " << tokens.size()
 				          << " tokens long. Expected minimum is 28 ply + 1 result. Stopping.\n";
 				std::cout << "line: [" << line << "]\n";
 				return;
@@ -250,7 +253,7 @@ namespace chess
 			extended_positions.emplace_back();
 
 			// Save the result.
-			const std::string result = *moves.rbegin();
+			const std::string result = *tokens.rbegin();
 			if (result == "1-0")
 			{
 				extended_positions.back().result = 1;
@@ -270,10 +273,10 @@ namespace chess
 			}
 
 			// Remove the result token.
-			moves.pop_back();
+			tokens.pop_back();
 
 			// Fix pgn-extract outputting UCI promotions as uppercase.
-			for (auto& move : moves)
+			for (auto& move : tokens)
 				util::to_lower(move);
 
 			// Reset the game state to the start position.
@@ -283,10 +286,10 @@ namespace chess
 			generate_child_boards_for_root();
 
 			// Get a position from the game by appling a random number of moves between 12 and N inclusive.
-			const int position = std::uniform_int_distribution(12, int(moves.size()))(rng);
+			const int position = std::uniform_int_distribution(12, int(tokens.size()))(rng);
 			for (int i = 0; i < position; ++i)
 			{
-				apply_move(move{moves[i], boards[0].get_bitboards()});
+				apply_move(move{tokens[i], boards[0].get_bitboards()});
 			}
 
 			if constexpr (config::verify_key_phase_eval)
@@ -310,7 +313,7 @@ namespace chess
 		    "Parsed {} games in {} seconds.\n", games_parsed, (util::time_in_ms() - start_time) / 1'000);
 	}
 
-	#if !texels_method
+	#ifdef modified_texel_tuning
 	static void generate_training_and_test_sets(size_t set_size, std::mt19937_64& rng)
 	{
 		if (extended_positions.size() == 0)
@@ -424,7 +427,7 @@ namespace chess
 			std::stringstream ss;
 			ss << std::format("Tuning {} ({} weights, at indexes {} through {}) using delta = +/-{}.\n", message, size,
 			    begin, begin + size - 1, delta);
-	#if texels_method
+	#ifdef texel_tuning
 			ss << "Using Texel's Tuning Method.";
 	#else
 			ss << "Using modified tuning method.";
@@ -437,7 +440,7 @@ namespace chess
 		const auto start = util::time_in_ms();
 		size_t pass = 1;
 
-	#if texels_method
+	#ifdef texel_tuning
 		// For Texel's Tuning Method, continue tuning as long as we find
 		// changes that reduce the error in the training set.
 		const double training_error_before = evaluate(training_set);
@@ -457,7 +460,7 @@ namespace chess
 			store_weights();
 			store_weights_formatted();
 
-	#if texels_method
+	#ifdef texel_tuning
 			improving = false;
 	#else
 			// Generate a new training and test set for this iteration.
@@ -480,7 +483,7 @@ namespace chess
 						std::cout << std::format("Improved weights[{:>3}] from {:>4} to {:>4}. New error: {:1.9f}\n", i,
 						    int(weights[i] - d), int(weights[i]), new_error);
 						training_error_after = new_error;
-	#if texels_method
+	#ifdef texel_tuning
 						improving = true;
 	#endif
 						break;
@@ -490,7 +493,7 @@ namespace chess
 				}
 			}
 
-	#if texels_method
+	#ifdef texel_tuning
 	#else
 			test_error_after = evaluate(test_set);
 	#endif
@@ -500,7 +503,7 @@ namespace chess
 			std::stringstream ss;
 			ss << std::format("Finished pass {} in {} seconds ({} minutes elapsed).", pass++,
 			    (now - pass_start) / 1'000, (now - start) / 60'000);
-	#if texels_method
+	#ifdef texel_tuning
 	#else
 			ss << '\n';
 			ss << std::format("Training set error before: {:1.9f}\n", training_error_before);
@@ -514,14 +517,14 @@ namespace chess
 			util::log(ss.str());
 			std::cout << ss.str() << '\n';
 		} while (
-	#if texels_method
+	#ifdef texel_tuning
 		    improving
 	#else
 		    test_error_after < test_error_before
 	#endif
 		);
 
-	#if texels_method
+	#ifdef texel_tuning
 		std::cout << "Storing final weights.\n";
 		store_weights();
 		store_weights_formatted();
