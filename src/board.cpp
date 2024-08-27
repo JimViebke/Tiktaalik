@@ -118,9 +118,8 @@ namespace chess
 			const file ep_file = *fen_it++ - 'a'; // convert letter file a-h to index 0-7
 			move.set_end_index(ep_file);
 			set_ep_capture();
-			++fen_it; // step past the rank
 		}
-		++fen_it; // step past the space
+		fen_it += 2;
 
 		// 5. Halfmove clock. This is the number of halfmoves since the last capture or pawn advance. This is used to
 		// determine if a draw can be claimed under the fifty-move rule.
