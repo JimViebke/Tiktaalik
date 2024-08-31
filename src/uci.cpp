@@ -276,7 +276,7 @@ namespace chess
 			{
 				send_command("uciok");
 			}
-			else if (args[0] == "position") // position (start_pos | (fen fenstring)) [moves ...]
+			else if (args[0] == "position") // position (startpos | (fen fenstring)) [moves ...]
 			{
 				process_position_command(args);
 			}
