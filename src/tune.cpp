@@ -14,18 +14,26 @@
 
 namespace chess
 {
-	const std::string base_dir = "D:/Games/chess/";
-
-	const std::string weights_file = base_dir + "engines/tiktaalik weights.txt";
-	const std::string formatted_weights_files = base_dir + "engines/tiktaalik weights formatted.txt";
-	const std::string games_file = base_dir + "games/CCRL-4040.[1913795]-rated-2500-no-mate.uci";
-
 	// Toggle the tuning method.
 	#if 1
 		#define texel_tuning
 	#else
 		#define modified_texel_tuning
 	#endif
+
+	// Toggle the format of training data.
+	#if 0
+		#define tune_pgn
+	#else
+		#define tune_epd
+	#endif
+
+	const std::string base_dir = "D:/Games/chess/";
+
+	const std::string weights_file = base_dir + "engines/tiktaalik weights.txt";
+	const std::string formatted_weights_files = base_dir + "engines/tiktaalik weights formatted.txt";
+	// const std::string games_file = base_dir + "games/CCRL-4040.[1913795]-rated-2500-no-mate.uci";
+	const std::string games_file = base_dir + "games/zurichess-quiet-labeled.epd";
 
 	struct extended_position
 	{
@@ -210,13 +218,25 @@ namespace chess
 			return;
 		}
 
+	#ifdef tune_pgn
+		const std::string win_str = "1-0";
+		const std::string loss_str = "0-1";
+		const std::string draw_str = "1/2-1/2";
+	#else
+		const std::string win_str = "\"1-0\";";
+		const std::string loss_str = "\"0-1\";";
+		const std::string draw_str = "\"1/2-1/2\";";
+	#endif
+
 		const auto start_time = util::time_in_ms();
 
 		// Make sure we're starting in a clean state.
 		root_ply = 0;
+	#ifdef tune_pgn
 		color_to_move = boards[0].load_fen(start_pos);
 		const board start_board = boards[0];
 		generate_child_boards_for_root();
+	#endif
 
 		std::mt19937_64 rng{std::mt19937_64::result_type(util::time_in_ms())};
 
@@ -230,11 +250,14 @@ namespace chess
 		{
 			// Skip empty lines.
 			if (line.size() == 0) continue;
+	#ifdef tune_pgn
 			// Skip lines containing PGN tags.
 			if (line[0] == '[') continue;
+	#endif
 
 			std::vector<std::string> tokens = util::tokenize(line);
 
+	#ifdef tune_pgn
 			if (tokens.size() < 1)
 			{
 				std::cout << "Tried to tokenize a line, but got nothing. Stopping.\n";
@@ -249,20 +272,28 @@ namespace chess
 				std::cout << "line: [" << line << "]\n";
 				return;
 			}
+	#else
+			if (tokens.size() != 6)
+			{
+				std::cout << std::format("Unexpected number of tokens. Stopping.\n", line);
+				std::cout << "line: [" << line << "]\n";
+				return;
+			}
+	#endif
 
 			extended_positions.emplace_back();
 
 			// Save the result.
 			const std::string result = *tokens.rbegin();
-			if (result == "1-0")
+			if (result == win_str)
 			{
 				extended_positions.back().result = 1;
 			}
-			else if (result == "0-1")
+			else if (result == loss_str)
 			{
 				extended_positions.back().result = 0;
 			}
-			else if (result == "1/2-1/2")
+			else if (result == draw_str)
 			{
 				extended_positions.back().result = 0.5;
 			}
@@ -275,6 +306,7 @@ namespace chess
 			// Remove the result token.
 			tokens.pop_back();
 
+	#ifdef tune_pgn
 			// Fix pgn-extract outputting UCI promotions as uppercase.
 			for (auto& move : tokens)
 				util::to_lower(move);
@@ -291,6 +323,11 @@ namespace chess
 			{
 				apply_move(move{tokens[i], boards[0].get_bitboards()});
 			}
+	#else
+			// (Re)construct the FEN string.
+			const std::string fen_string = std::format("{} {} {} {} 0 0", tokens[0], tokens[1], tokens[2], tokens[3]);
+			color_to_move = boards[0].load_fen(fen_string);
+	#endif
 
 			if constexpr (config::verify_key_phase_eval)
 			{
@@ -374,6 +411,10 @@ namespace chess
 
 		for (extended_position& ep : set)
 		{
+	#ifdef tune_pgn
+			// Positions loaded from a PGN's move list may be noisy.
+			// Copy the board into the root position so we can get the
+			// evaluation from a quiescence search.
 			boards[0] = ep.board;
 			boards[0].generate_eval();
 
@@ -384,6 +425,12 @@ namespace chess
 
 			const eval_t eval = (ep.side_to_move == white) ? alpha_beta<white, true>(0, 0, 0, -eval::mate, eval::mate)
 			                                               : -alpha_beta<black, true>(0, 0, 0, -eval::mate, eval::mate);
+	#else
+			// For now, positions loaded from an EPD are known to be quiet.
+			// Just (re)calculate the static evaluation and use it directly.
+			ep.board.generate_eval();
+			const eval_t eval = ep.board.get_eval();
+	#endif
 
 			const double error = ep.result - sigmoid((double)eval);
 			error_sum += (error * error);
@@ -539,6 +586,7 @@ namespace chess
 	static void show_tune_help()
 	{
 		std::cout << "\ttune help          Display this message.\n";
+		std::cout << "\ttune load          Load test positions.\n";
 		std::cout << "\ttune k             Tune the scaling constant K used in sigmoid(eval).\n";
 		std::cout << "\ttune all [delta]   Tune all weights using the provided delta.\n";
 		std::cout << "\ttune pse [delta]   Tune piece-square evals using the provided delta.\n";
@@ -551,6 +599,12 @@ namespace chess
 		if (args.size() < 2 || args[1] == "help")
 		{
 			show_tune_help();
+			return;
+		}
+
+		if (args[1] == "load")
+		{
+			load_games();
 			return;
 		}
 
