@@ -274,7 +274,6 @@ namespace chess
 			}
 			else if (args[0] == "setoption") // setoption name some_name [value some_value]
 			{
-				send_command("uciok");
 			}
 			else if (args[0] == "position") // position (startpos | (fen fenstring)) [moves ...]
 			{
