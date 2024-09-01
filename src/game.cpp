@@ -82,7 +82,6 @@ namespace chess
 	{
 		const std::string move_string = move.to_string();
 
-		send_command("info pv " + move_string); // En Croissant workaround: try send the best move as a pv.
 		send_command("bestmove " + move_string);
 
 		// Ponder after playing the move.
