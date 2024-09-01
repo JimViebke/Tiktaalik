@@ -80,15 +80,17 @@ namespace chess
 
 	void game::send_move(const move move)
 	{
-		const std::string move_string = move.to_string();
-
+		const auto move_string = move.to_string();
 		send_command("bestmove " + move_string);
 
-		// Ponder after playing the move.
-		searching = true;
-		pondering = true;
-		scheduled_turn_end = util::time_in_ms() + 1'000'000'000;
-		util::log("pondering " + move_string);
+		if (ponder_enabled)
+		{
+			// Ponder after playing the move.
+			searching = true;
+			pondering = true;
+			scheduled_turn_end = util::time_in_ms() + 1'000'000'000; // ~11 days
+			util::log("pondering " + move_string);
+		}
 	}
 
 	template <color color_to_move>

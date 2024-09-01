@@ -32,6 +32,7 @@ namespace chess
 	private:
 		void send_info(const eval_t eval);
 		void apply_moves(const std::vector<std::string>& args, size_t move_idx);
+		void process_setoption_command(std::vector<std::string>& args);
 		void process_position_command(const std::vector<std::string>& args);
 		void process_go_command(const std::vector<std::string>& args);
 
@@ -57,6 +58,7 @@ namespace chess
 		std::mutex game_mutex;
 
 		bool pondering = false;
+		bool ponder_enabled = false;
 
 		color color_to_move;
 

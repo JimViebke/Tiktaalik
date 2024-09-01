@@ -77,6 +77,30 @@ namespace chess
 		}
 	}
 
+	void game::process_setoption_command(std::vector<std::string>& args)
+	{
+		if (args.size() != 5)
+		{
+			util::log("Unexpected number of tokens in setoption command.");
+			return;
+		}
+
+		// setoption name some_name value some_value
+
+		util::to_lower(args[2]);
+
+		if (args[2] == "ponder")
+		{
+			util::to_lower(args[4]);
+			ponder_enabled = (args[4] == "true");
+			util::log(std::format("Ponder {}.", ponder_enabled ? "enabled" : "disabled"));
+		}
+		else
+		{
+			util::log("Unexpected setoption name.");
+		}
+	}
+
 	void game::process_position_command(const std::vector<std::string>& args)
 	{
 		if (args.size() < 2)
@@ -149,7 +173,7 @@ namespace chess
 
 		for (auto arg_it = args.cbegin() + 1; arg_it != args.cend(); ++arg_it)
 		{
-			if (*arg_it == "infinite")
+			if (*arg_it == "infinite" || *arg_it == "ponder")
 			{
 				infinite = true;
 			}
@@ -202,8 +226,9 @@ namespace chess
 		}
 		else if (infinite)
 		{
-			// Using infinite == ~11 days.
-			scheduled_turn_end = util::time_in_ms() + 1'000'000'000;
+			scheduled_turn_end = util::time_in_ms() + 1'000'000'000; // ~11 days.
+			pondering = true;
+			util::log("Pondering.");
 		}
 		else
 		{
@@ -260,12 +285,13 @@ namespace chess
 				util::log(ss.str());
 			}
 
-			const std::vector<std::string> args = util::tokenize(command);
+			std::vector<std::string> args = util::tokenize(command);
 
 			if (args[0] == "uci")
 			{
 				send_command("id name Tiktaalik");
 				send_command("id author Jim Viebke");
+				send_command("option name Ponder type check default false");
 				send_command("uciok");
 			}
 			else if (args[0] == "isready")
@@ -274,6 +300,7 @@ namespace chess
 			}
 			else if (args[0] == "setoption") // setoption name some_name [value some_value]
 			{
+				process_setoption_command(args);
 			}
 			else if (args[0] == "position") // position (startpos | (fen fenstring)) [moves ...]
 			{
