@@ -136,25 +136,21 @@ namespace chess
 
 	void game::worker_thread()
 	{
-		// Sleep until the main thread sets searching to true.
-		util::log("Worker started, waiting for search to start.");
+		// Sleep until the main thread wakes us.
 		searching.wait(false);
-		util::log("Worker starting search, getting initial mutex lock...");
 		std::unique_lock<decltype(game_mutex)> lock(game_mutex);
-		util::log("Worker ready.");
+		util::log("Worker started.");
 
 		while (1)
 		{
 			if (!searching)
 			{
 				// Stop searching and release the mutex until the main thread tells us to resume.
-				util::log("Worker stopping...");
+				util::log("Worker stopped.");
 				lock.unlock();
-				util::log("Worker sleeping.");
 				searching.wait(false);
-				util::log("Worker resuming...");
 				lock.lock();
-				util::log("Worker running.");
+				util::log("Worker resumed.");
 			}
 
 			if (n_legal_moves == 0)

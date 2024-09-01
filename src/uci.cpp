@@ -11,12 +11,7 @@ namespace chess
 {
 	void send_command(const std::string& command)
 	{
-		{
-			std::stringstream ss;
-			ss << "Sending UCI command: " << command;
-			util::log(ss.str());
-		}
-
+		util::log("Sending UCI command: " + command);
 		// send the command + endline + sync
 		std::cout << command << std::endl;
 	}
@@ -111,10 +106,9 @@ namespace chess
 
 		util::log("Got position command, stopping any search...");
 		searching = false;
-		util::log("Locking mutex...");
 		const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
 		pondering = false;
-		util::log("Setting up new position.");
+		util::log("Processing position command.");
 
 		engine_depth = 0;
 		engine_time = 0;
@@ -161,7 +155,6 @@ namespace chess
 
 		util::log("Got a go command, stopping any search...");
 		searching = false;
-		util::log("Locking mutex...");
 		const std::lock_guard<decltype(game_mutex)> lock(game_mutex);
 		pondering = false;
 		util::log("Processing go command.");
@@ -279,11 +272,7 @@ namespace chess
 				continue;
 			}
 
-			{
-				std::stringstream ss;
-				ss << "Got command: " << command;
-				util::log(ss.str());
-			}
+			util::log("Got command: " + command);
 
 			std::vector<std::string> args = util::tokenize(command);
 
