@@ -167,9 +167,14 @@ namespace chess
 
 		for (auto arg_it = args.cbegin() + 1; arg_it != args.cend(); ++arg_it)
 		{
-			if (*arg_it == "infinite" || *arg_it == "ponder")
+			if (*arg_it == "infinite")
 			{
 				infinite = true;
+			}
+			else if (*arg_it == "ponder")
+			{
+				pondering = true;
+				util::log("Pondering.");
 			}
 			// If there is at least one more token after arg_it, check for tokens that expect an argument.
 			else if (arg_it + 1 != args.cend())
@@ -223,11 +228,9 @@ namespace chess
 		{
 			scheduled_turn_end = util::time_in_ms() + time_left;
 		}
-		else if (infinite)
+		else if (infinite || pondering)
 		{
 			scheduled_turn_end = util::time_in_ms() + 1'000'000'000; // ~11 days.
-			pondering = true;
-			util::log("Pondering.");
 		}
 		else
 		{
