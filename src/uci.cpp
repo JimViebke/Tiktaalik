@@ -161,6 +161,7 @@ namespace chess
 
 		size_t time_left = 0;
 		size_t time_inc = 0;
+		size_t moves_to_go = 0;
 		bool infinite = false;
 		bool exact = false;
 
@@ -177,6 +178,11 @@ namespace chess
 				{
 					exact = true;
 					time_left = atoi((arg_it + 1)->c_str());
+					continue;
+				}
+				else if (*arg_it == "movestogo")
+				{
+					moves_to_go = atoi((arg_it + 1)->c_str());
 					continue;
 				}
 				else if (*arg_it == "perft" || *arg_it == "divide")
@@ -239,21 +245,32 @@ namespace chess
 			// If we can remove the increment from the clock, do so.
 			if (time_left > time_inc) time_left -= time_inc;
 
-			// Add 1/25 of the time remaining.
-			search_ms += time_left / 25; // todo: Adjust based on the move number.
+			if (moves_to_go > 0) // We are in staged time controls.
+			{
+				// Reserve one second of padding if we can. Otherwise, reserve one move of padding.
+				// Divide the remaining time evenly.
+				if (time_left > 1'000)
+					search_ms = (time_left - 1'000) / moves_to_go;
+				else
+					search_ms = time_left / (moves_to_go + 1);
+			}
+			else // This is the only time control.
+			{
+				// Add 1/25 of the time remaining.
+				search_ms += time_left / 25; // todo: Adjust based on the move number.
 
-			// Use at least one second.
-			search_ms = std::max(search_ms, 1'000ull);
+				// Use at least one second.
+				search_ms = std::max(search_ms, 1'000ull);
 
-			// Use at most half of our remaining clock.
-			search_ms = std::min(search_ms, time_left / 2);
+				// Use at most half of our remaining clock.
+				search_ms = std::min(search_ms, time_left / 2);
+			}
 
-			// Note the time point at which to stop searching.
+			// Save the time at which to stop searching.
 			scheduled_turn_end = util::time_in_ms() + search_ms;
 		}
 
-		// Currently, we only update the PV when we finish a round of Iterative Deepening.
-		// Reset the engine's depth to make sure we update this.
+		// Reset the engine's depth to make sure we get PV updates.
 		engine_depth = 0;
 
 		// Awaken the search thread.
