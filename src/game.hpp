@@ -56,6 +56,8 @@ namespace chess
 
 		std::mutex game_mutex;
 
+		bool pondering = false;
+
 		color color_to_move;
 
 		depth_t engine_depth = 0;

@@ -11,7 +11,6 @@ namespace chess
 	extern size_t root_ply;
 	extern std::array<tt_key, max_ply * 4> history;
 	extern std::atomic_bool searching;
-	extern std::atomic_bool pondering;
 	extern util::timepoint scheduled_turn_end;
 	extern size_t nodes;
 
