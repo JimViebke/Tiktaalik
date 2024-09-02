@@ -68,7 +68,7 @@ namespace chess
 		return false;
 	}
 
-	template <color color_to_move, bool quiescing, bool full_window>
+	template <color color_to_move, bool quiescing>
 	eval_t alpha_beta(const size_t idx, const size_t ply, const depth_t depth, eval_t alpha, eval_t beta)
 	{
 		// Stop searching if we're out of time.
@@ -78,7 +78,7 @@ namespace chess
 			return 0;
 		}
 
-		if constexpr (!quiescing && full_window) pv_lengths[ply] = ply;
+		if constexpr (!quiescing) pv_lengths[ply] = ply;
 
 		const board& board = boards[idx];
 
@@ -88,7 +88,7 @@ namespace chess
 		if (!quiescing && check_repetition(board, ply)) return 100;
 
 		// Enter quiescence at nominal leaf nodes.
-		if (!quiescing && depth == 0) return alpha_beta<color_to_move, true, full_window>(idx, ply, 0, alpha, beta);
+		if (!quiescing && depth == 0) return alpha_beta<color_to_move, true>(idx, ply, 0, alpha, beta);
 
 		if constexpr (quiescing)
 		{
@@ -133,30 +133,52 @@ namespace chess
 		eval_t eval = -eval::mate;
 		tt_eval_type node_eval_type = tt_eval_type::alpha;
 
+		bool found_pv = false;
+
 		while (1)
 		{
 			if (begin_idx != end_idx) found_moves = true;
 
 			for (size_t child_idx = begin_idx; child_idx < end_idx; ++child_idx)
 			{
-				const eval_t ab = -alpha_beta<other_color(color_to_move), quiescing, full_window>(
-				    child_idx, ply + !quiescing, depth - !quiescing, -beta, -alpha);
+				eval_t ab{};
+
+				if (found_pv)
+				{
+					// Do a zero-window search.
+					ab = -alpha_beta<other_color(color_to_move), quiescing>(
+					    child_idx, ply + !quiescing, depth - !quiescing, -alpha - 1, -alpha);
+
+					if (alpha < ab && ab < beta)
+					{
+						// Re-search using a full window.
+						ab = -alpha_beta<other_color(color_to_move), quiescing>(
+						    child_idx, ply + !quiescing, depth - !quiescing, -beta, -alpha);
+					}
+				}
+				else
+				{
+					// Do a full-window search.
+					ab = -alpha_beta<other_color(color_to_move), quiescing>(
+					    child_idx, ply + !quiescing, depth - !quiescing, -beta, -alpha);
+				}
 
 				if (!searching) return 0;
 
 				eval = std::max(eval, ab);
 				if (eval >= beta)
 				{
-					if constexpr (!quiescing && full_window)
+					if constexpr (!quiescing)
 						tt.store(key, depth, tt_eval_type::beta, beta, ply, boards[child_idx].get_move());
 					return beta;
 				}
 				if (eval > alpha)
 				{
+					found_pv = true;
 					alpha = eval;
 					node_eval_type = tt_eval_type::exact;
 					tt_move = boards[child_idx].get_move();
-					if constexpr (!quiescing && full_window) update_pv(ply, boards[child_idx]);
+					if constexpr (!quiescing) update_pv(ply, boards[child_idx]);
 				}
 
 				swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
@@ -193,7 +215,7 @@ namespace chess
 		}
 
 		// If no move was an improvement, tt_move stays as whatever we previously read from the TT.
-		if constexpr (!quiescing && full_window) tt.store(key, depth, node_eval_type, eval, ply, tt_move);
+		if constexpr (!quiescing) tt.store(key, depth, node_eval_type, eval, ply, tt_move);
 
 		return eval;
 	}
