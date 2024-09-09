@@ -36,7 +36,8 @@ namespace chess
 	constexpr bitboard rank_2 = rank_3 << 8;
 	constexpr bitboard rank_1 = rank_2 << 8;
 
-	constexpr bitboard file_a = 0x0101010101010101;
+	constexpr bitboard file_mask = 0x0101010101010101;
+	constexpr bitboard file_a = file_mask;
 	constexpr bitboard file_b = file_a << 1;
 	constexpr bitboard file_c = file_b << 1;
 	constexpr bitboard file_d = file_c << 1;
@@ -66,6 +67,11 @@ namespace chess
 			return ((color == chess::white) ? white : black);
 		}
 
+		template <color color>
+		const bitboard get(const piece piece) const
+		{
+			return get<color>() & (&pawns)[piece];
+		}
 		template <color color, piece piece>
 		const bitboard get() const
 		{
@@ -85,7 +91,7 @@ namespace chess
 		template <color color>
 		size_t count(const piece piece) const
 		{
-			return ::util::popcount((&pawns)[piece] & get<color>());
+			return ::util::popcount(get<color>(piece));
 		}
 
 		void print() const;
