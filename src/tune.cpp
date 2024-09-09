@@ -177,7 +177,7 @@ namespace chess
 		}
 
 		ss << '\n';
-		ss << left_indent << "// Piece count evals:\n";
+		ss << left_indent << "// Piece-count evals:\n";
 
 		for (size_t i = 0; i < pce_size; ++i)
 		{
@@ -493,6 +493,13 @@ namespace chess
 		const double training_error_before = evaluate(training_set);
 		double training_error_after = training_error_before;
 		bool improving = true;
+
+		{
+			std::stringstream ss;
+			ss << std::format("Starting error: {:1.9f}", training_error_before);
+			util::log(ss.str());
+			std::cout << ss.str() << '\n';
+		}
 	#else
 		// For the modified tuning method, continue tuning as long as we
 		// find changes that also reduce the error in a test set.
@@ -580,18 +587,29 @@ namespace chess
 		load_weights();
 	#endif
 
+	#ifdef texel_tuning
+		{
+			std::stringstream ss;
+			ss << std::format("Finished tuning. Error: {:1.9f}", training_error_after);
+			util::log(ss.str());
+			std::cout << ss.str() << '\n';
+		}
+	#else
 		std::cout << "Finished tuning.\n";
+	#endif
 	}
 
 	static void show_tune_help()
 	{
 		std::cout << "\ttune help          Display this message.\n";
 		std::cout << "\ttune load          Load test positions.\n";
+		std::cout << "\ttune save          Save formatted weights to file.\n";
+		std::cout << "\ttune error         Print the error for the loaded weights and positions.\n";
 		std::cout << "\ttune k             Tune the scaling constant K used in sigmoid(eval).\n";
 		std::cout << "\ttune all [delta]   Tune all weights using the provided delta.\n";
 		std::cout << "\ttune pse [delta]   Tune piece-square evals using the provided delta.\n";
-		std::cout << "\ttune pce [delta]   Tune piece count evals using the provided delta.\n";
-		std::cout << "\t                   (eg, bishop pair, knight pair, last pawn, etc.)\n";
+		std::cout << "\ttune pce [delta]   Tune piece-count evals using the provided delta.\n";
+		std::cout << "\t                   (bishop pair, knight pair, last pawn, etc.)\n";
 	}
 
 	void game::tune(const std::vector<std::string>& args)
@@ -605,6 +623,19 @@ namespace chess
 		if (args[1] == "load")
 		{
 			load_games();
+			return;
+		}
+		else if (args[1] == "save")
+		{
+			store_weights_formatted();
+			return;
+		}
+		else if (args[1] == "error")
+		{
+			std::stringstream ss;
+			ss << std::format("Current error: {:1.9f}", evaluate(extended_positions));
+			util::log(ss.str());
+			std::cout << ss.str() << '\n';
 			return;
 		}
 
@@ -645,7 +676,7 @@ namespace chess
 		else if (args[1] == "pce")
 		{
 			load_games();
-			tune_weights("piece count evals", pce_start, pce_size, delta);
+			tune_weights("piece-count evals", pce_start, pce_size, delta);
 		}
 		else
 		{
