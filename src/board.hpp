@@ -288,10 +288,10 @@ namespace chess
 				incremental_key ^= piece_square_key<moving_color, piece_after>(end_idx);
 			}
 
-			eval_t incremental_mg_eval = parent_board.get_mg_eval();
-			eval_t incremental_eg_eval = parent_board.get_eg_eval();
+			eval_t incremental_mg_eval = parent_board.mg_eval;
+			eval_t incremental_eg_eval = parent_board.eg_eval;
 
-			// Update square eval for the moving piece.
+			// Update piece-square evals for the moving piece.
 			incremental_mg_eval -= eval::piece_square_eval_mg<moving_color, piece>(start_idx);
 			incremental_eg_eval -= eval::piece_square_eval_eg<moving_color, piece>(start_idx);
 			incremental_mg_eval += eval::piece_square_eval_mg<moving_color, piece_after>(end_idx);
@@ -314,14 +314,14 @@ namespace chess
 					incremental_key ^= piece_square_key<opp_color, pawn>(captured_pawn_idx);
 				}
 
-				// Update eval for the captured pawn.
+				// Update piece-square evals for the captured pawn.
 				incremental_mg_eval -= eval::piece_square_eval_mg<opp_color, pawn>(captured_pawn_idx);
 				incremental_eg_eval -= eval::piece_square_eval_eg<opp_color, pawn>(captured_pawn_idx);
 			}
 			else if constexpr (move_type == move_type::castle_kingside || move_type == move_type::castle_queenside)
 			{
-				constexpr size_t rook_start_file = (move_type == move_type::castle_kingside ? 7 : 0);
-				constexpr size_t rook_start_rank = (moving_color == white ? 7 : 0);
+				constexpr rank rook_start_rank = (moving_color == white ? 7 : 0);
+				constexpr file rook_start_file = (move_type == move_type::castle_kingside ? 7 : 0);
 				constexpr size_t rook_start_index = rook_start_rank * 8 + rook_start_file;
 				constexpr size_t rook_end_index = rook_start_index + (move_type == move_type::castle_kingside ? -2 : 3);
 
@@ -332,7 +332,7 @@ namespace chess
 					incremental_key ^= piece_square_key<moving_color, rook>(rook_end_index);
 				}
 
-				// Update eval for the moving rook.
+				// Update piece-square evals for the moving rook.
 				incremental_mg_eval -= eval::piece_square_eval_mg<moving_color, rook>(rook_start_index);
 				incremental_eg_eval -= eval::piece_square_eval_eg<moving_color, rook>(rook_start_index);
 				incremental_mg_eval += eval::piece_square_eval_mg<moving_color, rook>(rook_end_index);
@@ -349,7 +349,7 @@ namespace chess
 					update_key_castling_rights_for<opp_color>(incremental_key, parent_board);
 				}
 
-				// Update eval for the captured piece.
+				// Update piece-square evals for the captured piece.
 				incremental_mg_eval -= eval::piece_square_eval_mg<opp_color>(captured_piece, end_idx);
 				incremental_eg_eval -= eval::piece_square_eval_eg<opp_color>(captured_piece, end_idx);
 			}
@@ -365,26 +365,26 @@ namespace chess
 				key = incremental_key;
 			}
 
-			phase_t incremental_phase = parent_board.get_phase();
-			eval_t incremental_piece_count_eval = parent_board.get_piece_count_eval();
+			phase_t incremental_phase = parent_board.phase;
+			eval_t incremental_persistent_eval = parent_board.persistent_eval;
 
 			if constexpr (move_type == move_type::capture)
 			{
 				incremental_phase -= eval::phase_weights[captured_piece];
-				incremental_piece_count_eval -= eval::piece_count_eval<opp_color>(captured_piece, bitboards);
+				incremental_persistent_eval -= eval::piece_count_eval<opp_color>(captured_piece, bitboards);
 			}
 			else if constexpr (move_type == move_type::en_passant_capture)
 			{
 				incremental_phase -= eval::phase_weights[pawn];
-				incremental_piece_count_eval -= eval::piece_count_eval<opp_color, pawn>(bitboards);
+				incremental_persistent_eval -= eval::piece_count_eval<opp_color, pawn>(bitboards);
 			}
 
 			if constexpr (promoted_piece != empty)
 			{
 				incremental_phase -= eval::phase_weights[pawn];
 				incremental_phase += eval::phase_weights[promoted_piece];
-				incremental_piece_count_eval -= eval::piece_count_eval<moving_color, pawn>(bitboards);
-				incremental_piece_count_eval += eval::piece_count_eval<moving_color, promoted_piece>(
+				incremental_persistent_eval -= eval::piece_count_eval<moving_color, pawn>(bitboards);
+				incremental_persistent_eval += eval::piece_count_eval<moving_color, promoted_piece>(
 				    bitboards.count<moving_color, promoted_piece>() - 1);
 			}
 
@@ -395,19 +395,15 @@ namespace chess
 			              promoted_piece != empty)
 			{
 				phase = incremental_phase;
-				piece_count_eval = incremental_piece_count_eval;
+				persistent_eval = incremental_persistent_eval;
 			}
 
 			mg_eval = incremental_mg_eval;
 			eg_eval = incremental_eg_eval;
-			eval = incremental_piece_count_eval + taper(incremental_phase, incremental_mg_eval, incremental_eg_eval);
+			eval = incremental_persistent_eval + taper(incremental_phase, incremental_mg_eval, incremental_eg_eval);
 		}
 
 		tt_key get_key() const { return key; }
-		eval_t get_mg_eval() const { return mg_eval; }
-		eval_t get_eg_eval() const { return eg_eval; }
-		eval_t get_piece_count_eval() const { return piece_count_eval; }
-		uint16_t get_phase() const { return phase; }
 		eval_t get_eval() const { return eval; }
 		template <color color_to_move>
 		eval_t get_eval() const
@@ -512,7 +508,7 @@ namespace chess
 			tt_key new_key = 0;
 
 			phase_t new_phase = 0;
-			eval_t new_piece_count_eval = 0;
+			eval_t new_persistent_eval = 0;
 			eval_t new_mg_eval = 0;
 			eval_t new_eg_eval = 0;
 
@@ -526,7 +522,7 @@ namespace chess
 					if constexpr (gen_phase) new_phase += count * eval::phase_weights[piece];
 					if constexpr (gen_eval)
 						for (size_t i = 0; i < count; ++i)
-							new_piece_count_eval += eval::piece_count_eval<color>(piece, i);
+							new_persistent_eval += eval::piece_count_eval<color>(piece, i);
 				}
 
 				while (bb)
@@ -582,8 +578,8 @@ namespace chess
 			{
 				mg_eval = new_mg_eval;
 				eg_eval = new_eg_eval;
-				piece_count_eval = new_piece_count_eval;
-				eval = new_piece_count_eval + taper(phase, new_mg_eval, new_eg_eval);
+				persistent_eval = new_persistent_eval;
+				eval = new_persistent_eval + taper(phase, new_mg_eval, new_eg_eval);
 			}
 		}
 
@@ -619,6 +615,6 @@ namespace chess
 
 		uint16_t board_state{};
 		uint16_t phase{};
-		eval_t piece_count_eval{};
+		eval_t persistent_eval{};
 	};
 }

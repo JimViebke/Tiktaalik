@@ -151,7 +151,7 @@ namespace chess
 		uint16_t expected_phase{};
 		eval_t expected_mg_eval{};
 		eval_t expected_eg_eval{};
-		eval_t expected_piece_count_eval{};
+		eval_t expected_persistent_eval{};
 		eval_t expected_eval{};
 
 		if constexpr (verify_key)
@@ -168,7 +168,7 @@ namespace chess
 		{
 			expected_mg_eval = mg_eval;
 			expected_eg_eval = eg_eval;
-			expected_piece_count_eval = piece_count_eval;
+			expected_persistent_eval = persistent_eval;
 			expected_eval = eval;
 		}
 
@@ -196,9 +196,9 @@ namespace chess
 				std::cout << "Incremental and generated eg_evals mismatch\n";
 			}
 
-			if (piece_count_eval != expected_piece_count_eval)
+			if (persistent_eval != expected_persistent_eval)
 			{
-				std::cout << "Incremental and generated piece_count_evals mismatch\n";
+				std::cout << "Incremental and generated persistent evals mismatch\n";
 			}
 
 			if (eval != expected_eval)
