@@ -372,11 +372,23 @@ namespace chess
 			{
 				incremental_phase -= eval::phase_weights[captured_piece];
 				incremental_persistent_eval -= eval::piece_count_eval<opp_color>(captured_piece, bitboards);
+				incremental_persistent_eval -=
+				    eval::file_piece_count_eval<opp_color>(captured_piece, end_idx % 8, bitboards);
 			}
 			else if constexpr (move_type == move_type::en_passant_capture)
 			{
 				incremental_phase -= eval::phase_weights[pawn];
 				incremental_persistent_eval -= eval::piece_count_eval<opp_color, pawn>(bitboards);
+				incremental_persistent_eval -= eval::file_piece_count_eval<opp_color, pawn>(end_idx % 8, bitboards);
+			}
+			else if constexpr (move_type == move_type::castle_kingside || move_type == move_type::castle_queenside)
+			{
+				constexpr file rook_start_file = (move_type == move_type::castle_kingside ? 7 : 0);
+				constexpr file rook_end_file = (move_type == move_type::castle_kingside ? 5 : 3);
+				incremental_persistent_eval -=
+				    eval::file_piece_count_eval<moving_color, rook>(rook_start_file, bitboards);
+				incremental_persistent_eval += eval::file_piece_count_eval<moving_color, rook>(
+				    bitboards.file_count<moving_color, rook>(rook_end_file) - 1);
 			}
 
 			if constexpr (promoted_piece != empty)
@@ -388,13 +400,37 @@ namespace chess
 				    bitboards.count<moving_color, promoted_piece>() - 1);
 			}
 
-			// If the move is a capture, en passant capture, or promotion, phase and piece count
-			// eval were modified and must be stored. Otherwise, the unmodified values were already
-			// copied over with the parent board state.
+			// If the moving piece is a rook, or a pawn that is promoting or changing files,
+			// update the file-count eval for the moving piece.
+			if constexpr (piece == rook || promoted_piece != empty ||
+			              (piece == pawn &&
+			                  (move_type == move_type::capture || move_type == move_type::en_passant_capture)))
+			{
+				bitboard start_file_pieces = bitboards.get<moving_color, piece>() & (file_mask << (start_idx % 8));
+				// If the moving piece is a rook, exclude the arriving bit, in case the rook is moving within a file.
+				if constexpr (piece == rook) start_file_pieces &= ~to;
+
+				incremental_persistent_eval -=
+				    eval::file_piece_count_eval<moving_color, piece>(::util::popcount(start_file_pieces));
+				incremental_persistent_eval += eval::file_piece_count_eval<moving_color, piece_after>(
+				    bitboards.file_count<moving_color, piece_after>(end_idx % 8) - 1);
+			}
+
+			// If the move is a capture, en passant capture, or promotion, the phase was modified and must be stored.
+			// Otherwise, the unmodified value was already copied over with the parent board state.
 			if constexpr (move_type == move_type::capture || move_type == move_type::en_passant_capture ||
 			              promoted_piece != empty)
 			{
 				phase = incremental_phase;
+			}
+
+			// If the move is a capture, en passant capture, promotion, rook move, or castle,
+			// the persistent evaluation was modified and must be stored.
+			// Otherwise, the unmodified value was already copied over with the parent board state.
+			if constexpr (move_type == move_type::capture || move_type == move_type::en_passant_capture ||
+			              promoted_piece != empty || piece == rook || move_type == move_type::castle_kingside ||
+			              move_type == move_type::castle_queenside)
+			{
 				persistent_eval = incremental_persistent_eval;
 			}
 
@@ -465,12 +501,20 @@ namespace chess
 				copy_mask |= fifty_move_counter_mask << fifty_move_counter_offset;
 			}
 
-			// If the move is not a capture, en passant capture, or promotion, the phase and
-			// piece count eval will not change. Copy them unmodified from the parent.
+			// If the move is not a capture, en passant capture, or promotion, the phase will not change.
+			// Copy it unmodified from the parent.
 			if constexpr (move_type != move_type::capture && move_type != move_type::en_passant_capture &&
 			              promoted_piece == empty)
 			{
-				copy_mask |= 0x00'00'FF'FF'FF'FF'00'00;
+				copy_mask |= 0x00'00'00'00'FF'FF'00'00;
+
+				// If the move is not a capture, en passant capture, promotion rook move, or castle,
+				// the persistent eval will not change. Copy it unmodified from the parent.
+				if constexpr (piece != rook && move_type != move_type::castle_kingside &&
+				              move_type != move_type::castle_queenside)
+				{
+					copy_mask |= 0x00'00'FF'FF'00'00'00'00;
+				}
 			}
 
 			return copy_mask;
@@ -533,6 +577,16 @@ namespace chess
 					if constexpr (gen_key) new_key ^= piece_square_key<color, piece>(piece_idx);
 					if constexpr (gen_eval) new_mg_eval += eval::piece_square_eval_mg<color, piece>(piece_idx);
 					if constexpr (gen_eval) new_eg_eval += eval::piece_square_eval_eg<color, piece>(piece_idx);
+				}
+
+				if constexpr (gen_eval && (piece == pawn || piece == rook))
+				{
+					for (file file = 0; file < 8; ++file)
+					{
+						const auto count = bitboards.file_count<color, piece>(file);
+						for (size_t i = 0; i < count; ++i)
+							new_persistent_eval += eval::file_piece_count_eval<color, piece>(i);
+					}
 				}
 			};
 

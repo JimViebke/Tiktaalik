@@ -60,7 +60,7 @@ namespace chess
 
 	// weights is usually available at compile time in evaluation.hpp.
 	// During tuning, instead provide it here.
-	std::array<int16_t, pse_size + pce_size> eval::weights;
+	std::array<int16_t, pse_size + pce_size + fpce_size> eval::weights;
 
 	bool load_weights()
 	{
@@ -200,6 +200,34 @@ namespace chess
 				case bishop: ss << " // 0-10 bishops\n"; break;
 				case rook: ss << " // 0-10 rooks\n"; break;
 				case queen: ss << " // 0-9 queens\n"; break;
+				}
+			}
+		}
+
+		ss << '\n';
+		ss << left_indent << "// File piece-count evals:\n";
+
+		for (size_t i = 0; i < fpce_size; ++i)
+		{
+			// If we're starting a new line, indent and align.
+			if (i % 8 == 0)
+			{
+				ss << left_indent << left_align;
+			}
+
+			ss << std::setw(4);
+			ss << std::right;
+			ss << int(eval::weights[fpce_start + i]) << ',';
+
+			if (i % 8 == 7)
+			{
+				switch (i / 8)
+				{
+				case pawn: ss << " // pawns\n"; break;
+				case knight: ss << " // knights\n"; break;
+				case bishop: ss << " // bishops\n"; break;
+				case rook: ss << " // rooks\n"; break;
+				case queen: ss << " // queens\n"; break;
 				}
 			}
 		}
@@ -396,7 +424,7 @@ namespace chess
 	}
 	#endif
 
-	double K = 0.7644;
+	double K = 0.0041;
 
 	static double sigmoid(const double eval)
 	{
@@ -610,6 +638,8 @@ namespace chess
 		std::cout << "\ttune pse [delta]   Tune piece-square evals using the provided delta.\n";
 		std::cout << "\ttune pce [delta]   Tune piece-count evals using the provided delta.\n";
 		std::cout << "\t                   (bishop pair, knight pair, last pawn, etc.)\n";
+		std::cout << "\ttune fpce [delta]  Tune file piece-count evals using the provided delta.\n";
+		std::cout << "\t                   (doubled pawns, rooks paired on a file, etc.)\n";
 	}
 
 	void game::tune(const std::vector<std::string>& args)
@@ -677,6 +707,11 @@ namespace chess
 		{
 			load_games();
 			tune_weights("piece-count evals", pce_start, pce_size, delta);
+		}
+		else if (args[1] == "fpce")
+		{
+			load_games();
+			tune_weights("file piece-count evals", fpce_start, fpce_size, delta);
 		}
 		else
 		{
