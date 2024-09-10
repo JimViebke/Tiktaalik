@@ -197,18 +197,11 @@ namespace chess
 
 		if (!found_moves)
 		{
-			// The position is either terminal (eval is min, max, or 0) or quiescent.
+			// The position is either terminal (checkmate/stalemate) or quiescent.
 
 			if constexpr (quiescing) return board.get_eval<color_to_move>();
 
-			const bitboards& bitboards = board.get_bitboards();
-			const size_t king_index = get_next_bit_index(bitboards.get<color_to_move, king>());
-
-			eval_t terminal_eval{};
-			if (is_king_in_check<color_to_move, check_type::all>(bitboards, king_index))
-				terminal_eval = -eval::mate + ply;
-			else                   // Stalemate.
-				terminal_eval = 0; // Todo: use contempt factor.
+			const eval_t terminal_eval = board.in_check<color_to_move>() ? -eval::mate + ply : eval_t{0};
 
 			tt.store(key, depth, tt_eval_type::exact, terminal_eval);
 			return terminal_eval;

@@ -165,12 +165,10 @@ namespace chess
 	template <color color>
 	force_inline_toggle bitboard get_blockers(const bitboards& bitboards)
 	{
-		const bitboard our_pieces = bitboards.get<color>();
-		const bitboard king_bitboard = our_pieces & bitboards.kings;
-		const size_t king_idx = get_next_bit_index(king_bitboard);
+		const size_t king_idx = get_next_bit_index(bitboards.get<color, king>());
 		const bitboard moves = get_slider_moves<queen>(bitboards, king_idx);
 		const bitboard blocker_squares = bishop_pext_masks[king_idx] | rook_pext_masks[king_idx];
-		return our_pieces & blocker_squares & moves;
+		return moves & blocker_squares & bitboards.get<color>();
 	}
 
 	template <color king_color>
