@@ -400,7 +400,7 @@ namespace chess
 
 	static double sigmoid(const double eval)
 	{
-		const double exp = -K * eval / 400;
+		const double exp = -K * eval;
 		return 1 / (1 + pow(10, exp));
 	}
 
