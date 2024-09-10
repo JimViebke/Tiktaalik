@@ -94,6 +94,17 @@ namespace chess
 			return ::util::popcount(get<color>(piece));
 		}
 
+		template <color color, piece piece>
+		size_t file_count(const file file) const
+		{
+			return ::util::popcount(get<color, piece>() & (file_mask << file));
+		}
+		template <color color>
+		size_t file_count(const piece piece, const file file) const
+		{
+			return ::util::popcount(get<color>(piece) & (file_mask << file));
+		}
+
 		void print() const;
 		void print_bits() const;
 	};
