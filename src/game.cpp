@@ -89,7 +89,13 @@ namespace chess
 			searching = true;
 			pondering = true;
 			scheduled_turn_end = util::time_in_ms() + 1'000'000'000; // ~11 days
-			util::log("pondering " + move_string);
+			util::log("Pondering.");
+		}
+		else
+		{
+			searching = false;
+			pondering = false;
+			util::log("Stopping.");
 		}
 	}
 
