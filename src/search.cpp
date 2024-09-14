@@ -44,11 +44,11 @@ namespace chess
 		return false;
 	}
 
-	inline_toggle static bool check_repetition(const board& board, const size_t ply)
+	inline_toggle static bool detect_draws(const board& board, const size_t ply)
 	{
-		// If this position is a repetition, evaluate it as an (unfavorable) draw.
-		// Todo: Scale contempt from large to small, so we don't try to draw over small disadvantages
-		// early in the game.
+		// Return true if:
+		// - This position has been seen before, or
+		// - 100 moves have passed since the last capture or pawn advance.
 		const size_t fifty_move_counter = board.get_fifty_move_counter();
 		auto history_end = history.data() + root_ply + ply;
 		const tt_key key = board.get_key();
@@ -61,6 +61,11 @@ namespace chess
 				{
 					return true;
 				}
+			}
+
+			if (fifty_move_counter >= 100)
+			{
+				return true;
 			}
 		}
 
@@ -82,10 +87,7 @@ namespace chess
 
 		const board& board = boards[idx];
 
-		// Evaluate a repeated position as unfavorable (-100 centipawns). These evals look
-		// reversed because we are considering the position itself rather than its moves/children.
-		// That is, if color_to_move == white, this evaluation is from black's perspective.
-		if (!quiescing && check_repetition(board, ply)) return 100;
+		if (!quiescing && detect_draws(board, ply)) return 0;
 
 		// Enter quiescence at nominal leaf nodes.
 		if (!quiescing && depth == 0) return alpha_beta<color_to_move, true>(idx, ply, 0, alpha, beta);
