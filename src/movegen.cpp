@@ -299,8 +299,7 @@ namespace chess
 
 		while (piece == king || pieces)
 		{
-			const size_t piece_idx = get_next_bit_index(pieces);
-			pieces = clear_next_bit(pieces);
+			const size_t piece_idx = (piece != king) ? get_next_bit_index(pieces) : king_idx;
 
 			tt_key incremental_key{};
 			if constexpr (!quiescing && !perft)
@@ -317,7 +316,8 @@ namespace chess
 			else
 				moves = get_slider_moves<piece>(parent_bbs, piece_idx);
 
-			const bitboard from = 1ull << piece_idx;
+			const bitboard from = (piece != king) ? get_next_bit(pieces) : bitboard{1ull << king_idx};
+			pieces = clear_next_bit(pieces);
 
 			bitboard captures = moves & parent_bbs.get<other_color(moving_color)>();
 			while (captures && (gen_moves == gen_moves::captures || gen_moves == gen_moves::all))
