@@ -316,7 +316,7 @@ namespace chess
 			else
 				moves = get_slider_moves<piece>(parent_bbs, piece_idx);
 
-			const bitboard from = (piece != king) ? get_next_bit(pieces) : bitboard{1ull << king_idx};
+			const bitboard from = (piece != king) ? get_next_bit(pieces) : pieces;
 			pieces = clear_next_bit(pieces);
 
 			bitboard captures = moves & parent_bbs.get<other_color(moving_color)>();
