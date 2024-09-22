@@ -203,7 +203,7 @@ namespace chess
 
 			if constexpr (quiescing) return board.get_eval<color_to_move>();
 
-			const eval_t terminal_eval = board.in_check<color_to_move>() ? -eval::mate + ply : eval_t{0};
+			const eval_t terminal_eval = board.in_check() ? -eval::mate + ply : eval_t{0};
 
 			tt.store(key, depth, tt_eval_type::exact, terminal_eval);
 			return terminal_eval;

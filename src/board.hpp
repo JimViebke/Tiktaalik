@@ -32,6 +32,21 @@ namespace chess
 	constexpr size_t boards_size = max_ply * max_n_of_moves;
 	extern std::array<board, boards_size> boards;
 
+	struct move_info
+	{
+		bitboard pawn_check_squares{};
+		bitboard knight_check_squares{};
+		bitboard bishop_check_squares{};
+		bitboard rook_check_squares{};
+
+		bitboard discovery_blockers{};
+
+		bitboard bishops_and_queens{};
+		bitboard rooks_and_queens{};
+
+		size_t opp_king_idx{};
+	};
+
 	inline constexpr size_t first_child_index(const size_t parent_index)
 	{
 		static_assert(std::popcount(max_n_of_moves) == 1);
@@ -68,7 +83,7 @@ namespace chess
 		return opp_king & king_attack_masks[target_idx];
 	}
 
-	// Constrain which types of checks board::in_check() performs.
+	// Constrain which types of checks in_check() performs.
 	// - If we are moving our king or are outside of move generation, do all checks.
 	// - Otherwise, if we started in check from a pawn, do pawn and slider checks.
 	// - Otherwise, if we started in check from a knight, do knight and slider checks.
@@ -80,6 +95,36 @@ namespace chess
 		knight,
 		sliders
 	};
+
+	template <color king_color, check_type check_type = check_type::all>
+	force_inline_toggle bool in_check(const board& board, const size_t king_idx)
+	{
+		constexpr color opp_color = other_color(king_color);
+
+		if constexpr (check_type == check_type::all)
+		{
+			if (square_is_attacked_by_king<opp_color>(board.get_bitboards(), king_idx)) return true;
+		}
+
+		if constexpr (check_type == check_type::knight || check_type == check_type::all)
+		{
+			if (square_is_attacked_by_knight<opp_color>(board.get_bitboards(), king_idx)) return true;
+		}
+
+		if constexpr (check_type == check_type::pawn || check_type == check_type::all)
+		{
+			if (square_is_attacked_by_pawn<opp_color>(board.get_bitboards(), king_idx)) return true;
+		}
+
+		return is_attacked_by_sliding_piece<king_color>(board.get_bitboards(), king_idx);
+	}
+
+	template <color king_color, check_type check_type = check_type::all>
+	force_inline_toggle bool in_check(const board& board)
+	{
+		const size_t king_idx = get_next_bit_index(board.get_bitboards().get<king_color, king>());
+		return in_check<king_color, check_type>(board, king_idx);
+	}
 
 	inline eval_t taper(const phase_t phase, const int64_t mg_eval, const int64_t eg_eval)
 	{
@@ -231,7 +276,7 @@ namespace chess
 		template <color moving_color, bool quiescing, bool perft, piece piece, move_type move_type,
 		    chess::piece promoted_piece>
 		force_inline_toggle void copy_make_board(const board& parent_board, tt_key incremental_key, const bitboard from,
-		    const bitboard to, const chess::piece captured_piece)
+		    const bitboard to, const chess::piece captured_piece, const move_info& move_info)
 		{
 			// Generate a mask at compile time to selectively copy parent state.
 			constexpr uint64_t copy_mask = get_copy_mask<moving_color, piece, move_type, promoted_piece>();
@@ -253,6 +298,12 @@ namespace chess
 			{
 				bitfield |= 1ull << en_passant_offset;
 			}
+
+			constexpr chess::piece piece_after = (promoted_piece == empty) ? piece : promoted_piece;
+
+			const bool gives_check =
+			    detect_check<moving_color, piece_after, move_type, promoted_piece>(from, to, move_info);
+			bitfield |= uint64_t(gives_check) << check_offset;
 
 			// If a rook moves, it cannot be used to castle.
 			// Update castling rights for the moving player.
@@ -319,8 +370,6 @@ namespace chess
 
 			// The incremental_key has already had the leaving piece removed, and the color to move toggled.
 			// We receive it by copy so we can modify it before writing it.
-
-			constexpr chess::piece piece_after = (promoted_piece == empty) ? piece : promoted_piece;
 
 			// Don't update keys during quiescence.
 			if constexpr (!quiescing)
@@ -499,37 +548,8 @@ namespace chess
 		{
 			return (board_state >> fifty_move_counter_offset) & fifty_move_counter_mask;
 		}
+		bool in_check() const { return (board_state >> check_offset) & check_mask; }
 		const class bitboards& get_bitboards() const { return bitboards; }
-
-		template <color king_color, check_type check_type = check_type::all>
-		force_inline_toggle bool in_check(const size_t king_idx) const
-		{
-			constexpr color opp_color = other_color(king_color);
-
-			if constexpr (check_type == check_type::all)
-			{
-				if (square_is_attacked_by_king<opp_color>(bitboards, king_idx)) return true;
-			}
-
-			if constexpr (check_type == check_type::knight || check_type == check_type::all)
-			{
-				if (square_is_attacked_by_knight<opp_color>(bitboards, king_idx)) return true;
-			}
-
-			if constexpr (check_type == check_type::pawn || check_type == check_type::all)
-			{
-				if (square_is_attacked_by_pawn<opp_color>(bitboards, king_idx)) return true;
-			}
-
-			return is_attacked_by_sliding_piece<king_color>(bitboards, king_idx);
-		}
-
-		template <color king_color, check_type check_type = check_type::all>
-		force_inline_toggle bool in_check() const
-		{
-			const size_t king_idx = get_next_bit_index(bitboards.get<king_color, king>());
-			return in_check<king_color, check_type>(king_idx);
-		}
 
 	private:
 		void set_previous_move_info(const color color_to_move);
@@ -597,6 +617,69 @@ namespace chess
 		void set_black_can_castle_ks(const uint16_t arg) { board_state |= arg << black_can_castle_ks_offset; }
 		void set_black_can_castle_qs(const uint16_t arg) { board_state |= arg << black_can_castle_qs_offset; }
 		void set_fifty_move_counter(const uint16_t arg) { board_state |= arg << fifty_move_counter_offset; }
+		void set_in_check() { board_state |= 1ull << check_offset; }
+
+		/*
+		Return true if the moving player (moving_color) has just put the opponent into check.
+		Return false otherwise.
+		If the move was a promotion, `piece` is the promoted-to type.
+		*/
+		template <color moving_color, piece piece, move_type move_type, chess::piece promoted_piece>
+		force_inline_toggle bool detect_check(const bitboard from, const bitboard to, const move_info& move_info) const
+		{
+			bitboard checkers{};
+
+			if constexpr (piece == pawn)
+			{
+				checkers |= to & move_info.pawn_check_squares;
+			}
+
+			if constexpr (piece == knight)
+			{
+				checkers |= to & move_info.knight_check_squares;
+			}
+
+			if constexpr (piece == bishop || piece == queen)
+			{
+				checkers |= to & move_info.bishop_check_squares;
+			}
+
+			if constexpr (piece == rook || piece == queen)
+			{
+				checkers |= to & move_info.rook_check_squares;
+			}
+
+			if constexpr (move_type == move_type::castle_kingside || move_type == move_type::castle_queenside)
+			{
+				constexpr size_t white_castling = (moving_color == white ? 56 : 0);
+				constexpr size_t castle_kingside = (move_type == move_type::castle_kingside ? 2 : 0);
+				constexpr bitboard rook_end_bb = 1ull << (3 + white_castling + castle_kingside);
+
+				checkers |= rook_end_bb & get_slider_moves<rook>(bitboards, move_info.opp_king_idx);
+			}
+			else if (from & move_info.discovery_blockers || move_type == move_type::en_passant_capture)
+			{
+				bitboard bishop_checkers{};
+				bitboard rook_checkers{};
+
+				if constexpr (promoted_piece == bishop || promoted_piece == queen)
+				{
+					bishop_checkers = to;
+				}
+				if constexpr (promoted_piece == rook || promoted_piece == queen)
+				{
+					rook_checkers = to;
+				}
+
+				const bitboard bishop_check_squares = get_slider_moves<bishop>(bitboards, move_info.opp_king_idx);
+				checkers |= (move_info.bishops_and_queens | bishop_checkers) & bishop_check_squares;
+
+				const bitboard rook_check_squares = get_slider_moves<rook>(bitboards, move_info.opp_king_idx);
+				checkers |= (move_info.rooks_and_queens | rook_checkers) & rook_check_squares;
+			}
+
+			return checkers;
+		}
 
 		template <color update_color>
 		inline_toggle_member void update_key_castling_rights_for(tt_key& incremental_key, const board& parent_board)
@@ -708,6 +791,7 @@ namespace chess
 		static constexpr size_t en_passant_bits = 1;
 		static constexpr size_t castling_right_bits = 1;
 		static constexpr size_t fifty_move_counter_bits = std::bit_width(50u * 2);
+		static constexpr size_t check_bits = 1;
 
 		// bitfield positions
 		static constexpr size_t en_passant_offset = 0;
@@ -717,14 +801,16 @@ namespace chess
 		static constexpr size_t black_can_castle_qs_offset = black_can_castle_ks_offset + castling_right_bits;
 		static constexpr size_t fifty_move_counter_offset =
 		    black_can_castle_qs_offset + castling_right_bits; // counts ply
+		static constexpr size_t check_offset = fifty_move_counter_offset + fifty_move_counter_bits;
 
 		// bitfield masks, not including offsets
 		static constexpr uint64_t en_passant_mask = (1ull << en_passant_bits) - 1;
 		static constexpr uint64_t castling_right_mask = (1ull << castling_right_bits) - 1;
 		static constexpr uint64_t fifty_move_counter_mask = (1ull << fifty_move_counter_bits) - 1;
+		static constexpr uint64_t check_mask = (1ull << check_bits) - 1;
 
 		// Check that we're using the expected number of bits.
-		static_assert(fifty_move_counter_bits + fifty_move_counter_offset + 4 == 16);
+		static_assert(check_bits + check_offset + 3 == 16);
 
 		tt_key key{};
 		bitboards bitboards{};

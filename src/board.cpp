@@ -138,6 +138,9 @@ namespace chess
 		set_previous_move_info(color_to_move);
 		// - Generate the Zobrist hash key, game phase, and static evaluation from scratch.
 		generate_key_phase_eval(color_to_move);
+		// - Set the in_check flag if the side to move is in check.
+		if (color_to_move == white && chess::in_check<white>(*this)) set_in_check();
+		if (color_to_move == black && chess::in_check<black>(*this)) set_in_check();
 
 		return color_to_move;
 	}
