@@ -14,7 +14,7 @@ namespace chess
 	{
 		board& child_board = boards[end_idx];
 		chess::piece captured_piece{};
-		child_board.copy_make_bitboards<moving_color, quiescing, perft, piece, move_type, promoted_piece>(
+		child_board.copy_make_bitboards<moving_color, perft, piece, move_type, promoted_piece>(
 		    parent_board, from, to, captured_piece);
 
 		// If this move would leave us in check, return early. A move might leave us in check if:
@@ -247,13 +247,13 @@ namespace chess
 		}
 	}
 
-	template <color moving_color, gen_moves gen_moves, bool quiescing, bool perft>
+	template <color moving_color, bool perft>
 	force_inline_toggle static void find_castle_moves(
 	    size_t& end_idx, const board& parent_board, tt_key key, const move_info& move_info)
 	{
 		constexpr size_t king_start_idx = (moving_color == white) ? 60 : 4;
 
-		if constexpr (!quiescing && !perft)
+		if constexpr (!perft)
 		{
 			key ^= piece_square_key<moving_color, king>(king_start_idx);
 		}
@@ -269,9 +269,9 @@ namespace chess
 			// Check that the king would not be moving through check.
 			if (!in_check<moving_color>(parent_board, king_start_idx + 1))
 			{
-				append_if_legal<moving_color, quiescing, perft, check_type::all, false, king,
-				    move_type::castle_kingside>(end_idx, parent_board, bitboard{}, king_start_idx + 2, key,
-				    1ull << king_start_idx, 1ull << (king_start_idx + 2), move_info);
+				append_if_legal<moving_color, false, perft, check_type::all, false, king, move_type::castle_kingside>(
+				    end_idx, parent_board, bitboard{}, king_start_idx + 2, key, 1ull << king_start_idx,
+				    1ull << (king_start_idx + 2), move_info);
 			}
 		}
 
@@ -283,9 +283,9 @@ namespace chess
 		{
 			if (!in_check<moving_color>(parent_board, king_start_idx - 1))
 			{
-				append_if_legal<moving_color, quiescing, perft, check_type::all, false, king,
-				    move_type::castle_queenside>(end_idx, parent_board, bitboard{}, king_start_idx - 2, key,
-				    1ull << king_start_idx, 1ull << (king_start_idx - 2), move_info);
+				append_if_legal<moving_color, false, perft, check_type::all, false, king, move_type::castle_queenside>(
+				    end_idx, parent_board, bitboard{}, king_start_idx - 2, key, 1ull << king_start_idx,
+				    1ull << (king_start_idx - 2), move_info);
 			}
 		}
 	}
@@ -361,9 +361,9 @@ namespace chess
 		find_moves_for<moving_color, gen_moves, quiescing, perft, check_type::all, false, king>(
 		    end_idx, parent_board, blockers, king_idx, key, move_info);
 
-		if constexpr (!in_check && (gen_moves == gen_moves::all || gen_moves == gen_moves::noncaptures))
+		if constexpr (!in_check && !quiescing && (gen_moves == gen_moves::all || gen_moves == gen_moves::noncaptures))
 		{
-			find_castle_moves<moving_color, gen_moves, quiescing, perft>(end_idx, parent_board, key, move_info);
+			find_castle_moves<moving_color, perft>(end_idx, parent_board, key, move_info);
 		}
 	}
 

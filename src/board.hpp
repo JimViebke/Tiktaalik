@@ -142,8 +142,7 @@ namespace chess
 		template <bool verify_key = true, bool verify_phase = true, bool verify_eval = true>
 		void verify_key_phase_eval(const color color_to_move);
 
-		template <color moving_color, bool quiescing, bool perft, piece piece, move_type move_type,
-		    chess::piece promoted_piece>
+		template <color moving_color, bool perft, piece piece, move_type move_type, chess::piece promoted_piece>
 		force_inline_toggle void copy_make_bitboards(
 		    const board& parent_board, const bitboard from, const bitboard to, chess::piece& captured_piece)
 		{
@@ -446,7 +445,8 @@ namespace chess
 
 			if constexpr ((piece == king || piece == rook) && !quiescing)
 			{
-				// A king or rook is moving; update our castling rights,
+				// A king or rook is moving; update our castling rights.
+				// During quiescence, we can't castle, so skip this.
 				update_key_castling_rights_for<moving_color>(incremental_key, parent_board);
 			}
 
