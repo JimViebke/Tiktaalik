@@ -122,7 +122,7 @@ namespace chess
 		}
 		else // We have a non-capture tt_move.
 		{
-			end_idx = generate_child_boards<color_to_move, gen_moves::all>(idx);
+			end_idx = generate_child_boards<color_to_move, gen_moves::all, quiescing>(idx);
 			generated_moves = gen_moves::all;
 		}
 
@@ -143,26 +143,40 @@ namespace chess
 
 			for (size_t child_idx = begin_idx; child_idx < end_idx; ++child_idx)
 			{
+				size_t next_depth{};
+				if constexpr (quiescing)
+				{
+					// During quiescence search, the depth stays at 0 and is ignored.
+					next_depth = 0;
+				}
+				else
+				{
+					next_depth = depth - 1;
+
+					// Extend the search by one ply for moves that give check.
+					next_depth += boards[child_idx].in_check();
+				}
+
 				eval_t ab{};
 
 				if (found_pv)
 				{
 					// Do a zero-window search.
 					ab = -alpha_beta<other_color(color_to_move), quiescing>(
-					    child_idx, ply + !quiescing, depth - !quiescing, -alpha - 1, -alpha);
+					    child_idx, ply + !quiescing, next_depth, -alpha - 1, -alpha);
 
 					if (alpha < ab && ab < beta)
 					{
 						// Re-search using a full window.
 						ab = -alpha_beta<other_color(color_to_move), quiescing>(
-						    child_idx, ply + !quiescing, depth - !quiescing, -beta, -alpha);
+						    child_idx, ply + !quiescing, next_depth, -beta, -alpha);
 					}
 				}
 				else
 				{
 					// Do a full-window search.
 					ab = -alpha_beta<other_color(color_to_move), quiescing>(
-					    child_idx, ply + !quiescing, depth - !quiescing, -beta, -alpha);
+					    child_idx, ply + !quiescing, next_depth, -beta, -alpha);
 				}
 
 				if (!searching) return 0;
@@ -186,7 +200,7 @@ namespace chess
 				swap_best_to_front<color_to_move>(child_idx + 1, end_idx);
 			}
 
-			if (!quiescing && generated_moves == gen_moves::captures)
+			if (generated_moves == gen_moves::captures && (!quiescing || board.in_check()))
 			{
 				end_idx = generate_child_boards<color_to_move, gen_moves::noncaptures>(idx);
 				generated_moves = gen_moves::all;
@@ -199,13 +213,18 @@ namespace chess
 
 		if (!found_moves)
 		{
-			// The position is either terminal (checkmate/stalemate) or quiescent.
+			// The position is either terminal (checkmate/stalemate), quiescent, or both.
+			// During quiescence search, we generate all moves if the side to move is in check.
+			// This means we can detect checkmates during quiescence search, but not stalemates.
 
-			if constexpr (quiescing) return board.get_eval<color_to_move>();
+			// If we are quiescing and not in check, return the static evaluation.
+			if (quiescing && !board.in_check()) return board.get_eval<color_to_move>();
 
+			// If we are in check, return the terminal evaluation.
 			const eval_t terminal_eval = board.in_check() ? -eval::mate + ply : eval_t{0};
 
-			tt.store(key, depth, tt_eval_type::exact, terminal_eval);
+			if constexpr (!quiescing) tt.store(key, depth, tt_eval_type::exact, terminal_eval);
+
 			return terminal_eval;
 		}
 
