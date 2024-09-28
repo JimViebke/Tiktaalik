@@ -45,6 +45,9 @@ namespace chess
 		bitboard rooks_and_queens{};
 
 		size_t opp_king_idx{};
+
+		eval_t incremental_mg_eval{};
+		eval_t incremental_eg_eval{};
 	};
 
 	inline constexpr size_t first_child_index(const size_t parent_index)
@@ -377,12 +380,24 @@ namespace chess
 				incremental_key ^= piece_square_key<moving_color, piece_after>(end_idx);
 			}
 
-			eval_t incremental_mg_eval = parent_board.mg_eval;
-			eval_t incremental_eg_eval = parent_board.eg_eval;
-
 			// Update piece-square evals for the moving piece.
-			incremental_mg_eval -= eval::piece_square_eval_mg<moving_color, piece>(start_idx);
-			incremental_eg_eval -= eval::piece_square_eval_eg<moving_color, piece>(start_idx);
+			eval_t incremental_mg_eval{};
+			eval_t incremental_eg_eval{};
+
+			// If the move is a pawn or castle move, subtract the piece-square evals for the moving piece.
+			// Otherwise, the piece-square evals have already been updated for the leaving square.
+			if constexpr (piece == pawn || move_type == move_type::castle_kingside ||
+			              move_type == move_type::castle_queenside)
+			{
+				incremental_mg_eval = parent_board.mg_eval - eval::piece_square_eval_mg<moving_color, piece>(start_idx);
+				incremental_eg_eval = parent_board.eg_eval - eval::piece_square_eval_eg<moving_color, piece>(start_idx);
+			}
+			else
+			{
+				incremental_mg_eval = move_info.incremental_mg_eval;
+				incremental_eg_eval = move_info.incremental_eg_eval;
+			}
+
 			incremental_mg_eval += eval::piece_square_eval_mg<moving_color, piece_after>(end_idx);
 			incremental_eg_eval += eval::piece_square_eval_eg<moving_color, piece_after>(end_idx);
 
@@ -536,6 +551,8 @@ namespace chess
 		{
 			return color_to_move == white ? eval : -eval;
 		}
+		eval_t get_mg_eval() const { return mg_eval; }
+		eval_t get_eg_eval() const { return eg_eval; }
 		move get_move() const { return move; }
 		bool move_is(const move passed_move) const { return move == passed_move; }
 		piece get_moved_piece() const { return move.get_moved_piece(); }

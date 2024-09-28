@@ -293,7 +293,7 @@ namespace chess
 	template <color moving_color, gen_moves gen_moves, bool quiescing, bool perft, check_type check_type, bool in_check,
 	    piece piece>
 	force_inline_toggle static void find_moves_for(size_t& end_idx, const board& parent_board, const bitboard blockers,
-	    const size_t king_idx, const tt_key key, const move_info& move_info)
+	    const size_t king_idx, const tt_key key, move_info& move_info)
 	{
 		static_assert(piece != pawn);
 
@@ -309,6 +309,15 @@ namespace chess
 			{
 				// XOR the key for the leaving piece once for all of its moves.
 				incremental_key = key ^ piece_square_key<moving_color, piece>(piece_idx);
+			}
+
+			if constexpr (!perft)
+			{
+				// Update piece-square evals for the leaving piece once for all of its moves.
+				move_info.incremental_mg_eval =
+				    parent_board.get_mg_eval() - eval::piece_square_eval_mg<moving_color, piece>(piece_idx);
+				move_info.incremental_eg_eval =
+				    parent_board.get_eg_eval() - eval::piece_square_eval_eg<moving_color, piece>(piece_idx);
 			}
 
 			bitboard moves{};
@@ -346,7 +355,7 @@ namespace chess
 
 	template <color moving_color, gen_moves gen_moves, bool quiescing, bool perft, check_type check_type, bool in_check>
 	force_inline_toggle static void find_moves(size_t& end_idx, const board& parent_board, const bitboard blockers,
-	    const size_t king_idx, const tt_key key, const move_info& move_info)
+	    const size_t king_idx, const tt_key key, move_info& move_info)
 	{
 		find_pawn_moves<moving_color, gen_moves, quiescing, perft, check_type, in_check>(
 		    end_idx, parent_board, blockers, king_idx, key, move_info);
